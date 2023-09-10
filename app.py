@@ -28,15 +28,23 @@ def submit_form():
 
     # Upload photo and retrieve, then set link to data
     image_extension = get_image_extension_from_base64(data["image"])
-    image_path = f"image/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
+    image_path = (
+        f"image/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
+    )
     image_url = s3.upload_binary_data(image_path, data["image"])
 
-
+    # Reset data properties as S3 url
     data["resume"], data["image"] = resume_url, image_url
 
-    db.put_data("zap-applications", data)
+    # Upload data to DynamoDB
+    db.put_data(table_name="zap-applications", data=data)
 
     return {"msg": True, "resumeUrl": resume_url}
+
+@app.route("/applicants", methods=["GET"])
+def get_applicants():
+    data = db.get_all(table_name="zap-applications")
+    return data
 
 
 """
