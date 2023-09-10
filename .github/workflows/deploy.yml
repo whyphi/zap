@@ -1,0 +1,46 @@
+name: Chalice Deployment
+
+on:
+  push
+
+jobs:
+  deployment-prod:
+    name: deploy-prod
+    runs-on: ubuntu-latest
+    if: contains('
+        refs/heads/staging
+        refs/heads/main
+      ', github.ref)
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip' # caching pip dependencies
+    - run: pip install pipenv
+    - run: pipenv requirements > requirements.txt
+    - run: pip install -r requirements.txt
+    - run: chalice deploy --stage prod
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+  deployment-dev:
+    name: deploy-dev
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/dev')
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip' # caching pip dependencies
+      - run: pip install pipenv
+      - run: pipenv requirements > requirements.txt
+      - run: pip install -r requirements.txt
+      - run: chalice deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
