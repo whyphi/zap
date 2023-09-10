@@ -11,7 +11,7 @@ class S3Client:
         self.is_prod = os.environ.get("ENV") == "prod"
         self.s3 = boto3.client("s3")
 
-    def upload_resume(self, path: str, data) -> str:
+    def upload_binary_data(self, path: str, data) -> str:
         """Uploads resume to S3 Bucket and returns path"""
         # Set path
         if self.is_prod:
