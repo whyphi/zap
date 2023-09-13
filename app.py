@@ -15,7 +15,7 @@ def index():
     return {"hello": "world"}
 
 
-@app.route("/submit", methods=["POST"])
+@app.route("/submit", methods=["POST"], cors=True)
 def submit_form():
     # Get data as JSON and attach unique id for applicantId
     data = app.current_request.json_body
@@ -41,15 +41,16 @@ def submit_form():
 
     return {"msg": True, "resumeUrl": resume_url}
 
-@app.route("/applicants", methods=["GET"])
+
+@app.route("/applicants", methods=["GET"], cors=True)
 def get_applicants():
     data = db.get_all(table_name="zap-applications")
     return data
 
-@app.route("/create", methods=["POST"])
+
+@app.route("/create", methods=["POST"], cors=True)
 def create_listing():
-    """Creates a new listing with given information
-    """
+    """Creates a new listing with given information"""
     data = app.current_request.json_body
     listing_id = str(uuid.uuid4())
     data["listingId"] = listing_id
@@ -58,18 +59,9 @@ def create_listing():
 
     return {"msg": True}
 
-@app.route("/listings", methods=["GET"])
+
+@app.route("/listings", methods=["GET"], cors=True)
 def get_all_listings():
-    """Gets all listings available
-    """
+    """Gets all listings available"""
     data = db.get_all(table_name="zap-listings")
     return data
-    
-
-
-"""
-TODO: 
-Submit form data to dynamodb and mongodb
-save resume in S3 -> generate link
-
-"""
