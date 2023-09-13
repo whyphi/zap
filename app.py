@@ -46,6 +46,26 @@ def get_applicants():
     data = db.get_all(table_name="zap-applications")
     return data
 
+@app.route("/create", methods=["POST"])
+def create_listing():
+    """Creates a new listing with given information
+    """
+    data = app.current_request.json_body
+    listing_id = str(uuid.uuid4())
+    data["listingId"] = listing_id
+
+    db.put_data(table_name="zap-listings", data=data)
+
+    return {"msg": True}
+
+@app.route("/listings", methods=["GET"])
+def get_all_listings():
+    """Gets all listings available
+    """
+    data = db.get_all(table_name="zap-listings")
+    return data
+    
+
 
 """
 TODO: 
