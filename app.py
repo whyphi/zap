@@ -58,6 +58,14 @@ def create_listing():
 
     return {"msg": True}
 
+@app.route("/listings", methods=["GET"])
+def get_all_listings():
+    """Gets all listings available
+    """
+    data = db.get_all(table_name="zap-listings")
+    return data
+    
+
 
 """
 TODO: 
