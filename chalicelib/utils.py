@@ -7,33 +7,25 @@ def decode_base64(base64_data):
     binary_data = base64.b64decode(base64_data)
     return binary_data
 
-def get_image_extension_from_base64(base64_data):
-    try:
-        # Decode the Base64 data to bytes
-        binary_data = base64.b64decode(base64_data)
+def get_file_extension_from_base64(base64_data):
+    parts = base64_data.split(',')
+    if len(parts) != 2:
+        return None  # Invalid data URI format
 
-        # Use imghdr to identify the image format
-        image_format = imghdr.what(None, binary_data)
+    metadata = parts[0]
 
-        if image_format:
-            # Normalize the format to lowercase (e.g., 'JPEG' -> 'jpg')
-            image_format = image_format.lower()
+    # Extract content type from metadata.
+    content_type = metadata.split(';')[0][5:]  # Remove "data:" prefix
 
-            # You can return the image format or the corresponding file extension
-            # If you want the extension, you can map known formats to extensions
-            format_to_extension = {
-                'jpeg': 'jpg',  # 'jpeg' is returned by imghdr for JPEG files
-                'png': 'png',
-                'heic': 'heic',
-                # Add more formats as needed
-            }
+    # Map content type to file extension.
+    extension_map = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "application/pdf": "pdf",
+        # Add more content type to extension mappings as needed.
+    }
 
-            extension = format_to_extension.get(image_format)
-            return extension
+    # Use the mapping to get the extension (default to 'dat' if not found).
+    extension = extension_map.get(content_type, 'dat')
 
-    except Exception as e:
-        # Handle decoding or identification errors here
-        print(f"Error: {str(e)}")
-
-    # Return None if the format cannot be determined
-    return None
+    return extension

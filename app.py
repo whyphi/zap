@@ -1,7 +1,7 @@
 from chalice import Chalice
 from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
-from chalicelib.utils import get_image_extension_from_base64
+from chalicelib.utils import get_file_extension_from_base64
 
 import uuid
 
@@ -27,7 +27,7 @@ def submit_form():
     resume_url = s3.upload_binary_data(resume_path, data["resume"])
 
     # Upload photo and retrieve, then set link to data
-    image_extension = get_image_extension_from_base64(data["image"])
+    image_extension = get_file_extension_from_base64(data["image"])
     image_path = (
         f"image/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
     )

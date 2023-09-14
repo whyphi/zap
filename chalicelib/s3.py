@@ -22,9 +22,10 @@ class S3Client:
         metadata = {
             "Content-Type": "application/pdf",
         }
-
-        binary_data = decode_base64(data)
-
+        
+        base64_data = data.split(',')[1]        
+        binary_data = decode_base64(base64_data)
+        
         self.s3.put_object(
             Bucket=self.bucket_name, Key=path, Body=binary_data, Metadata=metadata
         )
