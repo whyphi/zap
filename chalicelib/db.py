@@ -34,3 +34,11 @@ class DBResource:
         items = response.get("Items", [])
 
         return items
+
+    @add_env_suffix
+    def get_item(self, table_name: str, key: dict):
+        """Gets an item from table_name through key specifier"""
+        table = self.resource.Table(table_name)
+        print(table)
+        item = table.get_item(Key=key)
+        return item
