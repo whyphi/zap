@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 chalice = "*"
+boto3 = "*"
 
 [dev-packages]
 
