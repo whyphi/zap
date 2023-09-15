@@ -1,6 +1,7 @@
 import os
 import boto3
 from botocore import errorfactory
+from boto3.dynamodb.conditions import Key
 
 
 class DBResource:
@@ -36,9 +37,29 @@ class DBResource:
         return items
 
     @add_env_suffix
-    def get_item(self, table_name: str, key: dict):
+    def get_items(self, table_name: str, key: dict):
         """Gets an item from table_name through key specifier"""
         table = self.resource.Table(table_name)
         print(table)
         item = table.get_item(Key=key)
         return item
+
+    @add_env_suffix
+    def get_applicants(self, table_name: str, listing_id: str):
+        secondary_key_name = "listingId"
+        secondary_key_value = listing_id
+
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Use the query method to filter items by the secondary key
+        # Ensure that global secondary key is set
+        response = table.query(
+            IndexName=f"{secondary_key_name}-index",
+            KeyConditionExpression=Key(secondary_key_name).eq(secondary_key_value)
+        )
+
+        if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+            return response["Items"]
+
+        return []

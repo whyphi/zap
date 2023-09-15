@@ -69,10 +69,15 @@ def get_all_listings():
 
 @app.route("/listings/{id}", methods=["GET"], cors=True)
 def get_listing(id):
-    """Gets a listing from id
-    """
-    data = db.get_item(table_name="zap-listings", key={
-        "listingId": id
-    })
+    """Gets a listing from id"""
+    data = db.get_items(table_name="zap-listings", key={"listingId": id})
+
+    return data
+
+
+@app.route("/applicants/{listing_id}", methods=["GET"], cors=True)
+def get_applicants(listing_id):
+    """Gets all applicants from <listing_id>"""
+    data = db.get_applicants(table_name="zap-applications", listing_id=listing_id)
 
     return data
