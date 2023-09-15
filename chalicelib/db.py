@@ -37,12 +37,14 @@ class DBResource:
         return items
 
     @add_env_suffix
-    def get_items(self, table_name: str, key: dict):
+    def get_item(self, table_name: str, key: dict) -> dict:
         """Gets an item from table_name through key specifier"""
         table = self.resource.Table(table_name)
-        print(table)
-        item = table.get_item(Key=key)
-        return item
+        response = table.get_item(Key=key)
+        if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                return response["Item"]
+        
+        return {}
 
     @add_env_suffix
     def get_applicants(self, table_name: str, listing_id: str):
