@@ -18,17 +18,6 @@ Ensure that you have [AWS CLI](https://aws.amazon.com/cli/) installed. Then, set
 aws configure
 ```
 
-Ensure that you have Node.js [downloaded](https://nodejs.org/en/download) and your node version `v20.x.x`.
-
-To check your node version:
-```bash
-node -v
-```
-
-To update Node.js:
-```bash
-npm install -g n
-```
 
 ## Local Development
 
