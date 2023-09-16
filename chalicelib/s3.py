@@ -12,7 +12,7 @@ class S3Client:
         self.is_prod = os.environ.get("ENV") == "prod"
         self.s3 = boto3.client("s3")
 
-    def upload_binary_data(self, path: str, data) -> str:
+    def upload_binary_data(self, path: str, data: str) -> str:
         """Uploads resume to S3 Bucket and returns path"""
         # Set path
         if self.is_prod:
@@ -21,7 +21,7 @@ class S3Client:
             path = f"dev/{path}"
         
         # Split parts of base64 data
-        parts = base64_data.split(',')
+        parts = data.split(',')
         metadata, base64_data = parts[0], parts[1]        
 
         # Extract content type from metadata
