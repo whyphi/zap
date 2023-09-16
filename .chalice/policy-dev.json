@@ -1,0 +1,29 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "GeneralPolicy",
+			"Effect": "Allow",
+			"Action": [
+				"dynamodb:BatchGetItem",
+				"s3:PutObject",
+				"dynamodb:PutItem",
+				"dynamodb:GetItem",
+				"dynamodb:Scan",
+				"dynamodb:Query",
+				"logs:CreateLogStream",
+				"logs:CreateLogGroup",
+				"logs:PutLogEvents"
+			],
+			"Resource": [
+				"arn:aws:dynamodb:us-east-1::table/zap-applications-dev",
+				"arn:aws:dynamodb:us-east-1::table/zap-listings-dev",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-dev",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-listings-dev",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-dev/index/listingId-index",
+				"arn:*:logs:*:*:*",
+				"arn:aws:s3:::whyphi-zap/dev/*"
+			]
+		}
+	]
+}
