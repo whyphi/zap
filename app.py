@@ -23,14 +23,12 @@ def submit_form():
     data["applicantId"] = applicant_id
 
     # Upload resume and retrieve, then set link to data
-    resume_path = f"resume/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
+    resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
     resume_url = s3.upload_binary_data(resume_path, data["resume"])
 
     # Upload photo and retrieve, then set link to data
     image_extension = get_file_extension_from_base64(data["image"])
-    image_path = (
-        f"image/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
-    )
+    image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
     image_url = s3.upload_binary_data(image_path, data["image"])
 
     # Reset data properties as S3 url
