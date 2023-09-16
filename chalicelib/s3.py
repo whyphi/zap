@@ -5,6 +5,7 @@ from datetime import datetime
 from chalicelib.utils import decode_base64
 
 
+
 class S3Client:
     def __init__(self):
         self.bucket_name = "whyphi-zap"
@@ -18,19 +19,24 @@ class S3Client:
             path = f"prod/{path}"
         else:
             path = f"dev/{path}"
-
-        metadata = {
-            "Content-Type": "application/pdf",
-        }
         
-        base64_data = data.split(',')[1]        
+        # Split parts of base64 data
+        parts = base64_data.split(',')
+        metadata, base64_data = parts[0], parts[1]        
+
+        # Extract content type from metadata
+        content_type = metadata.split(';')[0][5:]  # Remove "data:" prefix
         binary_data = decode_base64(base64_data)
         
+        # Upload binary data as object with content type set
         self.s3.put_object(
-            Bucket=self.bucket_name, Key=path, Body=binary_data, Metadata=metadata
+            Bucket=self.bucket_name, Key=path, Body=binary_data, ContentType=content_type
         )
 
+        # Retrieve endpoint of object
         s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
-        resume_url = s3_endpoint + path
+        object_url = s3_endpoint + path
         
-        return resume_url
+        return object_url
+
+    
