@@ -14,6 +14,9 @@ s3 = S3Client()
 def index():
     return {"hello": "world"}
 
+@app.route("/test")
+def index():
+    return {"test": "test"}
 
 @app.route("/submit", methods=["POST"], cors=True)
 def submit_form():
