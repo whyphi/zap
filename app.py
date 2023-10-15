@@ -15,7 +15,7 @@ def index():
     return {"hello": "world"}
 
 @app.route("/test")
-def index():
+def test():
     return {"test": "test"}
 
 @app.route("/submit", methods=["POST"], cors=True)
