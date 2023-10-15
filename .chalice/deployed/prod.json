@@ -1,10 +1,10 @@
 {
   "resources": [
     {
-      "name": "default-role",
+      "name": "api_handler_role",
       "resource_type": "iam_role",
-      "role_arn": "arn:aws:iam::280776660572:role/zap-prod",
-      "role_name": "zap-prod"
+      "role_arn": "arn:aws:iam::280776660572:role/zap-prod-api_handler",
+      "role_name": "zap-prod-api_handler"
     },
     {
       "name": "api_handler",
