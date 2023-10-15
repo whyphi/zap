@@ -11,6 +11,8 @@
       "api_gateway_stage": "api"
     },
     "prod": {
+      "autogen_policy": false,
+      "iam_policy_file": "policy-prod.json",
       "environment_variables": {
         "ENV": "prod"
       },
