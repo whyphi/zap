@@ -3,6 +3,8 @@
   "app_name": "zap",
   "stages": {
     "dev": {
+      "manage_iam_role": false,
+      "iam_role_arn": "arn:aws:iam::280776660572:role/zap-dev",
       "environment_variables": {
         "ENV": "dev"
       },
