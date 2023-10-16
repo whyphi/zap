@@ -3,9 +3,14 @@ from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
 
+# Blueprints
+from chalicelib.blueprints.announcements import announcements_routes
+
 import uuid
 
 app = Chalice(app_name="zap")
+app.register_blueprint(announcements_routes)
+
 db = DBResource()
 s3 = S3Client()
 
