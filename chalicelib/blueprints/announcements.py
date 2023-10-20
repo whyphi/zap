@@ -1,29 +1,61 @@
 from chalice import Blueprint
 from chalicelib.services.ses import SesMailSender, SesDestination
+from chalicelib.services.mongo import MongoService
 import boto3
 
 announcements_routes = Blueprint(__name__)
 
-client = boto3.client('ses')
+ses_client = boto3.client('ses')
+
+message = """
+            Hey all! Wanted to send a quick update on the email broadcast feature. As you can tell, 
+            the first version of the backend is complete. All that's left is to make the API call from the frontend 
+            and we can deploy the feature (after the necessary tests, of course).
+            <br /><br />
+            Just as a reminder, if you want to track the progress on this feature, you can check out this 
+            <a href="https://github.com/whyphi/zap/pull/9">draft PR!</a> Looking forward to making more 
+            git commits with all of you.
+            <br /><br />
+            Happy coding!
+            <br /><br />
+            Best,
+            <br /><br />
+            Chris
+        """
+
 
 @announcements_routes.route("/announcement")
 def send_announcement():
-    # TODO: 1. Get all email data from MongoDB (Consider creating a mongodb wrapper in services)
+    MongoServer = MongoService()
+    MongoServer.connect()
+    users_data = MongoServer.get_all_data()
     
-    # TODO: 2. Convert all emails to a list
+    emails = [user['email'] for user in users_data]
+    # print(emails)
 
-    # TODO: 3. Create a new object with the list initialized into to (either send To to techteampct@gmail.com or all the users)
+    # emails = ['cwgough@bu.edu', 'cwilliam.gough@gmail.com']
 
-    # TODO: 4. Send Email using SesMailSender Class
+    ses = SesMailSender(ses_client)
+    for email in emails:
+        ses_destination = SesDestination(
+            tos=[email]
+        )
+        ses.send_email(
+            source="techteampct@gmail.com",
+            destination=ses_destination,
+            subject="Hello World",
+            text="test",
+            html=message
+        )
 
-    pass
+    return f'Sent emails to {len(emails)} people: {emails}'
 
 @announcements_routes.route("/test-email")
 def test_email():
     ses_destination = SesDestination(
-        tos=["techteampct@gmail.com"]
+        tos=["cwgough@bu.edu"]
     )
-    ses = SesMailSender(client)
+    ses = SesMailSender(ses_client)
     ses.send_email(
         source="techteampct@gmail.com",
         destination=ses_destination,
