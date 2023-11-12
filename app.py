@@ -95,7 +95,7 @@ def get_all_applicants(listing_id):
 
 @app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
 def toggle_visibility(id):
-    """Gets all applicants from <listing_id>"""
+    """Toggles visibilility of a given <listing_id>"""
     data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
     if data:
         return {"status": True}
