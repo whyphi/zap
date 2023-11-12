@@ -78,7 +78,7 @@ class DBResource:
         # If the item exists, update the visibility field to the opposite value
         if current_item:
             current_visibility = current_item["Item"]["isVisible"]
-            updated_visibility = not current_visibility
+            updated_visibility = not current_visibility if current_visibility is not None else True
 
             # Update the item with the new visibility value
             table.update_item(
