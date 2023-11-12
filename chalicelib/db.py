@@ -1,7 +1,7 @@
 import os
 import boto3
 from botocore import errorfactory
-from boto3.dynamodb.conditions import Key
+from chalicelib.models.listing import Listing
 
 
 class DBResource:
@@ -73,12 +73,14 @@ class DBResource:
         table = self.resource.Table(table_name)
 
         # Fetch the current item
-        current_item = table.get_item(Key=key)
+        curr_listing = Listing.from_dynamodb_item(table.get_item(Key=key)["Item"])
 
         # If the item exists, update the visibility field to the opposite value
-        if current_item:
-            current_visibility = current_item["Item"]["isVisible"]
-            updated_visibility = not current_visibility if current_visibility is not None else True
+        if curr_listing:
+            current_visibility = curr_listing.isVisible
+            updated_visibility = (
+                not current_visibility if current_visibility is not None else True
+            )
 
             # Update the item with the new visibility value
             table.update_item(
