@@ -42,8 +42,8 @@ class DBResource:
         table = self.resource.Table(table_name)
         response = table.get_item(Key=key)
         if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
-                return response["Item"]
-        
+            return response["Item"]
+
         return {}
 
     @add_env_suffix
@@ -58,10 +58,36 @@ class DBResource:
         # Ensure that global secondary key is set
         response = table.query(
             IndexName=f"{secondary_key_name}-index",
-            KeyConditionExpression=Key(secondary_key_name).eq(secondary_key_value)
+            KeyConditionExpression=Key(secondary_key_name).eq(secondary_key_value),
         )
 
         if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
             return response["Items"]
 
         return []
+
+    @add_env_suffix
+    def toggle_visibility(self, table_name: str, key: dict):
+        """Toggles the visibility boolean for an item identified by the key."""
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Fetch the current item
+        current_item = table.get_item(Key=key)
+
+        # If the item exists, update the visibility field to the opposite value
+        if current_item:
+            current_visibility = current_item["Item"]["isVisible"]
+            updated_visibility = not current_visibility
+
+            # Update the item with the new visibility value
+            table.update_item(
+                Key=key,
+                UpdateExpression="SET isVisible = :value",
+                ExpressionAttributeValues={":value": updated_visibility},
+            )
+
+            return True
+
+        # Return None if the item doesn't exist
+        return None

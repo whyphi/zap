@@ -14,9 +14,11 @@ s3 = S3Client()
 def index():
     return {"hello": "world"}
 
+
 @app.route("/test")
 def test():
     return {"test": "test"}
+
 
 @app.route("/submit", methods=["POST"], cors=True)
 def submit_form():
@@ -55,6 +57,7 @@ def create_listing():
     data = app.current_request.json_body
     listing_id = str(uuid.uuid4())
     data["listingId"] = listing_id
+    data["isVisible"] = True
 
     db.put_data(table_name="zap-listings", data=data)
 
@@ -88,3 +91,13 @@ def get_all_applicants(listing_id):
     """Gets all applicants from <listing_id>"""
     data = db.get_applicants(table_name="zap-applications", listing_id=listing_id)
     return data
+
+
+@app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
+def toggle_visibility(id):
+    """Gets all applicants from <listing_id>"""
+    data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
+    if data:
+        return {"status": True}
+
+    return {"status": False}
