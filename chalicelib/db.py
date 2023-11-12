@@ -2,6 +2,7 @@ import os
 import boto3
 from botocore import errorfactory
 from chalicelib.models.listing import Listing
+from boto3.dynamodb.conditions import Key
 
 
 class DBResource:
