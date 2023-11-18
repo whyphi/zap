@@ -74,7 +74,11 @@ class DBResource:
         table = self.resource.Table(table_name)
 
         # Fetch the current item
-        curr_listing = Listing.from_dynamodb_item(table.get_item(Key=key)["Item"])
+        listing_item = table.get_item(Key=key)
+        if "Item" not in listing_item:
+            return None
+        
+        curr_listing = Listing.from_dynamodb_item(listing_item["Item"])
 
         # If the item exists, update the visibility field to the opposite value
         if curr_listing:

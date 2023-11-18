@@ -3,6 +3,7 @@ from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
 
+
 import uuid
 
 app = Chalice(app_name="zap")
@@ -96,8 +97,16 @@ def get_all_applicants(listing_id):
 @app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
 def toggle_visibility(id):
     """Toggles visibilility of a given <listing_id>"""
-    data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
-    if data:
-        return {"status": True}
+    try:
+        # Perform visibility toggle in the database
+        data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
 
-    return {"status": False}
+        # Check the result and return the appropriate response
+        if data:
+            return {"status": True}
+        else:
+            return {"status": False,  "message": "Invalid listing ID"}, 400
+
+    except Exception as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": "Internal Server Error"}, 500
