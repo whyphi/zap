@@ -3,6 +3,7 @@ from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
 
+
 import uuid
 
 app = Chalice(app_name="zap")
@@ -14,9 +15,11 @@ s3 = S3Client()
 def index():
     return {"hello": "world"}
 
+
 @app.route("/test")
 def test():
     return {"test": "test"}
+
 
 @app.route("/submit", methods=["POST"], cors=True)
 def submit_form():
@@ -55,6 +58,7 @@ def create_listing():
     data = app.current_request.json_body
     listing_id = str(uuid.uuid4())
     data["listingId"] = listing_id
+    data["isVisible"] = True
 
     db.put_data(table_name="zap-listings", data=data)
 
@@ -88,3 +92,21 @@ def get_all_applicants(listing_id):
     """Gets all applicants from <listing_id>"""
     data = db.get_applicants(table_name="zap-applications", listing_id=listing_id)
     return data
+
+
+@app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
+def toggle_visibility(id):
+    """Toggles visibilility of a given <listing_id>"""
+    try:
+        # Perform visibility toggle in the database
+        data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
+
+        # Check the result and return the appropriate response
+        if data:
+            return {"status": True}
+        else:
+            return {"status": False,  "message": "Invalid listing ID"}, 400
+
+    except Exception as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": "Internal Server Error"}, 500
