@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 chalice = "*"
+boto3 = "*"
+pydantic = "*"
 
 [dev-packages]
 
