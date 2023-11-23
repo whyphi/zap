@@ -46,6 +46,23 @@ class DBResource:
             return response["Item"]
 
         return {}
+    
+    @add_env_suffix
+    def delete_item(self, table_name: str, key: dict):
+        """Deletes an item identified by the key."""
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Try to delete the item
+        try:
+            response = table.delete_item(Key=key)
+            if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                return True
+            else:
+                return False
+        except errorfactory.client.exceptions.ResourceNotFoundException:
+            # If the item does not exist, return False
+            return False
 
     @add_env_suffix
     def get_applicants(self, table_name: str, listing_id: str):

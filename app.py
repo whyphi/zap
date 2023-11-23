@@ -1,4 +1,4 @@
-from chalice import Chalice
+from chalice import Chalice, NotFoundError
 from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
@@ -78,6 +78,27 @@ def get_listing(id):
     data = db.get_item(table_name="zap-listings", key={"listingId": id})
 
     return data
+
+@app.route("/listings/{id}", methods=["DELETE"], cors=True)
+def delete_listing(id):
+    """Deletes a listing with the given ID."""
+    try:
+        # Perform delete operation in the database
+        deleted_listing = db.delete_item(table_name="zap-listings", key={"listingId": id})
+
+        # Check the result and return the appropriate response
+        if deleted_listing:
+            return {"status": True}
+        else:
+            raise NotFoundError("Listing not found")
+
+    except NotFoundError as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": "Listing not found"}, 404
+
+    except Exception as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": "Internal Server Error"}, 500
 
 
 @app.route("/applicant/{applicant_id}", methods=["GET"], cors=True)
