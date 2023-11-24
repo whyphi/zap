@@ -131,3 +131,38 @@ def toggle_visibility(id):
     except Exception as e:
         app.log.error(f"An error occurred: {str(e)}")
         return {"status": False, "message": "Internal Server Error"}, 500
+    
+@app.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
+def update_listing_field_route(id):
+    try:
+        # Get the field and the new value from the request body
+        request_body = app.current_request.json_body
+        field = request_body.get("field")
+        new_value = request_body.get("value")
+
+        # Check if the listing exists
+        existing_listing = db.get_item(table_name="zap-listings", key={"listingId": id})
+        if not existing_listing:
+            raise NotFoundError("Listing not found")
+
+        # Update the specified field in the database
+        updated_listing = db.update_listing_field(
+            table_name="zap-listings",
+            key={"listingId": id},
+            field=field,
+            new_value=new_value,
+        )
+
+        # Check the result and return the appropriate response
+        if updated_listing:
+            return {"status": True, "updated_listing": updated_listing}
+        else:
+            raise NotFoundError("Listing not found")
+
+    except NotFoundError as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": str(e)}, 404
+
+    except Exception as e:
+        app.log.error(f"An error occurred: {str(e)}")
+        return {"status": False, "message": "Internal Server Error"}, 500
