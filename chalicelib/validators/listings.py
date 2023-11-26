@@ -1,10 +1,11 @@
+from typing import Union
 from pydantic import BaseModel, validator
 from chalicelib.models.listing import Listing
 
 
 class UpdateFieldRequest(BaseModel):
     field: str
-    value: str
+    value: Union[str, list]
 
     @validator("field")
     def validate_field(cls, v):
