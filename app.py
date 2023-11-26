@@ -1,7 +1,8 @@
-from chalice import Chalice, NotFoundError
+from chalice import Chalice, NotFoundError, BadRequestError
 from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
+from pydantic import ValidationError
 
 
 import uuid
@@ -134,12 +135,17 @@ def toggle_visibility(id):
     
 @app.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 def update_listing_field_route(id):
-    try:
-        # Get the field and the new value from the request body
-        request_body = app.current_request.json_body
-        field = request_body.get("field")
-        new_value = request_body.get("value")
+    from chalicelib.validators.listings import UpdateFieldRequest
 
+    try:
+        # Validate given field type
+        request_body = app.current_request.json_body
+        request_body = UpdateFieldRequest(**request_body)
+
+        # Get field and value from object
+        field = request_body.field
+        new_value = request_body.value
+        
         # Check if the listing exists
         existing_listing = db.get_item(table_name="zap-listings", key={"listingId": id})
         if not existing_listing:
@@ -158,6 +164,11 @@ def update_listing_field_route(id):
             return {"status": True, "updated_listing": updated_listing}
         else:
             raise NotFoundError("Listing not found")
+    
+    except ValidationError as e:
+        # https://aws.github.io/chalice/topics/views.html
+        app.log.error(f"An error occurred: {str(e)}")
+        raise BadRequestError(str(e))
 
     except NotFoundError as e:
         app.log.error(f"An error occurred: {str(e)}")
