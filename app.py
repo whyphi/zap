@@ -4,6 +4,8 @@ from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
 from pydantic import ValidationError
 
+from chalicelib.services.ListingService import listing_service
+
 
 import uuid
 
@@ -56,50 +58,25 @@ def get_applicants():
 @app.route("/create", methods=["POST"], cors=True)
 def create_listing():
     """Creates a new listing with given information"""
-    data = app.current_request.json_body
-    listing_id = str(uuid.uuid4())
-    data["listingId"] = listing_id
-    data["isVisible"] = True
-
-    db.put_data(table_name="zap-listings", data=data)
-
-    return {"msg": True}
-
-
-@app.route("/listings", methods=["GET"], cors=True)
-def get_all_listings():
-    """Gets all listings available"""
-    data = db.get_all(table_name="zap-listings")
-    return data
+    return listing_service.create(app.current_request.json_body)
 
 
 @app.route("/listings/{id}", methods=["GET"], cors=True)
 def get_listing(id):
     """Gets a listing from id"""
-    data = db.get_item(table_name="zap-listings", key={"listingId": id})
+    return listing_service.get(id)
 
-    return data
+
+@app.route("/listings", methods=["GET"], cors=True)
+def get_all_listings():
+    """Gets all listings available"""
+    return listing_service.get_all()
+
 
 @app.route("/listings/{id}", methods=["DELETE"], cors=True)
 def delete_listing(id):
     """Deletes a listing with the given ID."""
-    try:
-        # Perform delete operation in the database
-        deleted_listing = db.delete_item(table_name="zap-listings", key={"listingId": id})
-
-        # Check the result and return the appropriate response
-        if deleted_listing:
-            return {"status": True}
-        else:
-            raise NotFoundError("Listing not found")
-
-    except NotFoundError as e:
-        app.log.error(f"An error occurred: {str(e)}")
-        return {"status": False, "message": "Listing not found"}, 404
-
-    except Exception as e:
-        app.log.error(f"An error occurred: {str(e)}")
-        return {"status": False, "message": "Internal Server Error"}, 500
+    return listing_service.delete(id)
 
 
 @app.route("/applicant/{applicant_id}", methods=["GET"], cors=True)
@@ -119,20 +96,9 @@ def get_all_applicants(listing_id):
 @app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
 def toggle_visibility(id):
     """Toggles visibilility of a given <listing_id>"""
-    try:
-        # Perform visibility toggle in the database
-        data = db.toggle_visibility(table_name="zap-listings", key={"listingId": id})
+    return listing_service.toggle_visibility(id)
 
-        # Check the result and return the appropriate response
-        if data:
-            return {"status": True}
-        else:
-            return {"status": False,  "message": "Invalid listing ID"}, 400
 
-    except Exception as e:
-        app.log.error(f"An error occurred: {str(e)}")
-        return {"status": False, "message": "Internal Server Error"}, 500
-    
 @app.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 def update_listing_field_route(id):
     from chalicelib.validators.listings import UpdateFieldRequest
@@ -145,7 +111,7 @@ def update_listing_field_route(id):
         # Get field and value from object
         field = request_body.field
         new_value = request_body.value
-        
+
         # Check if the listing exists
         existing_listing = db.get_item(table_name="zap-listings", key={"listingId": id})
         if not existing_listing:
@@ -164,7 +130,7 @@ def update_listing_field_route(id):
             return {"status": True, "updated_listing": updated_listing}
         else:
             raise NotFoundError("Listing not found")
-    
+
     except ValidationError as e:
         # https://aws.github.io/chalice/topics/views.html
         app.log.error(f"An error occurred: {str(e)}")
