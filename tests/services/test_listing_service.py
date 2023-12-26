@@ -3,36 +3,31 @@ from unittest.mock import MagicMock, patch
 from chalicelib.services.ListingService import ListingService
 
 SAMPLE_LISTING = {
-    "website": "why-phi.com",
-    "listingId": "123",
-    "colleges": {
-        "COM": False,
-        "QST": False,
-        "CDS": False,
-        "CAS": False,
-        "Wheelock": False,
-        "Sargent": False,
-        "Pardee": False,
-        "SHA": False,
-        "CGS": False,
-        "ENG": True,
-        "CFA": False,
-        "Other": False
-    },
-    "responses": [],
-    "lastName": "lastName",
-    "linkedin": "linkedin.com",
-    "email": "test@test.com",
-    "firstName": "firstName",
-    "applicantId": "1",
-    "minor": "test",
-    "image": "https://whyphi-zap.s3.amazonaws.com/prod/image/584bdc74-edfd-48e1-9905-d354f40430f6/test_test_2d1ec5ed-11e6-4258-bb6a-4dcaea085f96.png",
-    "gpa": "test",
-    "gradYear": "test",
-    "resume": "https://whyphi-zap.s3.amazonaws.com/prod/resume/584bdc74-edfd-48e1-9905-d354f40430f6/test_test_2d1ec5ed-11e6-4258-bb6a-4dcaea085f96.pdf",
-    "major": "test",
-    "phone": "123-123-1234",
-    "preferredName": "test"
+    "deadline": "2023-09-19T04:00:00.000Z",
+    "dateCreated": "2023-09-15T17:03:29.156Z",
+    "questions": [
+        {
+            "question": "Tell us about yourself. What are you passionate about/what motivates you? (200 words max)",
+            "additional": "",
+        },
+        {"question": "Why did you rush PCT? (200 words max)", "additional": ""},
+        {
+            "question": " How do you plan to contribute to PCT? Why should we choose you? (200 words max)",
+            "additional": "",
+        },
+        {
+            "question": "What are your career goals, and why did you choose this particular path? (200 words max)",
+            "additional": "",
+        },
+        {
+            "question": "Describe your most notable brother interaction at any rush event. (200 words max)",
+            "additional": "",
+        },
+        {"question": "Which rush events did you attend?", "additional": ""},
+    ],
+    "listingId": "1",
+    "isVisible": True,
+    "title": "PCT Fall 2023 Rush Application",
 }
 
 
@@ -40,6 +35,31 @@ SAMPLE_LISTING = {
 def service():
     with patch("chalicelib.services.ListingService.db") as mock_db:
         yield ListingService(), mock_db
+
+
+def test_create_listing(service):
+    import uuid
+
+    CREATED_LISTING = {
+        "title": "test",
+        "questions": [],
+        "deadline": "2023-12-26T22:56:15.035Z",
+        "dateCreated": "2023-12-26T22:56:20.287Z",
+    }
+    CREATED_LISTING_ID = "12345678123456781234567812345678"
+
+    with patch("uuid.uuid4") as mock_uuid:
+        mock_uuid.return_value = uuid.UUID(CREATED_LISTING_ID)
+        listing_service, mock_db = service
+        result = listing_service.create(CREATED_LISTING)
+
+        CREATED_LISTING["listingId"] = CREATED_LISTING_ID
+        CREATED_LISTING["isVisislbe"] = True
+        mock_db.put_data.assert_called_once_with(
+            table_name="zap-listings", data=CREATED_LISTING
+        )
+
+        assert result == {"msg": True}
 
 
 def test_get_listing(service):

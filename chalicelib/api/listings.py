@@ -9,7 +9,7 @@ listings_api = Blueprint(__name__)
 @listings_api.route("/create", methods=["POST"], cors=True)
 def create_listing():
     """Creates a new listing with given information"""
-    return listing_service.create(app.current_request.json_body)
+    return listing_service.create(listings_api.current_request.json_body)
 
 
 @listings_api.route("/listings/{id}", methods=["GET"], cors=True)
