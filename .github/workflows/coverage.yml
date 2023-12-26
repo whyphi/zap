@@ -29,7 +29,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: .coverage.xml
+          path: coverage.xml
       - name: Download tests coverage report
         uses: actions/download-artifact@v3
         with:
@@ -37,5 +37,5 @@ jobs:
       - name: Get and report coverage
         uses: orgoro/coverage@v3.1
         with:
-          coverageFile: .coverage.xml
+          coverageFile: coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
