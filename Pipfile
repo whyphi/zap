@@ -7,6 +7,9 @@ name = "pypi"
 chalice = "*"
 boto3 = "*"
 pydantic = "*"
+pytest = "*"
+coverage = "*"
+pytest-cov = "*"
 
 [dev-packages]
 
