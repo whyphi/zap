@@ -145,3 +145,5 @@ class DBResource:
         )
 
         return listing_item["Item"]
+
+db = DBResource()
