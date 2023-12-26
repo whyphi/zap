@@ -1,43 +1,42 @@
-name: 'coverage'
+name: "coverage"
 on:
-    pull_request:
-        branches:
-            - main
-            - staging
-            - dev/*
+  pull_request:
+    branches:
+      - main
+      - staging
+      - dev/*
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-        cache: 'pip' # caching pip dependencies
-    - name: Install pipenv
-      run: pip install pipenv
-    - run: pipenv requirements > requirements.txt
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-    - name: Run unit test suite
-      run: pytest --cov-report xml --cov=. tests/
-    - uses: actions/upload-artifact@v3
-      with:
-        name: coverage
-        path: .coverage.xml
-
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+          cache: "pip" # caching pip dependencies
+      - name: Install pipenv
+        run: pip install pipenv
+      - run: pipenv requirements > requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run unit test suite
+        run: pytest --cov-report xml --cov=. tests/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: .coverage.xml
 
   report-coverage:
-      runs-on: ubuntu-latest
-      needs: [build]
-      if: github.event_name == 'pull_request'
-      steps:
-        - name: Download tests coverage report
-            uses: actions/download-artifact@v3
-            with:
-              name: coverage
-        - name: Get and report coverage 
-          uses: orgoro/coverage@v3.1
-          with:
-              coverageFile: .coverage.xml
-              token: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Download tests coverage report
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage
+      - name: Get and report coverage
+        uses: orgoro/coverage@v3.1
+        with:
+          coverageFile: .coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
