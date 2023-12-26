@@ -5,6 +5,7 @@ from chalicelib.utils import get_file_extension_from_base64
 from pydantic import ValidationError
 
 from chalicelib.services.ListingService import listing_service
+from chalicelib.handlers.error_handler import handle_exceptions
 
 
 import uuid
@@ -100,46 +101,10 @@ def toggle_visibility(id):
 
 
 @app.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
+@handle_exceptions
 def update_listing_field_route(id):
-    from chalicelib.validators.listings import UpdateFieldRequest
-
     try:
-        # Validate given field type
-        request_body = app.current_request.json_body
-        request_body = UpdateFieldRequest(**request_body)
-
-        # Get field and value from object
-        field = request_body.field
-        new_value = request_body.value
-
-        # Check if the listing exists
-        existing_listing = db.get_item(table_name="zap-listings", key={"listingId": id})
-        if not existing_listing:
-            raise NotFoundError("Listing not found")
-
-        # Update the specified field in the database
-        updated_listing = db.update_listing_field(
-            table_name="zap-listings",
-            key={"listingId": id},
-            field=field,
-            new_value=new_value,
-        )
-
-        # Check the result and return the appropriate response
-        if updated_listing:
-            return {"status": True, "updated_listing": updated_listing}
-        else:
-            raise NotFoundError("Listing not found")
+        listing_service.update_field_route(id, app.current_request.json_body)
 
     except ValidationError as e:
-        # https://aws.github.io/chalice/topics/views.html
-        app.log.error(f"An error occurred: {str(e)}")
-        raise BadRequestError(str(e))
-
-    except NotFoundError as e:
-        app.log.error(f"An error occurred: {str(e)}")
-        return {"status": False, "message": str(e)}, 404
-
-    except Exception as e:
-        app.log.error(f"An error occurred: {str(e)}")
-        return {"status": False, "message": "Internal Server Error"}, 500
+        return {"status": False, "message": str(e)}, 400
