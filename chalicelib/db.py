@@ -3,6 +3,7 @@ import boto3
 from botocore import errorfactory
 from chalicelib.models.listing import Listing
 from boto3.dynamodb.conditions import Key
+from typing import Optional, Union
 
 
 class DBResource:
@@ -48,6 +49,23 @@ class DBResource:
         return {}
 
     @add_env_suffix
+    def delete_item(self, table_name: str, key: dict):
+        """Deletes an item identified by the key."""
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Try to delete the item
+        try:
+            response = table.delete_item(Key=key)
+            if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                return True
+            else:
+                return False
+        except errorfactory.client.exceptions.ResourceNotFoundException:
+            # If the item does not exist, return False
+            return False
+
+    @add_env_suffix
     def get_applicants(self, table_name: str, listing_id: str):
         secondary_key_name = "listingId"
         secondary_key_value = listing_id
@@ -77,7 +95,7 @@ class DBResource:
         listing_item = table.get_item(Key=key)
         if "Item" not in listing_item:
             return None
-        
+
         curr_listing = Listing.from_dynamodb_item(listing_item["Item"])
 
         # If the item exists, update the visibility field to the opposite value
@@ -98,3 +116,34 @@ class DBResource:
 
         # Return None if the item doesn't exist
         return None
+
+    @add_env_suffix
+    def update_listing_field(
+        self,
+        table_name: str,
+        key: dict,
+        field: str,
+        new_value: Union[str, int, float, bool],
+    ) -> Optional[dict]:
+        """Updates a specific field of a listing identified by the key."""
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Fetch the current item
+        listing_item = table.get_item(Key=key)
+        if "Item" not in listing_item:
+            return None
+
+        # Update the specified field with the new value
+        update_expression = f"SET {field} = :value"
+        expression_attribute_values = {":value": new_value}
+
+        table.update_item(
+            Key=key,
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attribute_values,
+        )
+
+        return listing_item["Item"]
+
+db = DBResource()
