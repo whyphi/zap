@@ -26,14 +26,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-      - uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: coverage.xml
-      - name: Download tests coverage report
-        uses: actions/download-artifact@v3
-        with:
-          name: coverage
       - name: Get and report coverage
         uses: orgoro/coverage@v3.1
         with:
