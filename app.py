@@ -1,16 +1,15 @@
-from chalice import Chalice, NotFoundError, BadRequestError
+from chalice import Chalice
 from chalicelib.db import DBResource
 from chalicelib.s3 import S3Client
 from chalicelib.utils import get_file_extension_from_base64
-from pydantic import ValidationError
-
-from chalicelib.services.ListingService import listing_service
-from chalicelib.handlers.error_handler import handle_exceptions
-
 
 import uuid
 
+from chalicelib.api.listings import listings_api
+
 app = Chalice(app_name="zap")
+app.register_blueprint(listings_api)
+
 db = DBResource()
 s3 = S3Client()
 
@@ -56,30 +55,6 @@ def get_applicants():
     return data
 
 
-@app.route("/create", methods=["POST"], cors=True)
-def create_listing():
-    """Creates a new listing with given information"""
-    return listing_service.create(app.current_request.json_body)
-
-
-@app.route("/listings/{id}", methods=["GET"], cors=True)
-def get_listing(id):
-    """Gets a listing from id"""
-    return listing_service.get(id)
-
-
-@app.route("/listings", methods=["GET"], cors=True)
-def get_all_listings():
-    """Gets all listings available"""
-    return listing_service.get_all()
-
-
-@app.route("/listings/{id}", methods=["DELETE"], cors=True)
-def delete_listing(id):
-    """Deletes a listing with the given ID."""
-    return listing_service.delete(id)
-
-
 @app.route("/applicant/{applicant_id}", methods=["GET"], cors=True)
 def get_applicant(applicant_id):
     """Get an applicant from <applicant_id>"""
@@ -92,19 +67,3 @@ def get_all_applicants(listing_id):
     """Gets all applicants from <listing_id>"""
     data = db.get_applicants(table_name="zap-applications", listing_id=listing_id)
     return data
-
-
-@app.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
-def toggle_visibility(id):
-    """Toggles visibilility of a given <listing_id>"""
-    return listing_service.toggle_visibility(id)
-
-
-@app.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
-@handle_exceptions
-def update_listing_field_route(id):
-    try:
-        listing_service.update_field_route(id, app.current_request.json_body)
-
-    except ValidationError as e:
-        return {"status": False, "message": str(e)}, 400
