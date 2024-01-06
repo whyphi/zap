@@ -10,6 +10,7 @@ pydantic = "*"
 pytest = "*"
 coverage = "*"
 pytest-cov = "*"
+moto = {extras = ["dynamodb"], version = "*"}
 
 [dev-packages]
 
