@@ -40,6 +40,8 @@ def service():
 def test_create_listing(service):
     import uuid
 
+    listing_service, mock_db = service
+
     CREATED_LISTING = {
         "title": "test",
         "questions": [],
@@ -50,9 +52,7 @@ def test_create_listing(service):
 
     with patch("uuid.uuid4") as mock_uuid:
         mock_uuid.return_value = uuid.UUID(CREATED_LISTING_ID)
-        listing_service, mock_db = service
         result = listing_service.create(CREATED_LISTING)
-
         CREATED_LISTING["listingId"] = CREATED_LISTING_ID
         CREATED_LISTING["isVisislbe"] = True
         mock_db.put_data.assert_called_once_with(
