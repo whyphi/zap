@@ -40,7 +40,7 @@ def toggle_visibility(id):
 @handle_exceptions
 def update_listing_field_route(id):
     try:
-        listing_service.update_field_route(id, app.current_request.json_body)
+        listing_service.update_field_route(id, listings_api.current_request.json_body)
 
     except ValidationError as e:
         return {"status": False, "message": str(e)}, 400
