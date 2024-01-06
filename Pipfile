@@ -7,6 +7,7 @@ name = "pypi"
 chalice = "*"
 boto3 = "*"
 "pymongo[srv]" = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
