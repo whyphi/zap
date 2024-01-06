@@ -4,11 +4,12 @@ import uuid
 
 
 class AlumniService:
-    def __init__(self):
-        pass
+    def __init__(self, table_name: str):
+        self.table_name = table_name
 
     def create(self, data):
         print(data)
+        # db.put_data(self.table_name, data)
         pass
 
     def get_all(self):
@@ -21,4 +22,4 @@ class AlumniService:
         pass
 
 
-alumni_service = AlumniService()
+alumni_service = AlumniService(table_name="zap-alumni")
