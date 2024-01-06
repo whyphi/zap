@@ -39,8 +39,4 @@ def toggle_visibility(id):
 @listings_api.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 @handle_exceptions
 def update_listing_field_route(id):
-    try:
-        listing_service.update_field_route(id, listings_api.current_request.json_body)
-
-    except ValidationError as e:
-        return {"status": False, "message": str(e)}, 400
+    return listing_service.update_field_route(id, listings_api.current_request.json_body)
