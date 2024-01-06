@@ -8,6 +8,7 @@ chalice = "*"
 boto3 = "*"
 "pymongo[srv]" = "*"
 python-dotenv = "*"
+pydantic = "*"
 
 [dev-packages]
 

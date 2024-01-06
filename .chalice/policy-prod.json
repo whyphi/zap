@@ -16,13 +16,13 @@
 				"logs:PutLogEvents"
 			],
 			"Resource": [
-				"arn:aws:dynamodb:us-east-1::table/zap-applications-dev",
-				"arn:aws:dynamodb:us-east-1::table/zap-listings-dev",
-				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-dev",
-				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-listings-dev",
-				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-dev/index/listingId-index",
+				"arn:aws:dynamodb:us-east-1::table/zap-applications-prod",
+				"arn:aws:dynamodb:us-east-1::table/zap-listings-prod",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-prod",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-listings-prod",
+				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-prod/index/listingId-index",
 				"arn:*:logs:*:*:*",
-				"arn:aws:s3:::whyphi-zap/dev/*"
+				"arn:aws:s3:::whyphi-zap/prod/*"
 			]
 		}
 	]
