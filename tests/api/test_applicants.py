@@ -34,8 +34,8 @@ def test_get_all_applicants():
         # Mock applicant_service's get method
         with patch(
             "chalicelib.services.ApplicantService.applicant_service.get_all"
-        ) as mock_get:
-            mock_get.return_value = TEST_APPLICANTS
+        ) as mock_get_all:
+            mock_get_all.return_value = TEST_APPLICANTS
             response = client.http.get(f"/applicants")
 
             # Check the response status code and body
@@ -49,8 +49,8 @@ def test_get_all_applicants_from_listing():
         # Mock applicant_service's get method
         with patch(
             "chalicelib.services.ApplicantService.applicant_service.get_all_from_listing"
-        ) as mock_get:
-            mock_get.return_value = TEST_APPLICANTS
+        ) as mock_get_all_from_listing:
+            mock_get_all_from_listing.return_value = TEST_APPLICANTS
             response = client.http.get(f"/applicants/test_listing_id")
 
             # Check the response status code and body
