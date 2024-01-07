@@ -28,7 +28,7 @@ def delete_alumni(id):
 @handle_exceptions
 def update_alumni_field_route(id):
     try:
-        alumni_service.update_field_route(id, app.current_request.json_body)
+        alumni_service.update_field_route(id, alumni_api.current_request.json_body)
 
     except ValidationError as e:
         return {"status": False, "message": str(e)}, 400
