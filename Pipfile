@@ -7,6 +7,10 @@ name = "pypi"
 chalice = "*"
 boto3 = "*"
 pydantic = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+chardet = "*"
 
 [dev-packages]
 
