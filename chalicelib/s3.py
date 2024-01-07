@@ -39,4 +39,4 @@ class S3Client:
         
         return object_url
 
-    
+s3 = S3Client()
