@@ -6,6 +6,12 @@ from pydantic import ValidationError
 listings_api = Blueprint(__name__)
 
 
+# TODO: Change /submit to /apply
+@listings_api.route("/submit", methods=["POST"], cors=True)
+def apply_to_listing():
+    return listing_service.apply(listings_api.current_request.json_body)
+
+
 @listings_api.route("/create", methods=["POST"], cors=True)
 def create_listing():
     """Creates a new listing with given information"""
