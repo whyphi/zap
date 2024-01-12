@@ -85,3 +85,5 @@ class SesMailSender:
             raise
         else:
             return message_id
+
+ses = SesMailSender(boto3.client('ses'))

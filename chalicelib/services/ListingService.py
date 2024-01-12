@@ -3,6 +3,7 @@ from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.db import db
 from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
+from chalicelib.modules.ses import ses, SesDestination
 
 import uuid
 from pydantic import ValidationError
@@ -20,7 +21,7 @@ class ListingService:
         db.put_data(table_name="zap-listings", data=data)
 
         return {"msg": True}
-    
+
     def apply(self, data):
         """Handles the form submission application"""
 
@@ -49,8 +50,32 @@ class ListingService:
         # Upload data to DynamoDB
         db.put_data(table_name="zap-applications", data=data)
 
-        return {"msg": True, "resumeUrl": resume_url}
+        # Send confirmation email
+        email_content = f"""
+            Dear {data["firstName"]},<br><br>
 
+            Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
+
+            Find out more about us, visit our website: https://bupct.com/<br><br>
+
+            Regards,<br>
+            Phi Chi Theta, Zeta Chapter<br><br>
+
+            ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
+        """
+
+        # TODO: Add email exception (invalid email causes error)
+
+        ses_destination = SesDestination(tos=[data["email"]])
+        ses.send_email(
+            source="noreply@why-phi.com",
+            destination=ses_destination,
+            subject="Thank you for applying to PCT",
+            text=email_content,
+            html=email_content
+        )
+
+        return {"msg": True, "resumeUrl": resume_url}
 
     def get(self, id: str):
         data = db.get_item(table_name="zap-listings", key={"listingId": id})
