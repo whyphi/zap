@@ -3,6 +3,7 @@
 import logging
 import boto3
 from botocore.exceptions import ClientError
+
 # from ses_identities import SesIdentity
 # from ses_templates import SesTemplate
 # from ses_generate_smtp_credentials import calculate_key
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class SesDestination:
     """Contains data about an email destination."""
+
     def __init__(self, tos, ccs=None, bccs=None):
         """
         :param tos: The list of recipients on the 'To:' line.
@@ -26,16 +28,20 @@ class SesDestination:
         """
         :return: The destination data in the format expected by Amazon SES.
         """
-        svc_format = {'ToAddresses': self.tos}
+        svc_format = {"ToAddresses": self.tos}
         if self.ccs is not None:
-            svc_format['CcAddresses'] = self.ccs
+            svc_format["CcAddresses"] = self.ccs
         if self.bccs is not None:
-            svc_format['BccAddresses'] = self.bccs
+            svc_format["BccAddresses"] = self.bccs
         return svc_format
+
+
 # snippet-end:[python.example_code.ses.SesDestination]
+
 
 class SesMailSender:
     """Encapsulates functions to send emails with Amazon SES."""
+
     def __init__(self, ses_client):
         """
         :param ses_client: A Boto3 Amazon SES client.
@@ -59,16 +65,18 @@ class SesMailSender:
         :return: The ID of the message, assigned by Amazon SES.
         """
         send_args = {
-            'Source': source,
-            'Destination': destination.to_service_format(),
-            'Message': {
-                'Subject': {'Data': subject},
-                'Body': {'Text': {'Data': text}, 'Html': {'Data': html}}}}
+            "Source": source,
+            "Destination": destination.to_service_format(),
+            "Message": {
+                "Subject": {"Data": subject},
+                "Body": {"Text": {"Data": text}, "Html": {"Data": html}},
+            },
+        }
         if reply_tos is not None:
-            send_args['ReplyToAddresses'] = reply_tos
+            send_args["ReplyToAddresses"] = reply_tos
         try:
             response = self.ses_client.send_email(**send_args)
-            message_id = response['MessageId']
+            message_id = response["MessageId"]
             # logger.info(
             #     "Sent mail %s from %s to %s.", message_id, source, destination.tos)
         except ClientError:
@@ -77,4 +85,3 @@ class SesMailSender:
             raise
         else:
             return message_id
-
