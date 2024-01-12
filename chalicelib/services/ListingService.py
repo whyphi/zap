@@ -96,7 +96,7 @@ class ListingService:
         except ValidationError as e:
             # https://aws.github.io/chalice/topics/views.html
             # app.log.error(f"An error occurred: {str(e)}")
-            raise ValidationError(str(e))
+            raise Exception(str(e))
 
         except NotFoundError as e:
             # app.log.error(f"An error occurred: {str(e)}")
@@ -104,7 +104,7 @@ class ListingService:
 
         except Exception as e:
             # app.log.error(f"An error occurred: {str(e)}")
-            raise e  # Re-raise the exception for global handling
+            raise Exception(e)  # Re-raise the exception for global handling
 
 
 listing_service = ListingService()
