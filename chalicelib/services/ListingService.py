@@ -56,7 +56,7 @@ class ListingService:
 
             Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
 
-            Find out more about us, visit our website: https://bupct.com/<br><br>
+            To find out more about us, visit our website: https://bupct.com/<br><br>
 
             Regards,<br>
             Phi Chi Theta, Zeta Chapter<br><br>
