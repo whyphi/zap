@@ -6,7 +6,13 @@ name = "pypi"
 [packages]
 chalice = "*"
 boto3 = "*"
+"pymongo[srv]" = "*"
+python-dotenv = "*"
 pydantic = "*"
+pytest = "*"
+coverage = "*"
+pytest-cov = "*"
+moto = {extras = ["dynamodb"], version = "*"}
 
 [dev-packages]
 
