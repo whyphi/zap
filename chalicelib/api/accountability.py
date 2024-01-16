@@ -1,7 +1,7 @@
 
 from chalicelib.db import DBResource
 from chalice import Blueprint
-from googlelib import spreadsheetapi
+import spreadsheetapi
 
 
 import uuid
