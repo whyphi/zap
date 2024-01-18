@@ -6,19 +6,49 @@ class InsightsService:
     def __init__(self):
         pass
 
-    # def get(self, id: str):
-    #     data = db.get_item(table_name="zap-applications", key={"applicantId": id})
-    #     return data
-
-    # def get_all(self):
-    #     data = db.get_all(table_name="zap-applications")
-    #     return data
-
     def get_insights_from_listing(self, id: str):
         data = db.get_applicants(table_name="zap-applications", listing_id=id)
-        
+
+        # initialize metrics
+        majors = {}
+        num_applicants = len(data)
+        avgGpa, avgGradYear = 0, 0
+
         # iterate over each applicant and perform analytics
-        return data
+        for applicant in data:
+            gpa, gradYear, major = applicant["gpa"], applicant["gradYear"], applicant["major"]
+
+            # attempt conversions (if fail, then skip)
+            try:
+                floatGpa = float(gpa)
+                avgGpa += floatGpa
+            except ValueError:
+                pass
+            try:
+                floatGrad = float(gradYear)
+                avgGradYear += floatGrad
+            except ValueError:
+                pass
+            
+            # parse majors (if non-empty)
+            if major:
+                if major in majors:
+                    majors[major] += 1
+                else:
+                    majors[major] = 1
+        
+        avgGpa /= num_applicants
+        avgGradYear /= num_applicants
+
+        insights = {
+            "applicantCount": num_applicants,
+            "avgGpa": avgGpa,
+            "commonMajor": "pizza",
+            "avgGradYear": avgGradYear,
+            "avgResponseLength": 0
+        }
+        
+        return insights, data
 
 
 insights_service = InsightsService()
