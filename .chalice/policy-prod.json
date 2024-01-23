@@ -32,7 +32,7 @@
 				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-prod/index/listingId-index",
 				"arn:*:logs:*:*:*",
 				"arn:aws:s3:::whyphi-zap/prod/*",
-				"arn:aws:ses:us-east-1:280776660572:identity/noreply@why-phi.com"
+				"arn:aws:ses:us-east-1:280776660572:identity/why-phi.com"
 			]
 		}
 	]
