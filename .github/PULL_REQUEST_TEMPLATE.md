@@ -10,6 +10,7 @@
 - [ ] Chore: technical debt, workflow improvements
 - [ ] Feature: New feature (non-breaking change which adds functionality)
 - [ ] Documentation: This change requires a documentation update
+- [ ] Merge: Pushing features to an upper envrironment
 
 ## Tests Performed
 

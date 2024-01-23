@@ -6,6 +6,12 @@ from pydantic import ValidationError
 listings_api = Blueprint(__name__)
 
 
+# TODO: Change /submit to /apply
+@listings_api.route("/submit", methods=["POST"], cors=True)
+def apply_to_listing():
+    return listing_service.apply(listings_api.current_request.json_body)
+
+
 @listings_api.route("/create", methods=["POST"], cors=True)
 def create_listing():
     """Creates a new listing with given information"""
@@ -27,16 +33,27 @@ def get_all_listings():
 @listings_api.route("/listings/{id}", methods=["DELETE"], cors=True)
 def delete_listing(id):
     """Deletes a listing with the given ID."""
-    return listing_service.delete(id)
+    try:
+        return listing_service.delete(id)
+    except Exception as e:
+        listings_api.log.debug(e)
 
 
 @listings_api.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
 def toggle_visibility(id):
     """Toggles visibilility of a given <listing_id>"""
-    return listing_service.toggle_visibility(id)
+    try:
+        return listing_service.toggle_visibility(id)
+    except Exception as e:
+        listings_api.log.debug(e)
 
 
 @listings_api.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 @handle_exceptions
 def update_listing_field_route(id):
-    return listing_service.update_field_route(id, listings_api.current_request.json_body)
+    try:
+        return listing_service.update_field_route(
+            id, listings_api.current_request.json_body
+        )
+    except Exception as e:
+        listings_api.log.debug(e)

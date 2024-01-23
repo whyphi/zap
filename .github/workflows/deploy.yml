@@ -1,26 +1,38 @@
 name: Chalice Deployment
 
 on:
-  push
+  push:
+    branches:
+      - main
+      - staging
+      - dev
+
 
 jobs:
   deployment-prod:
     name: deploy-prod
     runs-on: ubuntu-latest
-    if: contains('
-        refs/heads/staging
-        refs/heads/main
-      ', github.ref)
+    # if: contains('
+    #     refs/heads/staging
+    #     refs/heads/main
+    #   ', github.ref)
+
+    if: (github.ref == 'refs/heads/main')
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
         python-version: '3.9'
         cache: 'pip' # caching pip dependencies
     - run: pip install pipenv
     - run: pipenv requirements > requirements.txt
     - run: pip install -r requirements.txt
-    - run: chalice deploy --stage prod
+
+    - name: Chalice deploy to prod
+      run: chalice deploy --stage prod
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -29,17 +41,24 @@ jobs:
   deployment-dev:
     name: deploy-dev
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/heads/dev')
+    # if: startsWith(github.ref, 'refs/heads/dev')
+    if: (github.ref == 'refs/heads/staging')
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+  
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip' # caching pip dependencies
+
       - run: pip install pipenv
       - run: pipenv requirements > requirements.txt
       - run: pip install -r requirements.txt
-      - run: chalice deploy
+
+      - name: Chalice deploy to dev
+        run: chalice deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

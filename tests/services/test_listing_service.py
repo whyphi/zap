@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from chalicelib.services.ListingService import ListingService
 from chalice import NotFoundError
 from pydantic import ValidationError
+import json
 
 
 SAMPLE_LISTINGS = [
@@ -91,7 +92,7 @@ def test_delete_listing(service):
     mock_db.delete_item.return_value = True
 
     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-    assert result["status"]
+    assert result["statusCode"] == 200
 
 
 def test_delete_listing_not_found(service):
@@ -100,10 +101,8 @@ def test_delete_listing_not_found(service):
     mock_db.delete_item.return_value = False
 
     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-    body, code = result
 
-    assert not body["status"]
-    assert code == 404
+    assert result["statusCode"] == 404
 
 
 def test_delete_listing_exception(service):
@@ -112,10 +111,8 @@ def test_delete_listing_exception(service):
     mock_db.delete_item.side_effect = Exception("Error")
 
     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-    body, code = result
 
-    assert not body["status"]
-    assert code == 500
+    assert result["statusCode"] == 500
 
 
 def test_toggle_visibility(service):
@@ -124,12 +121,12 @@ def test_toggle_visibility(service):
     mock_db.toggle_visibility.return_value = True
     mock_listing_id = SAMPLE_LISTINGS[0]["listingId"]
 
-    result = listing_service.toggle_visibility(mock_listing_id)
+    result = json.loads(listing_service.toggle_visibility(mock_listing_id))
 
     mock_db.toggle_visibility.assert_called_once_with(
         table_name="zap-listings", key={"listingId": mock_listing_id}
     )
-    assert result["status"]
+    assert result["statusCode"] == 200
 
 
 def test_toggle_visibility_invalid_listing_id(service):
@@ -138,16 +135,15 @@ def test_toggle_visibility_invalid_listing_id(service):
     mock_db.toggle_visibility.return_value = None
     mock_listing_id = "3"
 
-    result = listing_service.toggle_visibility(mock_listing_id)
+    result = json.loads(listing_service.toggle_visibility(mock_listing_id))
 
     mock_db.toggle_visibility.assert_called_once_with(
         table_name="zap-listings", key={"listingId": mock_listing_id}
     )
 
-    body, code = result
+    print(result)
 
-    assert not body["status"]
-    assert code == 400
+    assert result["statusCode"] == 400
 
 
 def test_toggle_visibility_exception(service):
@@ -155,11 +151,8 @@ def test_toggle_visibility_exception(service):
 
     mock_db.toggle_visibility.side_effect = Exception("Error")
 
-    result = listing_service.toggle_visibility(SAMPLE_LISTINGS[0]["listingId"])
-    body, code = result
-
-    assert not body["status"]
-    assert code == 500
+    result = json.loads(listing_service.toggle_visibility(SAMPLE_LISTINGS[0]["listingId"]))
+    assert result["statusCode"] == 500
 
 
 def test_update_field_route(service):
@@ -179,12 +172,12 @@ def test_update_field_route(service):
 
         mock_db.update_listing_field.return_value = mock_updated_listing
 
-        result = listing_service.update_field_route(
+        result = json.loads(listing_service.update_field_route(
             SAMPLE_LISTINGS[0]["listingId"],
             {"field": "title", "value": "new test title"},
-        )
+        ))
 
-        assert result["status"]
+        assert result["statusCode"] == 200
         assert result["updated_listing"] == mock_updated_listing
 
 
