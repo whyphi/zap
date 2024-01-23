@@ -33,8 +33,7 @@
 				"arn:*:logs:*:*:*",
 				"arn:aws:s3:::whyphi-zap/dev/*",
 				"arn:aws:ses:us-east-1:280776660572:identity/why-phi.com"
-			],
-			"Principal":"*"
+			]
 		}
 	]
 }
