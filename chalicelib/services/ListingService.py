@@ -5,6 +5,7 @@ from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
 
+import json
 import uuid
 from pydantic import ValidationError
 
@@ -72,7 +73,7 @@ class ListingService:
             destination=ses_destination,
             subject="Thank you for applying to PCT",
             text=email_content,
-            html=email_content
+            html=email_content,
         )
 
         return {"msg": True, "resumeUrl": resume_url}
@@ -94,17 +95,17 @@ class ListingService:
 
             # Check the result and return the appropriate response
             if deleted_listing:
-                return {"status": True}
+                return {"statusCode": 200}
             else:
                 raise NotFoundError("Listing not found")
 
         except NotFoundError as e:
             # app.log.error(f"An error occurred: {str(e)}")
-            return {"status": False, "message": "Listing not found"}, 404
+            return {"statusCode": 404, "message": "Listing not found"}
 
         except Exception as e:
             # app.log.error(f"An error occurred: {str(e)}")
-            return {"status": False, "message": "Internal Server Error"}, 500
+            return {"statusCode": 500, "message": "Internal Server Error"}
 
     def toggle_visibility(self, id: str):
         try:
@@ -115,12 +116,12 @@ class ListingService:
 
             # Check the result and return the appropriate response
             if data:
-                return {"status": True}
+                return json.dumps({"statusCode": 200})
             else:
-                return {"status": False, "message": "Invalid listing ID"}, 400
+                return json.dumps({"statusCode": 400, "message": "Invalid listing ID"})
 
         except Exception as e:
-            return {"status": False, "message": "Internal Server Error"}, 500
+            return json.dumps({"statusCode": 500, "message": str(e)})
 
     def update_field_route(self, id, data):
         try:
@@ -147,7 +148,7 @@ class ListingService:
 
             # Check the result and return the appropriate response
             if updated_listing:
-                return {"status": True, "updated_listing": updated_listing}
+                return json.dumps({"statusCode": 200, "updated_listing": updated_listing})
             else:
                 raise NotFoundError("Listing not found")
 
