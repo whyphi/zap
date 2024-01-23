@@ -20,7 +20,9 @@
                 "dynamodb:PutItem",
 				"logs:CreateLogStream",
 				"logs:CreateLogGroup",
-				"logs:PutLogEvents"
+				"logs:PutLogEvents",
+				"ses:SendEmail",
+				"ses:SendRawEmail"
 			],
 			"Resource": [
 				"arn:aws:dynamodb:us-east-1::table/zap-applications-prod",
