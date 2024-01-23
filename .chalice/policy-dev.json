@@ -8,16 +8,16 @@
 				"s3:PutObject",
 				"dynamodb:Query",
 				"dynamodb:BatchGet*",
-                "dynamodb:DescribeStream",
-                "dynamodb:DescribeTable",
-                "dynamodb:Get*",
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:BatchWrite*",
-                "dynamodb:CreateTable",
-                "dynamodb:Delete*",
-                "dynamodb:Update*",
-                "dynamodb:PutItem",
+				"dynamodb:DescribeStream",
+				"dynamodb:DescribeTable",
+				"dynamodb:Get*",
+				"dynamodb:Query",
+				"dynamodb:Scan",
+				"dynamodb:BatchWrite*",
+				"dynamodb:CreateTable",
+				"dynamodb:Delete*",
+				"dynamodb:Update*",
+				"dynamodb:PutItem",
 				"logs:CreateLogStream",
 				"logs:CreateLogGroup",
 				"logs:PutLogEvents",
@@ -31,7 +31,8 @@
 				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-listings-dev",
 				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-dev/index/listingId-index",
 				"arn:*:logs:*:*:*",
-				"arn:aws:s3:::whyphi-zap/dev/*"
+				"arn:aws:s3:::whyphi-zap/dev/*",
+				"arn:aws:ses:us-east-1:280776660572:identity/noreply@why-phi.com"
 			]
 		}
 	]
