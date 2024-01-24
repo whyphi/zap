@@ -22,7 +22,8 @@
 				"logs:CreateLogGroup",
 				"logs:PutLogEvents",
 				"ses:SendEmail",
-				"ses:SendRawEmail"
+				"ses:SendRawEmail",
+				"ssm:GetParameters"
 			],
 			"Resource": [
 				"arn:aws:dynamodb:us-east-1::table/zap-applications-dev",
