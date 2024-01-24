@@ -39,11 +39,19 @@ class InsightsService:
         
         avgGpa /= num_applicants
         avgGradYear /= num_applicants
+        commonMajor, count = "", 0
+
+        # update most common major
+        for major, freq in majors.items():
+            if freq > count:
+                commonMajor = major
+                count = freq
 
         insights = {
             "applicantCount": num_applicants,
             "avgGpa": avgGpa,
-            "commonMajor": "pizza",
+            "commonMajor": commonMajor,
+            "countCommonMajor": count,
             "avgGradYear": avgGradYear,
             "avgResponseLength": 0
         }
