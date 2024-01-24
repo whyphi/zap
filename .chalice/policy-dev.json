@@ -23,7 +23,7 @@
 				"logs:PutLogEvents",
 				"ses:SendEmail",
 				"ses:SendRawEmail",
-				"ssm:GetParameters"
+				"ssm:GetParameter"
 			],
 			"Resource": [
 				"arn:aws:dynamodb:us-east-1::table/zap-applications-dev",
