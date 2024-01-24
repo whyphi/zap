@@ -1,24 +1,17 @@
 from pymongo.mongo_client import MongoClient
-import os
-from dotenv import load_dotenv
+import boto3
 
-load_dotenv()
-
-mongo_admin_user = os.getenv("MONGO_ADMIN_USER")
-mongo_admin_password = os.getenv("MONGO_ADMIN_PASSWORD")
-
-
-class MongoService:
+class MongoModule:
     """Manages connections to MongoDB."""
 
     def __init__(self):
         """Establishes connection to MongoDB server"""
-        self.user = mongo_admin_user
-        self.password = mongo_admin_password
+        self.ssm_client = boto3.client("ssm")
+        self.user = self.ssm_client.get_parameter(Name='/Zap/MONGO_ADMIN_USER', WithDecryption=True)["Parameter"]["Value"]
+        self.password = self.ssm_client.get_parameter(Name='/Zap/MONGO_ADMIN_PASSWORD', WithDecryption=True)["Parameter"]["Value"]
         self.uri = f"mongodb+srv://{self.user}:{self.password}@cluster0.9gtht.mongodb.net/?retryWrites=true&w=majority"
 
-        # Create a new client and connect to the server
-        self.client = MongoClient(self.uri)
+        self.mongo_client = MongoClient(self.uri)
 
     def connect(self):
         # Send a ping to confirm a successful connection
@@ -41,10 +34,19 @@ class MongoService:
         # for u in self.users:
         #    print(u)
         return self.users
+    
+    def get_all_data_from_collection(self, collection: str):
+        """Fetches all data from the specified collection."""
+        try:
+            # Use the specified collection to fetch data
+            cursor = self.mongo_client.vault[collection].find()
+            data = list(cursor)  # Convert the cursor to a list
+    
+        except Exception as e:
+            print(e)
+            return None  # Handle the exception gracefully, you may want to log it or take other actions
 
-        # insert more CRUD methods here
+        return data
 
 
-# MongoTester = MongoService()
-# MongoTester.connect()
-# MongoTester.get_all_data()
+mongo_module = MongoModule()
