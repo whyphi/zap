@@ -5,15 +5,25 @@
 			"Sid": "GeneralPolicy",
 			"Effect": "Allow",
 			"Action": [
-				"dynamodb:BatchGetItem",
 				"s3:PutObject",
-				"dynamodb:PutItem",
-				"dynamodb:GetItem",
-				"dynamodb:Scan",
 				"dynamodb:Query",
+				"dynamodb:BatchGet*",
+				"dynamodb:DescribeStream",
+				"dynamodb:DescribeTable",
+				"dynamodb:Get*",
+				"dynamodb:Query",
+				"dynamodb:Scan",
+				"dynamodb:BatchWrite*",
+				"dynamodb:CreateTable",
+				"dynamodb:Delete*",
+				"dynamodb:Update*",
+				"dynamodb:PutItem",
 				"logs:CreateLogStream",
 				"logs:CreateLogGroup",
-				"logs:PutLogEvents"
+				"logs:PutLogEvents",
+				"ses:SendEmail",
+				"ses:SendRawEmail",
+				"ssm:GetParameter"
 			],
 			"Resource": [
 				"arn:aws:dynamodb:us-east-1::table/zap-applications-prod",
@@ -22,7 +32,10 @@
 				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-listings-prod",
 				"arn:aws:dynamodb:us-east-1:280776660572:table/zap-applications-prod/index/listingId-index",
 				"arn:*:logs:*:*:*",
-				"arn:aws:s3:::whyphi-zap/prod/*"
+				"arn:aws:s3:::whyphi-zap/prod/*",
+				"arn:aws:ses:us-east-1:280776660572:identity/why-phi.com",
+				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/MONGO_ADMIN_USER",
+				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/MONGO_ADMIN_PASSWORD"
 			]
 		}
 	]
