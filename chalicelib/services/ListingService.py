@@ -29,13 +29,6 @@ class ListingService:
     def apply(self, data):
         """Handles the form submission application"""
 
-        """
-        TODO: Implement validator for deadline and isVisible
-        - Since making an additional call to fetch listing data is unnecessary, maybe the frontend can pass these
-        attributes as a header, that the backend can read and validate before processing the data. 
-        - The apply method can take in deadline and isVisible as another input to work with.
-        """
-
         try:
             Application.model_validate(data)
 
