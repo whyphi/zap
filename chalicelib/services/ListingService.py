@@ -1,4 +1,5 @@
-from chalice import NotFoundError, BadRequestError
+from chalice import NotFoundError, Response
+from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.db import db
 from chalicelib.s3 import s3
@@ -7,6 +8,8 @@ from chalicelib.modules.ses import ses, SesDestination
 
 import json
 import uuid
+from datetime import datetime, timedelta, timezone
+
 from pydantic import ValidationError
 
 
@@ -33,50 +36,76 @@ class ListingService:
         - The apply method can take in deadline and isVisible as another input to work with.
         """
 
-        applicant_id = str(uuid.uuid4())
-        data["applicantId"] = applicant_id
+        try:
+            Application.model_validate(data)
 
-        # Upload resume and retrieve, then set link to data
-        resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
-        resume_url = s3.upload_binary_data(resume_path, data["resume"])
+            listing_data = db.get_item(
+                table_name="zap-listings", key={"listingId": data["listingId"]}
+            )
 
-        # Upload photo and retrieve, then set link to data
-        image_extension = get_file_extension_from_base64(data["image"])
-        image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
-        image_url = s3.upload_binary_data(image_path, data["image"])
+            if not listing_data["isVisible"]:
+                raise NotFoundError("Invalid listing.")
 
-        # Reset data properties as S3 url
-        data["resume"], data["image"] = resume_url, image_url
+            deadline = datetime.strptime(
+                listing_data["deadline"], "%Y-%m-%dT%H:%M:%S.%f%z"
+            )
+            utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+            curr_est_time = utc_now.astimezone(timezone(timedelta(hours=-5)))
 
-        # Upload data to DynamoDB
-        db.put_data(table_name="zap-applications", data=data)
+            if curr_est_time > deadline:
+                return Response(
+                    body="Sorry. The deadline for this application has passed.",
+                    headers={"Content-Type": "text/plain"},
+                    status_code=410,
+                )
 
-        # Send confirmation email
-        email_content = f"""
-            Dear {data["firstName"]},<br><br>
+            applicant_id = str(uuid.uuid4())
+            data["applicantId"] = applicant_id
 
-            Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
+            # Upload resume and retrieve, then set link to data
+            resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
+            resume_url = s3.upload_binary_data(resume_path, data["resume"])
 
-            To find out more about us, visit our website: https://bupct.com/<br><br>
+            # Upload photo and retrieve, then set link to data
+            image_extension = get_file_extension_from_base64(data["image"])
+            image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
+            image_url = s3.upload_binary_data(image_path, data["image"])
 
-            Regards,<br>
-            Phi Chi Theta, Zeta Chapter<br><br>
+            # Reset data properties as S3 url
+            data["resume"], data["image"] = resume_url, image_url
 
-            ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
-        """
+            # Upload data to DynamoDB
+            db.put_data(table_name="zap-applications", data=data)
 
-        # TODO: Add email exception (invalid email causes error)
+            # Send confirmation email
+            email_content = f"""
+                Dear {data["firstName"]},<br><br>
 
-        ses_destination = SesDestination(tos=[data["email"]])
-        ses.send_email(
-            source="noreply@why-phi.com",
-            destination=ses_destination,
-            subject="Thank you for applying to PCT",
-            text=email_content,
-            html=email_content,
-        )
+                Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
 
-        return {"msg": True, "resumeUrl": resume_url}
+                To find out more about us, visit our website: https://bupct.com/<br><br>
+
+                Regards,<br>
+                Phi Chi Theta, Zeta Chapter<br><br>
+
+                ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
+            """
+
+            # TODO: Add email exception (invalid email causes error)
+
+            ses_destination = SesDestination(tos=[data["email"]])
+            ses.send_email(
+                source="noreply@why-phi.com",
+                destination=ses_destination,
+                subject="Thank you for applying to PCT",
+                text=email_content,
+                html=email_content,
+            )
+
+            return {"msg": True, "resumeUrl": resume_url}
+
+        except ValidationError as e:
+            return {"msg": False, "error": str(e)}
 
     def get(self, id: str):
         data = db.get_item(table_name="zap-listings", key={"listingId": id})
@@ -148,7 +177,9 @@ class ListingService:
 
             # Check the result and return the appropriate response
             if updated_listing:
-                return json.dumps({"statusCode": 200, "updated_listing": updated_listing})
+                return json.dumps(
+                    {"statusCode": 200, "updated_listing": updated_listing}
+                )
             else:
                 raise NotFoundError("Listing not found")
 
