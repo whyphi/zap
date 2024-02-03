@@ -54,6 +54,7 @@ class ListingService:
 
             applicant_id = str(uuid.uuid4())
             data["applicantId"] = applicant_id
+            data["dateApplied"] = curr_est_time.isoformat()
 
             # Upload resume and retrieve, then set link to data
             resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
