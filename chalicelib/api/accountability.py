@@ -31,16 +31,15 @@ def semester_list():
 @accountability_api.route('/spreadsheet', methods=['POST'], cors=True)
 def GoogleSheet():
     try:
-        request_data = accountability_api.current_request.json_body
-        url = request_data.get('link')
-
+        url = accountability_api.current_request.json_body
+        #url = request_data.get('link')
         fileId = extractFileId(url)
         datarange = 'Brothers'
         data = getdata(fileId, datarange)
 
         if data is None:
             return {'msg': False}
-
+        
         return data  
     except Exception as e:
         return {'error': str(e)}, 500

@@ -6,8 +6,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 """
-pip install google-auth-oauthlib
-pip install google-auth
+pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
 """
 
 
@@ -65,13 +64,8 @@ def extractFileId(url):
       #extract google spread sheet ID
       #https://docs.google.com/spreadsheets/d/spreadsheetId/edit#gid=0     
       #after https://docs.google.com/spreadsheets/d/ ; before /
-      
-      i = 40
-      s=url[i]
-      while(s!='/'):
-            s=url[i+1]
-            i+=1
 
-      fileId = url[40:i]
+
+      fileId = str(url)[39:82]
       
       return fileId
