@@ -6,8 +6,13 @@ class InsightsService:
     def __init__(self):
         pass
 
+    # TO-DO: helper function for pie charts
+
     def get_insights_from_listing(self, id: str):
+        # fetch applicants from `get_applicants` endpoint in `db.py`
         data = db.get_applicants(table_name="zap-applications", listing_id=id)
+
+        # TO-DO: call helper function to get distribution stats (for pie charts)
 
         # initialize metrics
         majors = {}
@@ -39,24 +44,24 @@ class InsightsService:
         
         avgGpa /= num_applicants
         avgGradYear /= num_applicants
-        commonMajor, count = "", 0
+        commonMajor, countCommonMajor = "", 0
 
         # update most common major
         for major, freq in majors.items():
-            if freq > count:
+            if freq > countCommonMajor:
                 commonMajor = major
-                count = freq
+                countCommonMajor = freq
 
         insights = {
             "applicantCount": num_applicants,
-            "avgGpa": avgGpa,
+            "avgGpa": round(avgGpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
             "commonMajor": commonMajor,
-            "countCommonMajor": count,
-            "avgGradYear": avgGradYear,
-            "avgResponseLength": 0
+            # "countCommonMajor": countCommonMajor,         # TO-DO: maybe do something with common major counts
+            "avgGradYear": int(avgGradYear),
+            # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
         
-        return insights, data
+        return insights
 
 
 insights_service = InsightsService()
