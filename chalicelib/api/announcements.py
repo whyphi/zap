@@ -1,6 +1,6 @@
 from chalice import Blueprint
 from chalicelib.modules.ses import ses, SesDestination
-from chalicelib.modules.mongo import MongoService
+from chalicelib.modules.mongo import MongoModule
 import boto3
 
 announcements_api = Blueprint(__name__)
@@ -11,7 +11,7 @@ ses_client = boto3.client("ses")
 # why is GET needed?
 @announcements_api.route("/announcement", methods=["GET", "POST"], cors=True)
 def send_announcement():
-    MongoServer = MongoService()
+    MongoServer = MongoModule()
     MongoServer.connect()
     users_data = MongoServer.get_all_data()
 
