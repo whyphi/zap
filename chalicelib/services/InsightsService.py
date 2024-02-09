@@ -6,14 +6,21 @@ class InsightsService:
     def __init__(self):
         pass
 
-    # TO-DO: helper function for pie charts
-
     def get_insights_from_listing(self, id: str):
+
+        ''' driver function of insights (returns both `dashboard` and `distribution`) '''
+
         # fetch applicants from `get_applicants` endpoint in `db.py`
         data = db.get_applicants(table_name="zap-applications", listing_id=id)
 
-        # TO-DO: call helper function to get distribution stats (for pie charts)
+        # call helper functions
+        dashboard = InsightsService.get_dashboard_insights(data)
+        distribution = InsightsService.get_pie_chart_insights(data)
 
+        return dashboard, distribution
+    
+
+    def get_dashboard_insights(data):
         # initialize metrics
         majors = {}
         num_applicants = len(data)
@@ -52,7 +59,7 @@ class InsightsService:
                 commonMajor = major
                 countCommonMajor = freq
 
-        insights = {
+        dashboard = {
             "applicantCount": num_applicants,
             "avgGpa": round(avgGpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
             "commonMajor": commonMajor,
@@ -60,8 +67,85 @@ class InsightsService:
             "avgGradYear": int(avgGradYear),
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
-        
+
+        return dashboard
+
+
+    def get_pie_chart_insights(data):
+        ''' helper function for pie charts (should be function, not method within InsightsService) '''
+
+        # initialize return object
+        # value (list) structure : [ {name: string, value: int, applicants: Applicant[]}, ... , ... ]
+        insights = {
+            "colleges": [],
+            "gpa": [],
+            "gradYear": [],
+            "major": [],
+            "minor": [],
+            "linkedin": [],
+            "website": [],
+        }
+    
+        # list of fields we want to consider
+        fields = ["colleges", "gpa", "gradYear", "major", "minor", "linkedin", "website"]
+
+        def findInsightsObject(metric, metric_val):
+            ''' helper to the helper lol -> checks for previously added metric_name '''
+
+            # check if college exists in `insights["colleges"]`
+            found_object = None
+
+            for insightsObject in insights[metric]:
+                if insightsObject["name"] == metric_val:
+                    found_object = insightsObject
+                    break
+            
+            return found_object
+
+        for applicant in data:
+            # iterate over applicant dictionary
+            for metric, val in applicant.items():
+                # case 1: ignore irrelevant metrics
+                if metric not in fields:
+                    continue
+                
+                # case 2: colleges -> iterate over colleges object
+                elif metric == "colleges":
+                    for college, status in val.items():
+                        # edge case: if status is false, skip (shouldn't contribute to count)
+                        if not status:
+                            continue
+
+                        # check if college exists in `insights["colleges"]`
+                        found_college = findInsightsObject(metric, college)
+                                
+                        if found_college:
+                            found_college["value"] += 1
+                            found_college["applicants"] += [applicant]
+                        else:
+                            newCollege = {"name": college, "value": 1, "applicants": [applicant]}
+                            insights[metric] += [newCollege]
+
+                        # skip to next metric
+                        continue 
+                        
+
+                # case 3: links -> linkedin or website
+                elif metric in ["linkedin", "website"]:
+                    val = True if len(val) > 0 else False
+                
+                # handle remaining fields
+                found_object = findInsightsObject(metric, val)
+                        
+                if found_object:
+                    found_object["value"] += 1
+                    found_object["applicants"] += [applicant]
+                else:
+                    newObject = {"name": val, "value": 1, "applicants": [applicant]}
+                    insights[metric] += [newObject]
+
         return insights
+        
 
 
 insights_service = InsightsService()
