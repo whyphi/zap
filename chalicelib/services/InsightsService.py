@@ -1,7 +1,6 @@
 # TO BE COMPLETED: create service to perform analytics (used in API...)
 from chalicelib.db import db
 
-
 class InsightsService:
     def __init__(self):
         pass
@@ -18,22 +17,28 @@ class InsightsService:
         distribution = InsightsService.get_pie_chart_insights(data)
 
         return dashboard, distribution
-    
+
 
     def get_dashboard_insights(data):
         # initialize metrics
         majors = {}
         num_applicants = len(data)
         avgGpa, avgGradYear = 0, 0
+        countGpa = 0
 
         # iterate over each applicant and perform analytics
         for applicant in data:
+            # convert major/minor to title case
+            applicant["major"] = applicant["major"].title()
+            applicant["minor"] = applicant["minor"].title()
+
             gpa, gradYear, major = applicant["gpa"], applicant["gradYear"], applicant["major"]
 
             # attempt conversions (if fail, then skip)
             try:
                 floatGpa = float(gpa)
                 avgGpa += floatGpa
+                countGpa += 1
             except ValueError:
                 pass
             try:
@@ -49,7 +54,7 @@ class InsightsService:
                 else:
                     majors[major] = 1
         
-        avgGpa /= num_applicants
+        avgGpa /= countGpa
         avgGradYear /= num_applicants
         commonMajor, countCommonMajor = "", 0
 
@@ -62,7 +67,7 @@ class InsightsService:
         dashboard = {
             "applicantCount": num_applicants,
             "avgGpa": round(avgGpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
-            "commonMajor": commonMajor,
+            "commonMajor": commonMajor.title(),
             # "countCommonMajor": countCommonMajor,         # TO-DO: maybe do something with common major counts
             "avgGradYear": int(avgGradYear),
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
@@ -105,7 +110,7 @@ class InsightsService:
             # iterate over applicant dictionary
             for metric, val in applicant.items():
                 # redefine value if empty
-                val = 'N/A' if not val else val
+                val = 'N/A' if (not val or val == 'N/A') else val
 
                 # case 1: ignore irrelevant metrics
                 if metric not in fields:
