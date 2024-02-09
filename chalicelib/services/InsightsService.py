@@ -76,7 +76,7 @@ class InsightsService:
 
         # initialize return object
         # value (list) structure : [ {name: string, value: int, applicants: Applicant[]}, ... , ... ]
-        insights = {
+        distribution = {
             "colleges": [],
             "gpa": [],
             "gradYear": [],
@@ -92,12 +92,12 @@ class InsightsService:
         def findInsightsObject(metric, metric_val):
             ''' helper to the helper lol -> checks for previously added metric_name '''
 
-            # check if college exists in `insights["colleges"]`
+            # check if college exists in `distribution["colleges"]`
             found_object = None
 
-            for insightsObject in insights[metric]:
-                if insightsObject["name"] == metric_val:
-                    found_object = insightsObject
+            for distributionObject in distribution[metric]:
+                if distributionObject["name"] == metric_val:
+                    found_object = distributionObject
                     break
             
             return found_object
@@ -116,7 +116,7 @@ class InsightsService:
                         if not status:
                             continue
 
-                        # check if college exists in `insights["colleges"]`
+                        # check if college exists in `distribution["colleges"]`
                         found_college = findInsightsObject(metric, college)
                                 
                         if found_college:
@@ -124,7 +124,7 @@ class InsightsService:
                             found_college["applicants"] += [applicant]
                         else:
                             newCollege = {"name": college, "value": 1, "applicants": [applicant]}
-                            insights[metric] += [newCollege]
+                            distribution[metric] += [newCollege]
 
                         # skip to next metric
                         continue 
@@ -142,9 +142,9 @@ class InsightsService:
                     found_object["applicants"] += [applicant]
                 else:
                     newObject = {"name": val, "value": 1, "applicants": [applicant]}
-                    insights[metric] += [newObject]
+                    distribution[metric] += [newObject]
 
-        return insights
+        return distribution
         
 
 
