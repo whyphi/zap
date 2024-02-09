@@ -91,8 +91,6 @@ class InsightsService:
 
         def findInsightsObject(metric, metric_val):
             ''' helper to the helper lol -> checks for previously added metric_name '''
-            # if not val:
-            print("####", metric, metric_val)
             # check if college exists in `distribution["colleges"]`
             found_object = None
 
@@ -107,7 +105,7 @@ class InsightsService:
             # iterate over applicant dictionary
             for metric, val in applicant.items():
                 # redefine value if empty
-                val = 'False' if not val else val
+                val = 'N/A' if not val else val
 
                 # case 1: ignore irrelevant metrics
                 if metric not in fields:
@@ -134,9 +132,9 @@ class InsightsService:
                     continue 
                         
 
-                # case 3: links -> linkedin or website
-                elif metric in ["linkedin", "website"]:
-                    val = 'True' if val else 'False'
+                # # case 3: links -> linkedin or website
+                # elif metric in ["linkedin", "website"]:
+                #     val = 'True' if val else 'False'
                 
                 # handle remaining fields
                 found_object = findInsightsObject(metric, val)
