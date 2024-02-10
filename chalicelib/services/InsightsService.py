@@ -120,7 +120,7 @@ class InsightsService:
                     val = 'N/A' if (not val or val == 'N/A') else 'True'
                  
                 # case 3: handle other metrics with mepty val (attempt to handle some edge cases)       # TO-DO: update Form.tsx in frontend to prevent bad inputs
-                elif metric == 'minor' and (not val or val.lower() in ['na', 'n/a', 'n a',  'n / a']):
+                elif metric in ['minor', 'gpa'] and (not val or val.lower() in ['na', 'n/a', 'n a',  'n / a']):
                     # general case
                     val = 'N/A'
                 
