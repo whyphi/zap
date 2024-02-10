@@ -13,6 +13,7 @@ class InsightsService:
         data = db.get_applicants(table_name="zap-applications", listing_id=id)
 
         # call helper functions
+        # NOTE: `get_dashboard_insights` updates the data object to ensure all majors/minors are Title() cased
         dashboard = InsightsService.get_dashboard_insights(data)
         distribution = InsightsService.get_pie_chart_insights(data)
 
@@ -109,14 +110,21 @@ class InsightsService:
         for applicant in data:
             # iterate over applicant dictionary
             for metric, val in applicant.items():
-                # redefine value if empty
-                val = 'N/A' if (not val or val == 'N/A') else val
 
                 # case 1: ignore irrelevant metrics
                 if metric not in fields:
                     continue
                 
-                # case 2: colleges -> iterate over colleges object
+                # case 2: metric is a url
+                if metric in ["linkedin", "website"]:
+                    val = 'N/A' if (not val or val == 'N/A') else 'True'
+                 
+                # case 3: handle other metrics with mepty val (attempt to handle some edge cases)       # TO-DO: update Form.tsx in frontend to prevent bad inputs
+                elif metric == 'minor' and (not val or val.lower() in ['na', 'n/a', 'n a',  'n / a']):
+                    # general case
+                    val = 'N/A'
+                
+                # case 4: colleges -> iterate over colleges object
                 elif metric == "colleges":
                     for college, status in val.items():
                         # edge case: if status is false, skip (shouldn't contribute to count)
@@ -135,11 +143,6 @@ class InsightsService:
 
                         # skip to next metric
                     continue 
-                        
-
-                # # case 3: links -> linkedin or website
-                # elif metric in ["linkedin", "website"]:
-                #     val = 'True' if val else 'False'
                 
                 # handle remaining fields
                 found_object = findInsightsObject(metric, val)
