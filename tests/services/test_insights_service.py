@@ -9,7 +9,7 @@ def service():
         yield InsightsService(), mock_db
 
 
-def test_get_applicant(service):
+def test_get_insights(service):
     insights_service, mock_db = service
 
     listing_id = "1"
@@ -24,7 +24,8 @@ def test_get_applicant(service):
     )
 
     assert len(result) == 2
-    assert result == [SAMPLE_DASHBOARD, SAMPLE_DISTRIBUTION]
+    assert result[0] == SAMPLE_DASHBOARD 
+    assert result[1] == SAMPLE_DISTRIBUTION
 
 
 
