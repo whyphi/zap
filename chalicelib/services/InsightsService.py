@@ -5,7 +5,7 @@ class InsightsService:
     def __init__(self):
         pass
 
-    # def get_insights_from_listing(self, id: str):
+    def get_insights_from_listing(self, id: str):
         ''' driver function of insights (returns both `dashboard` and `distribution`) '''
 
         # fetch applicants from `get_applicants` endpoint in `db.py`

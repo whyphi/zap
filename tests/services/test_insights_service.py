@@ -14,13 +14,13 @@ def test_get_applicant(service):
 
     listing_id = "1"
     # whenever get_item is called on the fake db, sample_data will be returned (create a deepcopy since it is being mutated)
-    mock_db.get_applicants.return_value = SAMPLE_APPLICANTS
+    mock_db.get_applicants.return_value = copy.deepcopy(SAMPLE_APPLICANTS)
 
     result = insights_service.get_insights_from_listing(listing_id)
     # confirm that database was called once with correct inputs
     mock_db.get_applicants.assert_called_once_with(
         table_name="zap-applications",
-        listing_id = listing_id
+        listing_id=listing_id
     )
 
     assert len(result) == 2
