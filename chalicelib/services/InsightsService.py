@@ -5,8 +5,7 @@ class InsightsService:
     def __init__(self):
         pass
 
-    def get_insights_from_listing(self, id: str):
-
+    # def get_insights_from_listing(self, id: str):
         ''' driver function of insights (returns both `dashboard` and `distribution`) '''
 
         # fetch applicants from `get_applicants` endpoint in `db.py`
@@ -14,13 +13,13 @@ class InsightsService:
 
         # call helper functions
         # NOTE: `get_dashboard_insights` updates the data object to ensure all majors/minors are Title() cased
-        dashboard = InsightsService.get_dashboard_insights(data)
-        distribution = InsightsService.get_pie_chart_insights(data)
+        dashboard = InsightsService._get_dashboard_insights(data)
+        distribution = InsightsService._get_pie_chart_insights(data)
 
         return dashboard, distribution
 
-
-    def get_dashboard_insights(data):
+    # private method (kinda)
+    def _get_dashboard_insights(data):
         # initialize metrics
         majors = {}
         num_applicants = len(data)
@@ -77,7 +76,7 @@ class InsightsService:
         return dashboard
 
 
-    def get_pie_chart_insights(data):
+    def _get_pie_chart_insights(data):
         ''' helper function for pie charts (should be function, not method within InsightsService) '''
 
         # initialize return object
