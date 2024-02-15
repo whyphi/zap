@@ -23,8 +23,8 @@ class InsightsService:
         # initialize metrics
         majors = {}
         num_applicants = len(data)
-        avgGpa, avgGradYear = 0, 0
-        countGpa = 0
+        avg_gpa, avg_grad_year = 0, 0
+        count_gpa = 0
 
         # iterate over each applicant and perform analytics
         for applicant in data:
@@ -32,18 +32,18 @@ class InsightsService:
             applicant["major"] = applicant["major"].title()
             applicant["minor"] = applicant["minor"].title()
 
-            gpa, gradYear, major = applicant["gpa"], applicant["gradYear"], applicant["major"]
+            gpa, grad_year, major = applicant["gpa"], applicant["gradYear"], applicant["major"]
 
             # attempt conversions (if fail, then skip)
             try:
-                floatGpa = float(gpa)
-                avgGpa += floatGpa
-                countGpa += 1
+                float_gpa = float(gpa)
+                avg_gpa += float_gpa
+                count_gpa += 1
             except ValueError:
                 pass
             try:
-                floatGrad = float(gradYear)
-                avgGradYear += floatGrad
+                float_grad = float(grad_year)
+                avg_grad_year += float_grad
             except ValueError:
                 pass
             
@@ -54,22 +54,22 @@ class InsightsService:
                 else:
                     majors[major] = 1
         
-        avgGpa /= countGpa
-        avgGradYear /= num_applicants
-        commonMajor, countCommonMajor = "", 0
+        avg_gpa /= count_gpa
+        avg_grad_year /= num_applicants
+        common_major, count_common_major = "", 0
 
         # update most common major
         for major, freq in majors.items():
-            if freq > countCommonMajor:
-                commonMajor = major
-                countCommonMajor = freq
+            if freq > count_common_major:
+                common_major = major
+                count_common_major = freq
 
         dashboard = {
             "applicantCount": num_applicants,
-            "avgGpa": round(avgGpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
-            "commonMajor": commonMajor.title(),
-            # "countCommonMajor": countCommonMajor,         # TO-DO: maybe do something with common major counts
-            "avgGradYear": int(avgGradYear),
+            "avgGpa": round(avg_gpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
+            "commonMajor": common_major.title(),
+            # "countCommonMajor": count_common_major,         # TO-DO: maybe do something with common major counts
+            "avgGradYear": int(avg_grad_year),
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
 
@@ -99,9 +99,9 @@ class InsightsService:
             # check if college exists in `distribution["colleges"]`
             found_object = None
 
-            for distributionObject in distribution[metric]:
-                if distributionObject["name"] == metric_val:
-                    found_object = distributionObject
+            for distribution_object in distribution[metric]:
+                if distribution_object["name"] == metric_val:
+                    found_object = distribution_object
                     break
             
             return found_object
@@ -150,8 +150,8 @@ class InsightsService:
                     found_object["value"] += 1
                     found_object["applicants"] += [applicant]
                 else:
-                    newObject = {"name": val, "value": 1, "applicants": [applicant]}
-                    distribution[metric] += [newObject]
+                    new_object = {"name": val, "value": 1, "applicants": [applicant]}
+                    distribution[metric] += [new_object]
 
         return distribution
 
