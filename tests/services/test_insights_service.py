@@ -4,8 +4,6 @@ from chalicelib.services.InsightsService import InsightsService
 import copy
 import json
 
-
-
 # Load JSON data from a file
 with open('tests/fixtures/sample_applicants.json') as f:
     SAMPLE_APPLICANTS = json.load(f)
