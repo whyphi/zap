@@ -27,6 +27,16 @@ class InsightsService:
         avg_gpa = 0
         count_gpa = 0
 
+        dashboard = {
+            "applicantCount": 0,
+            "avgGpa": "N/A",
+            "commonMajor": "N/A",
+            "commonGradYear": "N/A",
+        }
+
+        if num_applicants < 1:
+            return dashboard
+
         # iterate over each applicant and perform analytics
         for applicant in data:
             # convert major/minor to title case
