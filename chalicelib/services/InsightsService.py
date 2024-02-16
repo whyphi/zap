@@ -71,20 +71,11 @@ class InsightsService:
                     majors[major] = 1
         
         avg_gpa /= count_gpa
-        common_major, count_common_major = "", 0
-        common_grad_year, count_common_grad_year = "", 0
 
-        # update most common major
-        for major, freq in majors.items():
-            if freq > count_common_major:
-                common_major = major
-                count_common_major = freq
+        # calculate most common major/gradYear
+        common_major, count_common_major = max(majors.items(), key=lambda x: x[1])
+        common_grad_year, count_common_grad_year = max(grad_years.items(), key=lambda x: x[1])
         
-        # update most common grad_year
-        for year, freq in grad_years.items():
-            if freq > count_common_grad_year:
-                common_grad_year = year
-                count_common_grad_year = freq
 
         dashboard = {
             "applicantCount": num_applicants,
