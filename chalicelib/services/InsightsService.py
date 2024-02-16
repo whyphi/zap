@@ -22,8 +22,9 @@ class InsightsService:
     def _get_dashboard_insights(data):
         # initialize metrics
         majors = {}
+        grad_years = {}
         num_applicants = len(data)
-        avg_gpa, avg_grad_year = 0, 0
+        avg_gpa = 0
         count_gpa = 0
 
         # iterate over each applicant and perform analytics
@@ -40,11 +41,16 @@ class InsightsService:
                 avg_gpa += float_gpa
                 count_gpa += 1
             except ValueError:
+                print("skipping gpa: ", gpa)
                 pass
             try:
                 float_grad = float(grad_year)
-                avg_grad_year += float_grad
+                if float_grad in grad_years:
+                    grad_years[float_grad] += 1
+                else:
+                    grad_years[float_grad] = 1
             except ValueError:
+                print("skipping gradYear: ", grad_year)
                 pass
             
             # parse majors (if non-empty)
@@ -55,21 +61,27 @@ class InsightsService:
                     majors[major] = 1
         
         avg_gpa /= count_gpa
-        avg_grad_year /= num_applicants
         common_major, count_common_major = "", 0
+        common_grad_year, count_common_grad_year = "", 0
 
         # update most common major
         for major, freq in majors.items():
             if freq > count_common_major:
                 common_major = major
                 count_common_major = freq
+        
+        # update most common grad_year
+        for year, freq in grad_years.items():
+            if freq > count_common_grad_year:
+                common_grad_year = year
+                count_common_grad_year = freq
 
         dashboard = {
             "applicantCount": num_applicants,
             "avgGpa": round(avg_gpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
             "commonMajor": common_major.title(),
             # "countCommonMajor": count_common_major,         # TO-DO: maybe do something with common major counts
-            "avgGradYear": int(avg_grad_year),
+            "commonGradYear": int(common_grad_year),
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
 
