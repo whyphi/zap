@@ -138,7 +138,7 @@ class InsightsService:
                 
                 # case 2: metric is a url
                 if metric in ["linkedin", "website"]:
-                    val = 'N/A' if (not val or val == 'N/A') else 'True'
+                    val = 'N/A' if (not val or val == 'N/A') else 'hasURL'
                  
                 # case 3: handle other metrics with mepty val (attempt to handle some edge cases)       # TO-DO: update Form.tsx in frontend to prevent bad inputs
                 elif metric in ['minor', 'gpa'] and (not val or val.lower() in ['na', 'n/a', 'n a',  'n / a']):

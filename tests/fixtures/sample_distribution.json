@@ -1,10 +1,51 @@
-
 {
     "colleges": [
         {
             "name": "CAS",
-            "value": 1,
+            "value": 2,
             "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
                 {
                     "website": "",
                     "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
@@ -239,8 +280,50 @@
     "gpa": [
         {
             "name": "N/A",
-            "value": 1,
+            "value": 2,
             "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
                 {
                     "website": "",
                     "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
@@ -384,6 +467,96 @@
     ],
     "gradYear": [
         {
+            "name": "2028",
+            "value": 2,
+            "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
+                {
+                    "website": "https://github.com/wderocco8",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": false,
+                        "Wheelock": false,
+                        "Sargent": true,
+                        "Pardee": true,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "The Breaker",
+                    "linkedin": "https://www.linkedin.com/in/william-derocco/",
+                    "dateApplied": "2024-02-09T14:56:23.066712-05:00",
+                    "email": "wergewretr@gmail.com",
+                    "firstName": "Bob",
+                    "applicantId": "e6522255-8853-484e-ba9a-d6687fbc2bce",
+                    "minor": "Biology",
+                    "events": {
+                        "infoSession2": true,
+                        "professionalPanel": true,
+                        "infoSession1": true,
+                        "resumeWorkshop": true,
+                        "socialEvent": true
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/The Breaker_Bob_e6522255-8853-484e-ba9a-d6687fbc2bce.jpg",
+                    "gpa": "3.6",
+                    "hasGpa": true,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/The Breaker_Bob_e6522255-8853-484e-ba9a-d6687fbc2bce.pdf",
+                    "major": "Chaos Engineering",
+                    "gradMonth": "May",
+                    "phone": "2032091600",
+                    "preferredName": "Bobert"
+                }
+            ]
+        },
+        {
             "name": "2022",
             "value": 1,
             "applicants": [
@@ -478,22 +651,24 @@
                     "preferredName": ""
                 }
             ]
-        },
+        }
+    ],
+    "major": [
         {
-            "name": "2028",
+            "name": "Computer Science",
             "value": 1,
             "applicants": [
                 {
-                    "website": "https://github.com/wderocco8",
+                    "website": "",
                     "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
                     "colleges": {
                         "COM": false,
                         "QST": false,
                         "CDS": false,
-                        "CAS": false,
+                        "CAS": true,
                         "Wheelock": false,
-                        "Sargent": true,
-                        "Pardee": true,
+                        "Sargent": false,
+                        "Pardee": false,
                         "SHA": false,
                         "CGS": false,
                         "ENG": false,
@@ -501,34 +676,32 @@
                         "Other": false
                     },
                     "responses": [],
-                    "lastName": "The Breaker",
-                    "linkedin": "https://www.linkedin.com/in/william-derocco/",
-                    "dateApplied": "2024-02-09T14:56:23.066712-05:00",
-                    "email": "wergewretr@gmail.com",
-                    "firstName": "Bob",
-                    "applicantId": "e6522255-8853-484e-ba9a-d6687fbc2bce",
-                    "minor": "Biology",
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
                     "events": {
-                        "infoSession2": true,
-                        "professionalPanel": true,
+                        "infoSession2": false,
+                        "professionalPanel": false,
                         "infoSession1": true,
-                        "resumeWorkshop": true,
-                        "socialEvent": true
+                        "resumeWorkshop": false,
+                        "socialEvent": false
                     },
-                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/The Breaker_Bob_e6522255-8853-484e-ba9a-d6687fbc2bce.jpg",
-                    "gpa": "3.6",
-                    "hasGpa": true,
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
                     "gradYear": "2028",
-                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/The Breaker_Bob_e6522255-8853-484e-ba9a-d6687fbc2bce.pdf",
-                    "major": "Chaos Engineering",
-                    "gradMonth": "May",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
                     "phone": "2032091600",
-                    "preferredName": "Bobert"
+                    "preferredName": ""
                 }
             ]
-        }
-    ],
-    "major": [
+        },
         {
             "name": "Culinary Arts",
             "value": 1,
@@ -670,6 +843,96 @@
     ],
     "minor": [
         {
+            "name": "N/A",
+            "value": 2,
+            "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": false,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Coast",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-09T14:59:14.575818-05:00",
+                    "email": "wergewretr@gmail.com",
+                    "firstName": "Wes",
+                    "applicantId": "db3a4d5e-7480-4ef4-83c3-8abd1373764c",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": false,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Coast_Wes_db3a4d5e-7480-4ef4-83c3-8abd1373764c.png",
+                    "gpa": "3.99",
+                    "hasGpa": true,
+                    "gradYear": "2026",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Coast_Wes_db3a4d5e-7480-4ef4-83c3-8abd1373764c.pdf",
+                    "major": "Chaos Engineering",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                }
+            ]
+        },
+        {
             "name": "Rock Climbing",
             "value": 1,
             "applicants": [
@@ -714,54 +977,6 @@
                     "gradMonth": "January",
                     "phone": "2032091600",
                     "preferredName": "Jay"
-                }
-            ]
-        },
-        {
-            "name": "N/A",
-            "value": 1,
-            "applicants": [
-                {
-                    "website": "",
-                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
-                    "colleges": {
-                        "COM": false,
-                        "QST": false,
-                        "CDS": false,
-                        "CAS": false,
-                        "Wheelock": false,
-                        "Sargent": false,
-                        "Pardee": false,
-                        "SHA": false,
-                        "CGS": false,
-                        "ENG": false,
-                        "CFA": false,
-                        "Other": false
-                    },
-                    "responses": [],
-                    "lastName": "Coast",
-                    "linkedin": "",
-                    "dateApplied": "2024-02-09T14:59:14.575818-05:00",
-                    "email": "wergewretr@gmail.com",
-                    "firstName": "Wes",
-                    "applicantId": "db3a4d5e-7480-4ef4-83c3-8abd1373764c",
-                    "minor": "",
-                    "events": {
-                        "infoSession2": false,
-                        "professionalPanel": false,
-                        "infoSession1": false,
-                        "resumeWorkshop": false,
-                        "socialEvent": false
-                    },
-                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Coast_Wes_db3a4d5e-7480-4ef4-83c3-8abd1373764c.png",
-                    "gpa": "3.99",
-                    "hasGpa": true,
-                    "gradYear": "2026",
-                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Coast_Wes_db3a4d5e-7480-4ef4-83c3-8abd1373764c.pdf",
-                    "major": "Chaos Engineering",
-                    "gradMonth": "January",
-                    "phone": "2032091600",
-                    "preferredName": ""
                 }
             ]
         },
@@ -817,8 +1032,50 @@
     "linkedin": [
         {
             "name": "N/A",
-            "value": 2,
+            "value": 3,
             "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
                 {
                     "website": "",
                     "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
@@ -906,7 +1163,7 @@
             ]
         },
         {
-            "name": "true",
+            "name": "hasURL",
             "value": 1,
             "applicants": [
                 {
@@ -957,8 +1214,50 @@
     "website": [
         {
             "name": "N/A",
-            "value": 2,
+            "value": 3,
             "applicants": [
+                {
+                    "website": "",
+                    "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
+                    "colleges": {
+                        "COM": false,
+                        "QST": false,
+                        "CDS": false,
+                        "CAS": true,
+                        "Wheelock": false,
+                        "Sargent": false,
+                        "Pardee": false,
+                        "SHA": false,
+                        "CGS": false,
+                        "ENG": false,
+                        "CFA": false,
+                        "Other": false
+                    },
+                    "responses": [],
+                    "lastName": "Reynolds",
+                    "linkedin": "",
+                    "dateApplied": "2024-02-15T23:51:52.216457-05:00",
+                    "email": "wderocco@bu.edu",
+                    "firstName": "Ryan",
+                    "applicantId": "5eae4310-b9fc-4896-9997-e614615558a9",
+                    "minor": "",
+                    "events": {
+                        "infoSession2": false,
+                        "professionalPanel": false,
+                        "infoSession1": true,
+                        "resumeWorkshop": false,
+                        "socialEvent": false
+                    },
+                    "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.jpg",
+                    "gpa": "",
+                    "hasGpa": false,
+                    "gradYear": "2028",
+                    "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/a6612ed3-6d48-45c4-ab39-fbd946b8cbe8/Reynolds_Ryan_5eae4310-b9fc-4896-9997-e614615558a9.pdf",
+                    "major": "Computer Science",
+                    "gradMonth": "January",
+                    "phone": "2032091600",
+                    "preferredName": ""
+                },
                 {
                     "website": "",
                     "listingId": "a6612ed3-6d48-45c4-ab39-fbd946b8cbe8",
@@ -1046,7 +1345,7 @@
             ]
         },
         {
-            "name": "true",
+            "name": "hasURL",
             "value": 1,
             "applicants": [
                 {
