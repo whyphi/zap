@@ -14,7 +14,6 @@ with open('tests/fixtures/insights/general/sample_dashboard.json') as f:
 with open('tests/fixtures/insights/general/sample_distribution.json') as f:
     SAMPLE_DISTRIBUTION = json.load(f)
 
-
 # Load JSON data from a file (insights test - no applicants)
 with open('tests/fixtures/insights/noApplicants/sample_applicants.json') as f:
     SAMPLE_APPLICANTS_NO_APP = json.load(f)
