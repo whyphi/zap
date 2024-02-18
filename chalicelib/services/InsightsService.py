@@ -70,19 +70,33 @@ class InsightsService:
                 else:
                     majors[major] = 1
         
-        avg_gpa /= count_gpa
+        if count_gpa:
+            avg_gpa /= count_gpa
+        else:
+            avg_gpa = "N/A"
 
         # calculate most common major/gradYear
-        common_major, count_common_major = max(majors.items(), key=lambda x: x[1])
-        common_grad_year, count_common_grad_year = max(grad_years.items(), key=lambda x: x[1])
+        # Check if majors dictionary is not empty
+        if majors:
+            common_major, count_common_major = max(majors.items(), key=lambda x: x[1])
+        else:
+            # Handle the case when majors dictionary is empty
+            common_major, count_common_major = "N/A", 0
+
+        # Check if grad_years dictionary is not empty
+        if grad_years:
+            common_grad_year, count_common_grad_year = max(grad_years.items(), key=lambda x: x[1])
+        else:
+            # Handle the case when grad_years dictionary is empty
+            common_grad_year, count_common_grad_year = "N/A", 0
         
 
         dashboard = {
             "applicantCount": num_applicants,
-            "avgGpa": round(avg_gpa, 1),                     # round to 1 decimal place (e.g. 3.123 -> 3.1)
+            "avgGpa": round(avg_gpa, 1) if avg_gpa != "N/A" else avg_gpa,
             "commonMajor": common_major.title(),
             # "countCommonMajor": count_common_major,         # TO-DO: maybe do something with common major counts
-            "commonGradYear": int(common_grad_year),
+            "commonGradYear": int(common_grad_year) if common_grad_year != 'N/A' else common_grad_year,
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
 

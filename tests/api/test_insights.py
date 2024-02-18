@@ -5,10 +5,10 @@ import json
 
 from app import app
 
-with open('tests/fixtures/sample_dashboard.json') as f:
+with open('tests/fixtures/insights/general/sample_dashboard.json') as f:
     SAMPLE_DASHBOARD = json.load(f)
 
-with open('tests/fixtures/sample_distribution.json') as f:
+with open('tests/fixtures/insights/general/sample_distribution.json') as f:
     SAMPLE_DISTRIBUTION = json.load(f)
 
 
