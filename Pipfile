@@ -13,6 +13,7 @@ pytest = "*"
 coverage = "*"
 pytest-cov = "*"
 moto = {extras = ["dynamodb"], version = "*"}
+pyjwt = "*"
 
 [dev-packages]
 
