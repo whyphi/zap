@@ -3,6 +3,18 @@ import jwt
 
 
 def add_env_suffix(func):
+    """
+    Decorator for adding an environment suffix to a table name based on the provided 'env' flag.
+
+    Args:
+        func (function): The original function to be decorated.
+
+    Returns:
+        function: A wrapper function that modifies the input 'table_name' based on the 'env' flag.
+
+    - When calling my_function with env=True, the table_name will be suffixed with '-prod'.
+    - When calling my_function with env=False or without the 'env' flag, the table_name will be suffixed with '-dev'.
+    """
     def wrapper(self, table_name: str, *args, **kwargs):
         if "env" in kwargs and kwargs["env"]:
             table_name += "-prod"
@@ -15,6 +27,21 @@ def add_env_suffix(func):
 
 
 def auth(blueprint, role):
+    """
+    Decorator for authenticating and authorizing access to API routes.
+
+    Args:
+        blueprint (object): The Flask Blueprint object, providing access to the current request.
+        role (str): The required role for authorization.
+
+    Returns:
+        function: A decorator function that authenticates and authorizes access based on the provided role.
+
+    Raises:
+        401 Unauthorized: If the Authorization header is missing, the token is invalid, or the token has expired.
+        403 Forbidden: If the decoded role is not part of the given role.
+    """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             api_request = blueprint.current_request
