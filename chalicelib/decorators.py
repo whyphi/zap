@@ -31,8 +31,8 @@ def auth(blueprint, role):
     Decorator for authenticating and authorizing access to API routes.
 
     Args:
-        blueprint (object): The Flask Blueprint object, providing access to the current request.
-        role (str): The required role for authorization.
+        blueprint (object): The Chalice Blueprint object, providing access to the current request.
+        role (list[str]): The required role for authorization.
 
     Returns:
         function: A decorator function that authenticates and authorizes access based on the provided role.
