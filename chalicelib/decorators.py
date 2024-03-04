@@ -1,5 +1,6 @@
 import boto3
 import jwt
+from chalice import UnauthorizedError
 
 
 def add_env_suffix(func):
@@ -15,6 +16,7 @@ def add_env_suffix(func):
     - When calling my_function with env=True, the table_name will be suffixed with '-prod'.
     - When calling my_function with env=False or without the 'env' flag, the table_name will be suffixed with '-dev'.
     """
+
     def wrapper(self, table_name: str, *args, **kwargs):
         if "env" in kwargs and kwargs["env"]:
             table_name += "-prod"
@@ -46,10 +48,12 @@ def auth(blueprint, role):
         def wrapper(*args, **kwargs):
             api_request = blueprint.current_request
             auth_header = api_request.headers.get("Authorization", None)
-            _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
+            if not auth_header:
+                raise UnauthorizedError("Authorization header is missing.")
 
+            _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
             if not token:
-                return {"error": "Authorization header is missing"}, 401
+                raise UnauthorizedError("Token is missing.")
 
             try:
                 ssm_client = boto3.client("ssm")
@@ -63,10 +67,9 @@ def auth(blueprint, role):
                 return func(*args, **kwargs)
 
             except jwt.ExpiredSignatureError:
-                return {"error": "Unauthorized: Token has expired"}, 401
+                raise UnauthorizedError("Token has expired.")
             except jwt.InvalidTokenError:
-                print("test")
-                return {"error": "Unauthorized: Invalid token"}, 401
+                raise UnauthorizedError("Invalid token.")
 
         return wrapper
 
