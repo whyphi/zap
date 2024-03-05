@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1bce497fd117cb2d15d591e822bd69f3482ea5ed97c571949460ddc56f342d80"
+            "sha256": "94d059808e767efc05e169abca5407778efaf686b79e4b68897f40e451c9228f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -458,11 +458,11 @@
                 "dynamodb"
             ],
             "hashes": [
-                "sha256:71bb832a18b64f10fc4cec117b9b0e2305e5831d9a17eb74f6b9819ed7613843",
-                "sha256:7e27395e5c63ff9554ae14b5baa41bfe6d6b1be0e59eb02977c6ce28411246de"
+                "sha256:01aef6a489a725c8d725bd3dc6f70ff1bedaee3e2641752e4b471ff0ede4b4d7",
+                "sha256:93e0fd13b624bd79115494f833308c3641b2be0fc9f4f18aa9264aa01f6168e0"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==5.0.2"
+            "markers": "python_version >= '3.7'",
+            "version": "==4.2.13"
         },
         "packaging": {
             "hashes": [
@@ -490,10 +490,10 @@
         },
         "py-partiql-parser": {
             "hashes": [
-                "sha256:53053e70987dea2983e1990ad85f87a7d8cec13dd4a4b065a740bcfd661f5a6b",
-                "sha256:aeac8f46529d8651bbae88a1a6c14dc3aa38ebc4bc6bd1eb975044c0564246c6"
+                "sha256:427a662e87d51a0a50150fc8b75c9ebb4a52d49129684856c40c88b8c8e027e4",
+                "sha256:dc454c27526adf62deca5177ea997bf41fac4fd109c5d4c8d81f984de738ba8f"
             ],
-            "version": "==0.5.1"
+            "version": "==0.5.0"
         },
         "pycparser": {
             "hashes": [
