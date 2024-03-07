@@ -34,7 +34,7 @@ def auth(blueprint, roles):
 
     Args:
         blueprint (object): The Chalice Blueprint object, providing access to the current request.
-        role (list[str]): The required role for authorization.
+        roles (list[str]): The required role for authorization.
 
     Returns:
         function: A decorator function that authenticates and authorizes access based on the provided role.
