@@ -23,7 +23,6 @@ def create_listing():
 
 
 @listings_api.route("/listings/{id}", methods=["GET"], cors=True)
-@auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def get_listing(id):
     """Gets a listing from id"""
     return listing_service.get(id)
