@@ -21,7 +21,8 @@ def get_all_timeframes():
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):
-    pass
+    data = events_api.current_request.json_body
+    return event_service.create_event(timeframe_id, data["name"])
 
 
 @events_api.route(

@@ -77,7 +77,7 @@ class MongoModule:
         except Exception as e:
             print(e)
         return self.users
-    
+
     @add_env_suffix
     def get_all_data_from_collection(self, collection: str):
         """Fetches all data from the specified collection."""
@@ -99,7 +99,9 @@ class MongoModule:
                 return []
 
         except Exception as e:
-            print(f"An error occurred while fetching data from collection '{collection}': {e}")
+            print(
+                f"An error occurred while fetching data from collection '{collection}': {e}"
+            )
             raise  # Handle the exception gracefully, you may want to log it or take other actions
 
     @add_env_suffix
@@ -122,6 +124,37 @@ class MongoModule:
                 {"_id": ObjectId(document_id)}, {"$set": update_data}
             )
             if result.modified_count > 0:
+                print(f"Document with ID {document_id} updated successfully.")
+                return True
+            else:
+                print(f"No document with ID {document_id} found.")
+                return False
+        except Exception as e:
+            print(
+                f"An error occurred while updating document with ID {document_id}: {e}"
+            )
+            return False
+
+    @add_env_suffix
+    def update_document(self, collection, document_id, query):
+        """
+        Updates a document in the specified collection with the given ID.
+
+        Args:
+            collection (str): The name of the collection to update the document in.
+            document_id (str): The ID of the document to update.
+            query (dict): A dictionary containing the update operators.
+
+        Returns:
+            bool: True if the update was successful, False otherwise.
+        """
+        try:
+            print(collection)
+            result = self.mongo_client.vault[collection].update_one(
+                {"_id": ObjectId(document_id)}, query
+            )
+
+            if result.matched_count > 0:
                 print(f"Document with ID {document_id} updated successfully.")
                 return True
             else:

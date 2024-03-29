@@ -33,9 +33,24 @@ class EventService:
 
         return json.dumps(timeframes, cls=self.BSONEncoder)
 
+    def create_event(self, timeframe_id: str, event_name: str):
+        event_doc = {
+            "name": event_name,
+            "dateCreated": datetime.datetime.now(),
+            "timeframeId": timeframe_id,
+        }
 
+        event_id = mongo_module.insert_document(
+            f"{self.collection_prefix}event", event_doc
+        )
 
+        event_doc["eventId"] = str(event_id)
+
+        mongo_module.update_document(
+            f"{self.collection_prefix}timeframe",
+            timeframe_id,
+            {"$push": {"events": event_doc}},
+        )
 
 
 event_service = EventService()
-
