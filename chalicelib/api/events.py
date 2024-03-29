@@ -8,13 +8,14 @@ events_api = Blueprint(__name__)
 @events_api.route("/timeframes", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_timeframe():
-    pass
+    data = events_api.current_request.json_body
+    return event_service.create_timeframe(data["name"])
 
 
 @events_api.route("/timeframes", methods=["GET"], cors=True)
 @auth(events_api, roles=["admin"])
 def get_all_timeframes():
-    pass
+    return event_service.get_all_timeframes()
 
 
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
