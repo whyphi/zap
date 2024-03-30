@@ -31,6 +31,13 @@ def get_event(event_id: str):
     return event_service.get_event(event_id)
 
 
+@events_api.route("/events/{event_id}/checkin", methods=["POST"], cors=True)
+@auth(events_api, roles=["admin"])
+def checkin(event_id: str):
+    data = events_api.current_request.json_body
+    return event_service.checkin(event_id, data)
+
+
 @events_api.route("/events/{event_id}", methods=["PATCH"], cors=True)
 @auth(events_api, roles=["admin"])
 def update_event(event_id: str):

@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-
+from chalice import NotFoundError, BadRequestError
 import json
 from bson import ObjectId
 import datetime
@@ -38,6 +38,7 @@ class EventService:
             "name": event_name,
             "dateCreated": datetime.datetime.now(),
             "timeframeId": timeframe_id,
+            "usersAttended": [],
         }
 
         event_id = mongo_module.insert_document(
@@ -59,5 +60,38 @@ class EventService:
 
         return json.dumps(event, cls=self.BSONEncoder)
 
+    def checkin(self, event_id: str, data: dict):
+        # Check if user exists
+        user_id = data["userId"]
+        member = mongo_module.get_document_by_id(f"users", user_id)
+        if member is None:
+            raise NotFoundError(f"User with ID {user_id} does not exist.")
+        
+        user_name = member["name"]
 
+        # Check if user has already checked in
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}event", event_id
+        )
+
+        if any(d["userId"] == user_id for d in event["usersAttended"]):
+            raise BadRequestError(f"{user_name} has already checked in.")
+
+        data["name"] = user_name
+        data["dateCheckedIn"] = datetime.datetime.now()
+
+        # Update the event document
+        mongo_module.update_document(
+            f"{self.collection_prefix}event",
+            event_id,
+            {"$push": {"usersAttended": data}},
+        )
+
+        # Return success message with the user's name
+        return {
+            "status": True,
+            "message": f"{user_name} has successfully been checked in.",
+        }
+
+ 
 event_service = EventService()
