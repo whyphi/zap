@@ -52,5 +52,12 @@ class EventService:
             {"$push": {"events": event_doc}},
         )
 
+    def get_event(self, event_id: str):
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}event", event_id
+        )
+
+        return json.dumps(event, cls=self.BSONEncoder)
+
 
 event_service = EventService()

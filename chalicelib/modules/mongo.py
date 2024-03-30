@@ -166,5 +166,28 @@ class MongoModule:
             )
             return False
 
+    @add_env_suffix
+    def get_document_by_id(self, collection, document_id):
+        """
+        Retrieves a document from the specified collection with the given ID.
+
+        Args:
+            collection (str): The name of the collection to retrieve the document from.
+            document_id (str): The ID of the document to retrieve.
+
+        Returns:
+            dict: The retrieved document, or None if not found.
+        """
+        try:
+            result = self.mongo_client.vault[collection].find_one(
+                {"_id": ObjectId(document_id)}
+            )
+            return result
+        except Exception as e:
+            print(
+                f"An error occurred while retrieving document with ID {document_id}: {e}"
+            )
+            return None
+
 
 mongo_module = MongoModule()
