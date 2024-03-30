@@ -189,5 +189,30 @@ class MongoModule:
             )
             return None
 
+    @add_env_suffix
+    def delete_document_by_id(self, collection, document_id):
+        """
+        Deletes a document from the specified collection with the given ID.
+
+        Args:
+            collection (str): The name of the collection to delete the document from.
+            document_id (str): The ID of the document to delete.
+
+        Returns:
+            bool: True if the document was deleted successfully, False otherwise.
+        """
+        try:
+            result = self.mongo_client.vault[collection].delete_one(
+                {"_id": ObjectId(document_id)}
+            )
+            if result.deleted_count > 0:
+                print(f"Document with ID {document_id} deleted successfully.")
+                return True
+            else:
+                print(f"No document with ID {document_id} found.")
+                return False
+        except Exception as e:
+            print(e)
+
 
 mongo_module = MongoModule()

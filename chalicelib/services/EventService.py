@@ -93,5 +93,28 @@ class EventService:
             "message": f"{user_name} has successfully been checked in.",
         }
 
+    def delete(self, event_id: str):
+        # Check if event exists and if it doesn't return errors
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}event", event_id
+        )
+
+        if event is None:
+            raise NotFoundError(f"Event with ID {event_id} does not exist.")
+
+        # If event exists, get the timeframeId (parent)
+        timeframe_id = event["timeframeId"]
+
+        # Remove event from timeframe 
+        mongo_module.update_document(
+            f"{self.collection_prefix}timeframe",
+            timeframe_id,
+            {"$pull": {"events": {"_id": ObjectId(event_id)}}},
+        )
+
+        # Delete the event document
+        mongo_module.delete_document_by_id(
+            f"{self.collection_prefix}event", event_id
+        )
  
 event_service = EventService()
