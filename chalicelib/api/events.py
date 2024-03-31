@@ -46,5 +46,5 @@ def update_event(event_id: str):
 
 @events_api.route("/events/{event_id}", methods=["DELETE"], cors=True)
 @auth(events_api, roles=["admin"])
-def delete(event_id: str):
+def delete_event(event_id: str):
     return event_service.delete(event_id)
