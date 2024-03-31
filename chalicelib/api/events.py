@@ -22,7 +22,7 @@ def get_all_timeframes():
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):
     data = events_api.current_request.json_body
-    return event_service.create_event(timeframe_id, data["name"])
+    return event_service.create_event(timeframe_id, data)
 
 
 @events_api.route("/events/{event_id}", methods=["GET"], cors=True)
