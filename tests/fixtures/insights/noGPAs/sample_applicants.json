@@ -1,0 +1,38 @@
+[
+    {
+        "website": "",
+        "listingId": "9497eb3a-a9cf-44b0-a0d7-d5869fdf6c52",
+        "colleges": {
+            "COM": false,
+            "QST": false,
+            "CDS": false,
+            "CAS": true,
+            "Wheelock": false,
+            "Sargent": false,
+            "Pardee": false,
+            "SHA": false,
+            "CGS": false,
+            "ENG": false,
+            "CFA": false,
+            "Other": false
+        },
+        "responses": [],
+        "lastName": "De Rocco",
+        "linkedin": "",
+        "dateApplied": "2024-02-16T15:52:34.953662-05:00",
+        "email": "wderocco@bu.edu",
+        "firstName": "William",
+        "applicantId": "db8308c0-ddb7-4995-9441-e97d1d28861f",
+        "minor": "",
+        "events": null,
+        "image": "https://whyphi-zap.s3.amazonaws.com/dev/image/9497eb3a-a9cf-44b0-a0d7-d5869fdf6c52/De Rocco_William_db8308c0-ddb7-4995-9441-e97d1d28861f.png",
+        "gpa": "",
+        "hasGpa": false,
+        "gradYear": "2030",
+        "resume": "https://whyphi-zap.s3.amazonaws.com/dev/resume/9497eb3a-a9cf-44b0-a0d7-d5869fdf6c52/De Rocco_William_db8308c0-ddb7-4995-9441-e97d1d28861f.pdf",
+        "major": "Computer Science",
+        "gradMonth": "January",
+        "phone": "2032091600",
+        "preferredName": ""
+    }
+]

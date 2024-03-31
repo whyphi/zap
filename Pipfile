@@ -12,7 +12,8 @@ pydantic = "*"
 pytest = "*"
 coverage = "*"
 pytest-cov = "*"
-moto = {extras = ["dynamodb"], version = "*"}
+moto = {extras = ["dynamodb"], version = "4.2.13"}
+pyjwt = "*"
 
 [dev-packages]
 
