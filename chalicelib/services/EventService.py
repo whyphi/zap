@@ -3,6 +3,7 @@ from chalice import NotFoundError, BadRequestError
 import json
 from bson import ObjectId
 import datetime
+from chalicelib.modules.google_sheets import GoogleSheetsModule
 
 
 class EventService:
@@ -63,7 +64,7 @@ class EventService:
         member = mongo_module.get_document_by_id(f"users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
-        
+
         user_name = member["name"]
 
         # Check if user has already checked in
@@ -84,6 +85,8 @@ class EventService:
             {"$push": {"usersAttended": data}},
         )
 
+        # TODO: Update in google sheets
+
         # Return success message with the user's name
         return {
             "status": True,
@@ -102,7 +105,7 @@ class EventService:
         # If event exists, get the timeframeId (parent)
         timeframe_id = event["timeframeId"]
 
-        # Remove event from timeframe 
+        # Remove event from timeframe
         mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
@@ -110,8 +113,7 @@ class EventService:
         )
 
         # Delete the event document
-        mongo_module.delete_document_by_id(
-            f"{self.collection_prefix}event", event_id
-        )
- 
+        mongo_module.delete_document_by_id(f"{self.collection_prefix}event", event_id)
+
+
 event_service = EventService()
