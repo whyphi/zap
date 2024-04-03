@@ -30,6 +30,11 @@ def create_event(timeframe_id: str):
 def get_event(event_id: str):
     return event_service.get_event(event_id)
 
+@events_api.route("/timeframes/{timeframe_id}/sheets", methods=["GET"], cors=True)
+@auth(events_api, roles=["admin"])
+def get_timeframe_sheets(timeframe_id: str):
+    return event_service.get_timeframe_sheets(timeframe_id)
+
 
 @events_api.route("/events/{event_id}/checkin", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])

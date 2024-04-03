@@ -85,7 +85,34 @@ class EventService:
             {"$push": {"usersAttended": data}},
         )
 
-        # TODO: Update in google sheets
+        # Update the Google Sheets document as user attended
+        gs = GoogleSheetsModule()
+        ss_id = event["spreadsheetId"]
+        sheet_title = data["sheetTitle"]
+        first_name, last_name = data["firstName"], data["lastName"]
+        matching_row_num = gs.find_matching_row(
+            spreadsheet_id=ss_id,
+            sheet_name=sheet_title,
+            cols=["A", "B"],
+            val_to_match=[first_name, last_name],
+        )
+
+        if matching_row_num == -1:
+            return {
+                "status": False,
+                "message": f"{first_name} {last_name} was not found in the sheet.",
+            }
+
+        # Update the matching row to meet Google Sheets standards
+        matching_row_num += 1
+
+        gs.update_row(
+            spreadsheet_id=ss_id,
+            sheet_name=sheet_title,
+            col="F",
+            row=matching_row_num,
+            data=[["1"]],
+        )
 
         # Return success message with the user's name
         return {
@@ -114,6 +141,18 @@ class EventService:
 
         # Delete the event document
         mongo_module.delete_document_by_id(f"{self.collection_prefix}event", event_id)
+
+    def get_timeframe_sheets(self, timeframe_id: str):
+        timeframe = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
+        )
+
+        if timeframe["spreadsheetId"] is None or timeframe["spreadsheetId"] == "":
+            return []
+
+        gs = GoogleSheetsModule()
+        sheets = gs.get_sheets(timeframe["spreadsheetId"], include_properties=False)
+        return [sheet["title"] for sheet in sheets]
 
 
 event_service = EventService()
