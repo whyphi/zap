@@ -147,7 +147,7 @@ class EventService:
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
-        if timeframe["spreadsheetId"] is None or timeframe["spreadsheetId"] == "":
+        if "spreadsheetId" not in timeframe or timeframe["spreadsheetId"] == "":
             return []
 
         gs = GoogleSheetsModule()
