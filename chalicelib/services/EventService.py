@@ -20,10 +20,10 @@ class EventService:
     def __init__(self):
         self.collection_prefix = "events-"
 
-    def create_timeframe(self, timeframe_name: str):
-        timeframe_doc = {"name": timeframe_name, "dateCreated": datetime.datetime.now()}
+    def create_timeframe(self, timeframe_data: dict):
+        timeframe_data["dateCreated"] = datetime.datetime.now()
         mongo_module.insert_document(
-            f"{self.collection_prefix}timeframe", timeframe_doc
+            f"{self.collection_prefix}timeframe", timeframe_data
         )
 
     def get_all_timeframes(self):
