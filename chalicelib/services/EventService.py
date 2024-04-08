@@ -26,6 +26,13 @@ class EventService:
             f"{self.collection_prefix}timeframe", timeframe_data
         )
 
+    def get_timeframe(self, timeframe_id: str):
+        timeframe = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
+        )
+
+        return json.dumps(timeframe, cls=self.BSONEncoder)
+
     def get_all_timeframes(self):
         """Retrieve all timeframes from the database."""
         timeframes = mongo_module.get_all_data_from_collection(

@@ -18,6 +18,12 @@ def get_all_timeframes():
     return event_service.get_all_timeframes()
 
 
+@events_api.route("/timeframes/{timeframe_id}", methods=["GET"], cors=True)
+@auth(events_api, roles=["admin"])
+def get_timeframe(timeframe_id: str):
+    return event_service.get_timeframe(timeframe_id)
+
+
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):
@@ -29,6 +35,7 @@ def create_event(timeframe_id: str):
 @auth(events_api, roles=["admin"])
 def get_event(event_id: str):
     return event_service.get_event(event_id)
+
 
 @events_api.route("/timeframes/{timeframe_id}/sheets", methods=["GET"], cors=True)
 @auth(events_api, roles=["admin"])
