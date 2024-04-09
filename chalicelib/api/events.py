@@ -24,6 +24,11 @@ def get_timeframe(timeframe_id: str):
     return event_service.get_timeframe(timeframe_id)
 
 
+@events_api.route("/timeframes/{timeframe_id}", methods=["DELETE"], cors=True)
+@auth(events_api, roles=["admin"])
+def delete_timeframe(timeframe_id: str):
+    return event_service.delete_timeframe(timeframe_id)
+
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):

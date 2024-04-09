@@ -41,6 +41,29 @@ class EventService:
 
         return json.dumps(timeframes, cls=self.BSONEncoder)
 
+    def delete_timeframe(self, timeframe_id: str):
+        # Check if timeframe exists and if it doesn't return errors
+        timeframe = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
+        )
+
+        if timeframe is None:
+            raise NotFoundError(f"Timeframe with ID {timeframe_id} does not exist.")
+
+        # If timeframe exists, get the eventIds (children)
+        event_ids = [str(event["_id"]) for event in timeframe["events"]]
+
+        # Delete all the events in the timeframe
+        for event_id in event_ids:
+            mongo_module.delete_document_by_id(
+                f"{self.collection_prefix}event", event_id
+            )
+
+        # If timeframe exists, delete the timeframe document
+        mongo_module.delete_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
+        )
+
     def create_event(self, timeframe_id: str, event_data: dict):
         event_data["dateCreated"] = datetime.datetime.now()
         event_data["timeframeId"] = timeframe_id
