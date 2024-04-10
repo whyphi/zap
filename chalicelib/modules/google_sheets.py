@@ -7,6 +7,7 @@ from googleapiclient.discovery import build
 # from google_auth_oauthlib.flow import InstalledAppFlow
 import boto3
 import json
+from thefuzz import fuzz
 
 
 class GoogleSheetsModule:
@@ -37,8 +38,8 @@ class GoogleSheetsModule:
             ]
         return sheets_properties
 
-    def find_matching_row(
-        self, spreadsheet_id: str, sheet_name: str, cols: list[str], val_to_match: list
+    def find_matching_name(
+        self, spreadsheet_id: str, sheet_name: str, cols: list[str], name_to_match: list, use_similarity: bool=False
     ):
         range = f"{sheet_name}!{cols[0]}:{cols[-1]}"
         response = (
@@ -48,11 +49,26 @@ class GoogleSheetsModule:
             .execute()
         )
         rows = list(response["values"])
-        for idx, row in enumerate(rows):
-            if row[0] == val_to_match[0] and row[1] == val_to_match[1]:
-                return idx
+        
+        if use_similarity:
 
-        return -1
+            best_idx, score = 0, fuzz.ratio(name_to_match, f"{rows[0][0]} {rows[0][1]}")
+
+            for idx, row in enumerate(rows):
+                name = f"{row[0]} {row[1]}"
+                curr_score = fuzz.ratio(name_to_match, name)
+                if curr_score > score:
+                    best_idx = idx
+                    score = curr_score
+
+            return best_idx
+        else:
+            for idx, row in enumerate(rows):
+                name = f"{row[0]} {row[1]}"
+                if name_to_match in name:
+                    return idx
+
+            return -1
 
     def update_row(
         self, spreadsheet_id: str, sheet_name: str, col: str, row: int, data: list
@@ -63,4 +79,27 @@ class GoogleSheetsModule:
             range=f"{sheet_name}!{col.upper()}{row}",
             valueInputOption="USER_ENTERED",
             body=body,
+        ).execute()
+
+    def find_next_available_col(self, spreadsheet_id: str, sheet_name: str):
+        # Find the next available column in row 1
+        events_range = f"{sheet_name}!A1:Z1"
+        response = (
+            self.service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=events_range)
+            .execute()
+        )
+        events = response["values"][0]
+
+        next_col = chr(ord("A") + len(events))
+
+        return next_col
+
+    def add_event(self, spreadsheet_id: str, sheet_tab: str, event_name: str, col: str):
+        self.service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range=f"{sheet_tab}!{col}{1}",
+            valueInputOption="USER_ENTERED",
+            body={"values": [[event_name]]},
         ).execute()

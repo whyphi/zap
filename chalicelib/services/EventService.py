@@ -69,17 +69,35 @@ class EventService:
         event_data["timeframeId"] = timeframe_id
         event_data["usersAttended"] = []
 
+        # Get Google Spreadsheet ID from timeframe
+        timeframe_doc = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
+        )
+        spreadsheet_id = timeframe_doc["spreadsheetId"]
+
+        # Add event name to Google Sheets
+        gs = GoogleSheetsModule()
+        col = gs.find_next_available_col(spreadsheet_id, event_data["sheetTab"])
+        gs.add_event(spreadsheet_id, event_data["sheetTab"], event_data["name"], col)
+
+        # Append next available col value to event data
+        event_data["spreadsheetCol"] = col
+
+        # Insert the event in event collection
         event_id = mongo_module.insert_document(
             f"{self.collection_prefix}event", event_data
         )
 
         event_data["eventId"] = str(event_id)
 
+        # Insert child event in timeframe collection
         mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
             {"$push": {"events": event_data}},
         )
+
+        return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
         event = mongo_module.get_document_by_id(
@@ -88,16 +106,23 @@ class EventService:
 
         return json.dumps(event, cls=self.BSONEncoder)
 
-    def checkin(self, event_id: str, data: dict):
-        # Check if user exists
-        user_id = data["userId"]
+    def checkin(self, event_id: str, user: dict) -> dict:
+        """Checks in a user to an event.
+
+        Arguments:
+            event_id {str} -- ID of the event to check into.
+            user {dict} -- Dictionary containing user ID and name.
+
+        Returns:
+            dict -- Dictionary containing status and message.
+        """
+        user_id = user["userId"]
         member = mongo_module.get_document_by_id(f"users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
         user_name = member["name"]
 
-        # Check if user has already checked in
         event = mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
@@ -105,46 +130,54 @@ class EventService:
         if any(d["userId"] == user_id for d in event["usersAttended"]):
             raise BadRequestError(f"{user_name} has already checked in.")
 
-        data["name"] = user_name
-        data["dateCheckedIn"] = datetime.datetime.now()
+        checkin_data = {
+            "userId": user_id,
+            "name": user_name,
+            "dateCheckedIn": datetime.datetime.now(),
+        }
 
-        # Update the event document
+        # Update event collection with checkin data
         mongo_module.update_document(
             f"{self.collection_prefix}event",
             event_id,
-            {"$push": {"usersAttended": data}},
+            {"$push": {"usersAttended": checkin_data}},
         )
 
-        # Update the Google Sheets document as user attended
+        # Get timeframe document to get Google Sheets info
+        timeframe = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", event["timeframeId"]
+        )
+
+        # Get Google Sheets information
+        ss_id = timeframe["spreadsheetId"]
+
+        # Initialize Google Sheets Module
         gs = GoogleSheetsModule()
-        ss_id = event["spreadsheetId"]
-        sheet_title = data["sheetTitle"]
-        first_name, last_name = data["firstName"], data["lastName"]
-        matching_row_num = gs.find_matching_row(
+
+        # Find row in Google Sheets that matches user's name
+        row_num = gs.find_matching_name(
             spreadsheet_id=ss_id,
-            sheet_name=sheet_title,
+            sheet_name=event["sheetTab"],
             cols=["A", "B"],
-            val_to_match=[first_name, last_name],
+            name_to_match=user_name,
+            use_similarity=True
         )
 
-        if matching_row_num == -1:
+        if row_num == -1:
             return {
                 "status": False,
-                "message": f"{first_name} {last_name} was not found in the sheet.",
+                "message": f"{user_name} was not found in the sheet.",
             }
 
-        # Update the matching row to meet Google Sheets standards
-        matching_row_num += 1
-
+        # Update Google Sheets cell with a "1" if user has checked in
         gs.update_row(
             spreadsheet_id=ss_id,
-            sheet_name=sheet_title,
-            col="F",
-            row=matching_row_num,
+            sheet_name=event["sheetTab"],
+            col=event["spreadsheetCol"],
+            row=row_num + 1,
             data=[["1"]],
         )
 
-        # Return success message with the user's name
         return {
             "status": True,
             "message": f"{user_name} has successfully been checked in.",
