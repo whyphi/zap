@@ -14,6 +14,10 @@ coverage = "*"
 pytest-cov = "*"
 moto = {extras = ["dynamodb"], version = "4.2.13"}
 pyjwt = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+thefuzz = "*"
 
 [dev-packages]
 

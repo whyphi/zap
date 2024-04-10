@@ -149,7 +149,6 @@ class MongoModule:
             bool: True if the update was successful, False otherwise.
         """
         try:
-            print(collection)
             result = self.mongo_client.vault[collection].update_one(
                 {"_id": ObjectId(document_id)}, query
             )
