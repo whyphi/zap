@@ -34,127 +34,171 @@ TEST_LISTINGS = [
 
 def test_create_listing():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.create"
-        ) as mock_create:
-            mock_create.return_value = {"msg": True}
-            response = client.http.post(f"/create")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.create"
+            ) as mock_create:
+                mock_create.return_value = {"msg": True}
+                response = client.http.post(
+                    f"/create",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.status_code == 200
-            assert response.json_body == {"msg": True}
+                assert response.status_code == 200
+                assert response.json_body == {"msg": True}
 
 
 def test_get_listing():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.get"
-        ) as mock_get:
-            mock_get.return_value = TEST_LISTINGS[0]
-            response = client.http.get(f"/listings/{TEST_LISTINGS[0]['listingId']}")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.get"
+            ) as mock_get:
+                mock_get.return_value = TEST_LISTINGS[0]
+                response = client.http.get(
+                    f"/listings/{TEST_LISTINGS[0]['listingId']}",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.status_code == 200
-            assert response.json_body == TEST_LISTINGS[0]
+                assert response.status_code == 200
+                assert response.json_body == TEST_LISTINGS[0]
 
 
 def test_get_all_listings():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.get_all"
-        ) as mock_get_all:
-            mock_get_all.return_value = TEST_LISTINGS
-            response = client.http.get(f"/listings")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.get_all"
+            ) as mock_get_all:
+                mock_get_all.return_value = TEST_LISTINGS
+                response = client.http.get(
+                    f"/listings",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.status_code == 200
-            assert response.json_body == TEST_LISTINGS
+                assert response.status_code == 200
+                assert response.json_body == TEST_LISTINGS
 
 
 def test_delete_listing():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.delete"
-        ) as mock_delete:
-            mock_delete.return_value = {"status": True}
-            response = client.http.delete(f"/listings/{TEST_LISTINGS[0]['listingId']}")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.delete"
+            ) as mock_delete:
+                mock_delete.return_value = {"status": True}
+                response = client.http.delete(
+                    f"/listings/{TEST_LISTINGS[0]['listingId']}",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.status_code == 200
-            assert response.json_body == {"status": True}
+                assert response.status_code == 200
+                assert response.json_body == {"status": True}
 
 
 def test_toggle_visibility():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.toggle_visibility"
-        ) as mock_toggle_visibility:
-            mock_toggle_visibility.return_value = {"status": True}
-            response = client.http.patch(
-                f"/listings/{TEST_LISTINGS[0]['listingId']}/toggle/visibility"
-            )
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.toggle_visibility"
+            ) as mock_toggle_visibility:
+                mock_toggle_visibility.return_value = {"status": True}
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[0]['listingId']}/toggle/visibility",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.status_code == 200
-            assert response.json_body == {"status": True}
+                assert response.status_code == 200
+                assert response.json_body == {"status": True}
 
 
 def test_update_listing_field_route():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.update_field_route"
-        ) as mock_update_field_route:
-            mock_update_field_route.return_value = {
-                "status": True,
-                "updated_listing": TEST_LISTINGS[1],
-            }
-            response = client.http.patch(
-                f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field"
-            )
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.update_field_route"
+            ) as mock_update_field_route:
+                mock_update_field_route.return_value = {
+                    "status": True,
+                    "updated_listing": TEST_LISTINGS[1],
+                }
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            print(response.json_body)
+                print(response.json_body)
 
-            assert response.status_code == 200
-            assert response.json_body == {
-                "status": True,
-                "updated_listing": TEST_LISTINGS[1],
-            }
+                assert response.status_code == 200
+                assert response.json_body == {
+                    "status": True,
+                    "updated_listing": TEST_LISTINGS[1],
+                }
 
 
 def test_update_listing_field_route_not_found():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.update_field_route"
-        ) as mock_update_field_route:
-            mock_update_field_route.side_effect = NotFoundError("Not found")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.update_field_route"
+            ) as mock_update_field_route:
+                mock_update_field_route.side_effect = NotFoundError("Not found")
 
-            response = client.http.patch(
-                f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field"
-            )
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.json_body == None
+                assert response.json_body == None
 
 
 def test_update_listing_field_route_bad_request():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.update_field_route"
-        ) as mock_update_field_route:
-            mock_update_field_route.side_effect = BadRequestError("Bad request")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.update_field_route"
+            ) as mock_update_field_route:
+                mock_update_field_route.side_effect = BadRequestError("Bad request")
 
-            response = client.http.patch(
-                f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field"
-            )
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            # body, status_code = response.json_body
+                # body, status_code = response.json_body
 
-            assert response.json_body == None
+                assert response.json_body == None
 
 
 def test_update_listing_field_route_exception():
     with Client(app) as client:
-        with patch(
-            "chalicelib.services.ListingService.listing_service.update_field_route"
-        ) as mock_update_field_route:
-            mock_update_field_route.side_effect = Exception("Error")
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"role": "admin"}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.update_field_route"
+            ) as mock_update_field_route:
+                mock_update_field_route.side_effect = Exception("Error")
 
-            response = client.http.patch(
-                f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field"
-            )
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[1]['listingId']}/update-field",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
 
-            assert response.json_body == None
+                assert response.json_body == None
