@@ -24,6 +24,26 @@ class GoogleSheetsModule:
         )
         self.service = build("sheets", "v4", credentials=self.creds)
 
+    def get_rows(self, spreadsheet_id: str, sheet_name: str, start_row: int, end_row: int):
+        range = f"{sheet_name}!A{start_row}:Z{end_row}"
+        response = (
+            self.service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range)
+            .execute()
+        )
+        return response
+
+    def get_all_cells(self, spreadsheet_id: str, sheet_name: str):
+        range = f"{sheet_name}!A1:Z"
+        response = (
+            self.service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range)
+            .execute()
+        )
+        return response
+
     def get_sheets(self, spreadsheet_id: str, include_properties: bool = False):
         sheet_metadata = (
             self.service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()

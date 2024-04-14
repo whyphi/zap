@@ -6,6 +6,7 @@ from chalicelib.api.announcements import announcements_api
 from chalicelib.api.insights import insights_api
 from chalicelib.api.members import members_api
 from chalicelib.api.events import events_api
+from chalicelib.api.accountability import accountability_api
 
 app = Chalice(app_name="zap")
 app.register_blueprint(announcements_api)
@@ -14,6 +15,7 @@ app.register_blueprint(applicants_api)
 app.register_blueprint(insights_api)
 app.register_blueprint(members_api)
 app.register_blueprint(events_api)
+app.register_blueprint(accountability_api)
 
 
 @app.route("/")
