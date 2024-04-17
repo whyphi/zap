@@ -29,6 +29,7 @@ def get_timeframe(timeframe_id: str):
 def delete_timeframe(timeframe_id: str):
     return event_service.delete_timeframe(timeframe_id)
 
+
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):
@@ -65,3 +66,33 @@ def update_event(event_id: str):
 @auth(events_api, roles=["admin"])
 def delete_event(event_id: str):
     return event_service.delete(event_id)
+
+
+@events_api.route("/events/rush", methods=["GET"], cors=True)
+@auth(events_api, roles=["admin"])
+def get_rush_events():
+    return event_service.get_rush_categories_and_events()
+
+@events_api.route("/events/rush/{event_id}", methods=["GET"], cors=True)
+def get_rush_event(event_id):
+    return event_service.get_rush_event(event_id)
+
+
+@events_api.route("/events/rush/category", methods=["POST"], cors=True)
+@auth(events_api, roles=["admin"])
+def create_rush_category():
+    data = events_api.current_request.json_body
+    return event_service.create_rush_category(data)
+
+
+@events_api.route("/events/rush", methods=["POST"], cors=True)
+@auth(events_api, roles=["admin"])
+def create_rush_event():
+    data = events_api.current_request.json_body
+    return event_service.create_rush_event(data)
+    
+
+@events_api.route("/events/rush/checkin/{event_id}", methods=["POST"], cors=True)
+def checkin_rush(event_id):
+    data = events_api.current_request.json_body
+    return event_service.checkin_rush(event_id, data)
