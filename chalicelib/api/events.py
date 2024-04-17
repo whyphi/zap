@@ -68,6 +68,12 @@ def delete_event(event_id: str):
     return event_service.delete(event_id)
 
 
+@events_api.route("/events/rush", methods=["GET"], cors=True)
+@auth(events_api, roles=["admin"])
+def get_rush_events():
+    return event_service.get_rush_categories_and_events()
+
+
 @events_api.route("/events/rush/category", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_rush_category():

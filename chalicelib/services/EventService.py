@@ -217,17 +217,41 @@ class EventService:
         sheets = gs.get_sheets(timeframe["spreadsheetId"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
 
+    def get_rush_categories_and_events(self):
+        rush_categories = mongo_module.get_all_data_from_collection(
+            f"{self.collection_prefix}rush"
+        )
+
+        return json.dumps(rush_categories, cls=self.BSONEncoder)
+
     def create_rush_category(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
         data["events"] = []
-        return mongo_module.insert_document(
-            f"{self.collection_prefix}rush", data
-        )
+        return mongo_module.insert_document(f"{self.collection_prefix}rush", data)
 
     def create_rush_event(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
-        return mongo_module.insert_document(
-            f"{self.collection_prefix}rush", data
+        data_copy = data.copy()
+        data_copy.pop("categoryId", None)
+
+
+        # Add event to its own collection
+        data["attendees"] = []
+        data["numAttendees"] = 0
+        event_id = mongo_module.insert_document(
+            f"{self.collection_prefix}rush-event", data
         )
+
+        data_copy["eventId"] = str(event_id)
+
+        # Add event to rush category
+        mongo_module.update_document(
+            f"{self.collection_prefix}rush",
+            data["categoryId"],
+            {"$push": {"events": data_copy}},
+        )
+
+        return
+
 
 event_service = EventService()
