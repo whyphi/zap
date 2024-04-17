@@ -61,7 +61,6 @@ def auth(blueprint, roles):
                     Name="/Zap/AUTH_SECRET", WithDecryption=True
                 )["Parameter"]["Value"]
                 decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
-                print(roles)
                 # TODO: if decoded role is not part of given, reject auth
 
                 return func(*args, **kwargs)
