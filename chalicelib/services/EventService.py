@@ -227,7 +227,8 @@ class EventService:
     def create_rush_category(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
         data["events"] = []
-        return mongo_module.insert_document(f"{self.collection_prefix}rush", data)
+        mongo_module.insert_document(f"{self.collection_prefix}rush", data)
+        return
 
     def create_rush_event(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
