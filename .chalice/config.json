@@ -8,6 +8,7 @@
       "environment_variables": {
         "ENV": "dev"
       },
+      "lambda_memory_size": 256,
       "api_gateway_stage": "api"
     },
     "prod": {
@@ -16,6 +17,7 @@
       "environment_variables": {
         "ENV": "prod"
       },
+      "lambda_memory_size": 384,
       "api_gateway_stage": "api"
     }
   }
