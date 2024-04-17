@@ -160,7 +160,7 @@ class EventService:
             sheet_name=event["sheetTab"],
             cols=["A", "B"],
             name_to_match=user_name,
-            use_similarity=True
+            use_similarity=True,
         )
 
         if row_num == -1:
@@ -217,5 +217,17 @@ class EventService:
         sheets = gs.get_sheets(timeframe["spreadsheetId"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
 
+    def create_rush_category(self, data: dict):
+        data["dateCreated"] = datetime.datetime.now()
+        data["events"] = []
+        return mongo_module.insert_document(
+            f"{self.collection_prefix}rush", data
+        )
+
+    def create_rush_event(self, data: dict):
+        data["dateCreated"] = datetime.datetime.now()
+        return mongo_module.insert_document(
+            f"{self.collection_prefix}rush", data
+        )
 
 event_service = EventService()

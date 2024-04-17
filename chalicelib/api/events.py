@@ -29,6 +29,7 @@ def get_timeframe(timeframe_id: str):
 def delete_timeframe(timeframe_id: str):
     return event_service.delete_timeframe(timeframe_id)
 
+
 @events_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
 @auth(events_api, roles=["admin"])
 def create_event(timeframe_id: str):
@@ -65,3 +66,17 @@ def update_event(event_id: str):
 @auth(events_api, roles=["admin"])
 def delete_event(event_id: str):
     return event_service.delete(event_id)
+
+
+@events_api.route("/events/rush/category", methods=["POST"], cors=True)
+@auth(events_api, roles=["admin"])
+def create_rush_category():
+    data = events_api.current_request.json_body
+    return event_service.create_rush_category(data)
+
+
+@events_api.route("/events/rush", methods=["POST"], cors=True)
+@auth(events_api, roles=["admin"])
+def create_rush_event():
+    data = events_api.current_request.json_body
+    return event_service.create_rush_event(data)
