@@ -116,7 +116,7 @@ class EventService:
         Returns:
             dict -- Dictionary containing status and message.
         """
-        user_id = user["userId"]
+        user_id, user_email = user["id"], user["email"]
         member = mongo_module.get_document_by_id(f"users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
@@ -136,13 +136,6 @@ class EventService:
             "dateCheckedIn": datetime.datetime.now(),
         }
 
-        # Update event collection with checkin data
-        mongo_module.update_document(
-            f"{self.collection_prefix}event",
-            event_id,
-            {"$push": {"usersAttended": checkin_data}},
-        )
-
         # Get timeframe document to get Google Sheets info
         timeframe = mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", event["timeframeId"]
@@ -154,13 +147,12 @@ class EventService:
         # Initialize Google Sheets Module
         gs = GoogleSheetsModule()
 
-        # Find row in Google Sheets that matches user's name
-        row_num = gs.find_matching_name(
+        # Find row in Google Sheets that matches user's email
+        row_num = gs.find_matching_email(
             spreadsheet_id=ss_id,
             sheet_name=event["sheetTab"],
-            cols=["A", "B"],
-            name_to_match=user_name,
-            use_similarity=True,
+            col="C",
+            email_to_match=user_email,
         )
 
         if row_num == -1:
@@ -177,6 +169,14 @@ class EventService:
             row=row_num + 1,
             data=[["1"]],
         )
+
+        # Update event collection with checkin data
+        mongo_module.update_document(
+            f"{self.collection_prefix}event",
+            event_id,
+            {"$push": {"usersAttended": checkin_data}},
+        )
+
 
         return {
             "status": True,
