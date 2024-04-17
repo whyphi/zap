@@ -252,6 +252,17 @@ class EventService:
         )
 
         return
+    
+    def get_rush_event(self, event_id: str, hide_attendees: bool = True):
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush-event", event_id
+        )
+
+        if hide_attendees:
+            event.pop("attendees", None)
+            event.pop("numAttendees", None)
+
+        return json.dumps(event, cls=self.BSONEncoder)
 
 
 event_service = EventService()
