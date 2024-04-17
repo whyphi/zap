@@ -89,6 +89,23 @@ class GoogleSheetsModule:
                     return idx
 
             return -1
+        
+    def find_matching_email(
+        self, spreadsheet_id: str, sheet_name: str, col: str, email_to_match: str
+    ):
+        range = f"{sheet_name}!{col}:{col}"
+        response = (
+            self.service.spreadsheets()
+            .values()
+            .get(spreadsheetId=spreadsheet_id, range=range)
+            .execute()
+        )
+
+        rows = list(response["values"])
+        for idx, row in enumerate(rows):
+            if email_to_match in row:
+                return idx
+        return -1
 
     def update_row(
         self, spreadsheet_id: str, sheet_name: str, col: str, row: int, data: list
