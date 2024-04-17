@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import NotFoundError, BadRequestError
+from chalice import NotFoundError, BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
 import datetime
@@ -234,7 +234,6 @@ class EventService:
         data_copy = data.copy()
         data_copy.pop("categoryId", None)
 
-
         # Add event to its own collection
         data["attendees"] = []
         data["numAttendees"] = 0
@@ -252,7 +251,7 @@ class EventService:
         )
 
         return
-    
+
     def get_rush_event(self, event_id: str, hide_attendees: bool = True):
         event = mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
@@ -262,7 +261,35 @@ class EventService:
             event.pop("attendees", None)
             event.pop("numAttendees", None)
 
+        event.pop("code")
+
         return json.dumps(event, cls=self.BSONEncoder)
+
+    def checkin_rush(self, event_id: str, user_data: dict):
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush-event", event_id
+        )
+
+        code = user_data["code"]
+        user_data.pop("code")
+
+        if code != event["code"]:
+            raise UnauthorizedError("Invalid code.")
+
+        if any(d["email"] == user_data["email"] for d in event["attendees"]):
+            raise BadRequestError("User has already checked in.")
+
+        user_data["checkinTime"] = datetime.datetime.now()
+        event["attendees"].append(user_data)
+        event["numAttendees"] += 1
+
+        mongo_module.update_document(
+            f"{self.collection_prefix}rush-event",
+            event_id,
+            {"$set": event},
+        )
+
+        return
 
 
 event_service = EventService()

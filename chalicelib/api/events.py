@@ -91,3 +91,8 @@ def create_rush_event():
     data = events_api.current_request.json_body
     return event_service.create_rush_event(data)
     
+
+@events_api.route("/events/rush/checkin/{event_id}", methods=["POST"], cors=True)
+def checkin_rush(event_id):
+    data = events_api.current_request.json_body
+    return event_service.checkin_rush(event_id, data)
