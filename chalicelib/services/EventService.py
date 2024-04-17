@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import NotFoundError, BadRequestError
+from chalice import NotFoundError, BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
 import datetime
@@ -160,7 +160,7 @@ class EventService:
             sheet_name=event["sheetTab"],
             cols=["A", "B"],
             name_to_match=user_name,
-            use_similarity=True
+            use_similarity=True,
         )
 
         if row_num == -1:
@@ -216,6 +216,80 @@ class EventService:
         gs = GoogleSheetsModule()
         sheets = gs.get_sheets(timeframe["spreadsheetId"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
+
+    def get_rush_categories_and_events(self):
+        rush_categories = mongo_module.get_all_data_from_collection(
+            f"{self.collection_prefix}rush"
+        )
+
+        return json.dumps(rush_categories, cls=self.BSONEncoder)
+
+    def create_rush_category(self, data: dict):
+        data["dateCreated"] = datetime.datetime.now()
+        data["events"] = []
+        return mongo_module.insert_document(f"{self.collection_prefix}rush", data)
+
+    def create_rush_event(self, data: dict):
+        data["dateCreated"] = datetime.datetime.now()
+        data_copy = data.copy()
+        data_copy.pop("categoryId", None)
+
+        # Add event to its own collection
+        data["attendees"] = []
+        data["numAttendees"] = 0
+        event_id = mongo_module.insert_document(
+            f"{self.collection_prefix}rush-event", data
+        )
+
+        data_copy["eventId"] = str(event_id)
+
+        # Add event to rush category
+        mongo_module.update_document(
+            f"{self.collection_prefix}rush",
+            data["categoryId"],
+            {"$push": {"events": data_copy}},
+        )
+
+        return
+
+    def get_rush_event(self, event_id: str, hide_attendees: bool = True):
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush-event", event_id
+        )
+
+        if hide_attendees:
+            event.pop("attendees", None)
+            event.pop("numAttendees", None)
+
+        event.pop("code")
+
+        return json.dumps(event, cls=self.BSONEncoder)
+
+    def checkin_rush(self, event_id: str, user_data: dict):
+        event = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush-event", event_id
+        )
+
+        code = user_data["code"]
+        user_data.pop("code")
+
+        if code != event["code"]:
+            raise UnauthorizedError("Invalid code.")
+
+        if any(d["email"] == user_data["email"] for d in event["attendees"]):
+            raise BadRequestError("User has already checked in.")
+
+        user_data["checkinTime"] = datetime.datetime.now()
+        event["attendees"].append(user_data)
+        event["numAttendees"] += 1
+
+        mongo_module.update_document(
+            f"{self.collection_prefix}rush-event",
+            event_id,
+            {"$set": event},
+        )
+
+        return
 
 
 event_service = EventService()

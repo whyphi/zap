@@ -48,7 +48,7 @@ class MongoModule:
         self.vault = self.client.vault
 
     @add_env_suffix
-    def insert_document(self, collection: str, data: dict) -> None:
+    def insert_document(self, collection: str, data: dict) -> ObjectId:
         """
         Inserts a document into the specified collection.
 
@@ -56,11 +56,15 @@ class MongoModule:
             collection (str): The name of the collection to insert the document into.
             data (dict): The document to insert into the collection.
 
+        Returns:
+            ObjectId: The ID of the inserted document.
+
         Raises:
             Exception: If an error occurs while inserting the document.
         """
         try:
-            self.mongo_client.vault[collection].insert_one(data)
+            result = self.mongo_client.vault[collection].insert_one(data)
+            return result.inserted_id
         except Exception as e:
             print(e)
 
