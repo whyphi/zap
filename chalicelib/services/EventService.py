@@ -4,6 +4,7 @@ import json
 from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
+from chalicelib.modules.ses import ses, SesDestination
 
 
 class EventService:
@@ -175,6 +176,27 @@ class EventService:
             f"{self.collection_prefix}event",
             event_id,
             {"$push": {"usersAttended": checkin_data}},
+        )
+
+        # Send email to user that has checked in
+        email_content = f"""
+            Hi {user_name},<br><br>
+
+            Thank you for checking in to <b>{event["name"]}</b>! This is a confirmation that you have checked in.<br><br>
+
+            Regards,<br>
+            PCT Tech Team<br><br>
+
+            ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
+        """
+
+        ses_destination = SesDestination(tos=[user_email])
+        ses.send_email(
+            source="checkin-bot@why-phi.com",
+            destination=ses_destination,
+            subject=f"Check-in Confirmation: {event['name']}",
+            text=email_content,
+            html=email_content,
         )
 
         return {
