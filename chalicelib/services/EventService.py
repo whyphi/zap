@@ -177,7 +177,6 @@ class EventService:
             {"$push": {"usersAttended": checkin_data}},
         )
 
-
         return {
             "status": True,
             "message": f"{user_name} has successfully been checked in.",
@@ -291,6 +290,47 @@ class EventService:
         )
 
         return
+
+    def delete_rush_event(self, event_id: str):
+        """
+        Deletes an rush event from the rush-event collection
+
+        Parameters
+        ----------
+        event_id : str
+            ID of the event to be deleted
+
+        Raises
+        ------
+        BadRequestError
+            If the event does not exist in the rush-event collection
+        """
+        try:
+            # Check if event exists in the rush-event collection
+            event = mongo_module.get_document_by_id(
+                f"{self.collection_prefix}rush-event", event_id
+            )
+
+            if not event:
+                raise Exception("Event does not exist.")
+
+            event_category_id = event["categoryId"]
+
+            # Delete the event from its category
+            mongo_module.update_document(
+                f"{self.collection_prefix}rush",
+                event_category_id,
+                {"$pull": {"events": {"eventId": event_id}}},
+            )
+
+            # Delete event data from the rush-event collection
+            mongo_module.delete_document_by_id(
+                f"{self.collection_prefix}rush-event", event_id
+            )
+            return
+
+        except Exception as e:
+            raise BadRequestError(e)
 
 
 event_service = EventService()
