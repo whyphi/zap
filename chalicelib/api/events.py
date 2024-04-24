@@ -96,3 +96,8 @@ def create_rush_event():
 def checkin_rush(event_id):
     data = events_api.current_request.json_body
     return event_service.checkin_rush(event_id, data)
+
+
+@events_api.route("/events/rush/{event_id}", methods=["DELETE"], cors=True)
+def delete_rush_event(event_id):
+    return event_service.delete_rush_event(event_id)
