@@ -1,6 +1,7 @@
 from chalice import Blueprint
 from chalicelib.services.MemberService import member_service
 from chalicelib.decorators import auth
+from chalicelib.models.roles import Roles
 
 members_api = Blueprint(__name__)
 
@@ -25,3 +26,9 @@ def onboard_member(user_id):
         }
     else:
         { "status": False}
+
+@members_api.route("/members/{user_id}/roles", methods=["PATCH"], cors=True)
+@auth(members_api, roles=[Roles.ADMIN])
+def update_member_roles(user_id):
+    data = members_api.current_request.json_body
+    return member_service.update_roles(user_id, data["roles"])
