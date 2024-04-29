@@ -27,6 +27,13 @@ def onboard_member(user_id):
     else:
         { "status": False}
 
+
+@members_api.route("/members", methods=["POST"], cors=True)
+@auth(members_api, roles=[Roles.ADMIN])
+def create_member():
+    data = members_api.current_request.json_body
+    return member_service.create(data)
+
 @members_api.route("/members/{user_id}/roles", methods=["PATCH"], cors=True)
 @auth(members_api, roles=[Roles.ADMIN])
 def update_member_roles(user_id):
