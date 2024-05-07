@@ -37,7 +37,9 @@
 				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/AUTH_SECRET",
 				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/MONGO_ADMIN_USER",
 				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/MONGO_ADMIN_PASSWORD",
-				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/GOOGLE_SERVICE_ACCOUNT_CREDENTIALS"
+				"arn:aws:ssm:us-east-1:280776660572:parameter/Zap/GOOGLE_SERVICE_ACCOUNT_CREDENTIALS",
+				"arn:aws:ssm:us-east-1:280776660572:parameter/Vault/POSTHOG_API_KEY",
+				"arn:aws:ssm:us-east-1:280776660572:parameter/Vault/POSTHOG_PROJECT_ID"
 			]
 		}
 	]
