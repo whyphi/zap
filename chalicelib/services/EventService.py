@@ -4,6 +4,7 @@ import json
 from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
+from chalicelib.modules.ses import ses, SesDestination
 
 
 class EventService:
@@ -177,6 +178,26 @@ class EventService:
             {"$push": {"usersAttended": checkin_data}},
         )
 
+        # Send email to user that has checked in
+        email_content = f"""
+            Hi {user_name},<br><br>
+
+            Thank you for checking in to <b>{event["name"]}</b>! This is a confirmation that you have checked in.<br><br>
+
+            Regards,<br>
+            PCT Tech Team<br><br>
+
+            ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
+        """
+
+        ses_destination = SesDestination(tos=[user_email])
+        ses.send_email(
+            source="checkin-bot@why-phi.com",
+            destination=ses_destination,
+            subject=f"Check-in Confirmation: {event['name']}",
+            text=email_content,
+            html=email_content,
+        )
 
         return {
             "status": True,
@@ -291,6 +312,47 @@ class EventService:
         )
 
         return
+
+    def delete_rush_event(self, event_id: str):
+        """
+        Deletes an rush event from the rush-event collection
+
+        Parameters
+        ----------
+        event_id : str
+            ID of the event to be deleted
+
+        Raises
+        ------
+        BadRequestError
+            If the event does not exist in the rush-event collection
+        """
+        try:
+            # Check if event exists in the rush-event collection
+            event = mongo_module.get_document_by_id(
+                f"{self.collection_prefix}rush-event", event_id
+            )
+
+            if not event:
+                raise Exception("Event does not exist.")
+
+            event_category_id = event["categoryId"]
+
+            # Delete the event from its category
+            mongo_module.update_document(
+                f"{self.collection_prefix}rush",
+                event_category_id,
+                {"$pull": {"events": {"eventId": event_id}}},
+            )
+
+            # Delete event data from the rush-event collection
+            mongo_module.delete_document_by_id(
+                f"{self.collection_prefix}rush-event", event_id
+            )
+            return
+
+        except Exception as e:
+            raise BadRequestError(e)
 
 
 event_service = EventService()

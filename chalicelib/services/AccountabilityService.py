@@ -17,6 +17,11 @@ class AccountabilityService:
             end_row=START_ROW + page_size - 1,
         )
         values = cells["values"]
+
+        # NOTE: It's possible that someone might have added additional rows
+        #       in the spreadsheet, in which all the columns are not populated.
+        #       Ensure to understand the spreadsheet format and make the
+        #       appropriate fix for the code below.
         values = [
             {
                 "name": f"{value[0]} {value[1]}",
@@ -31,6 +36,7 @@ class AccountabilityService:
                 "variableBucketMet": True if "YES" == value[14] else False,
             }
             for value in values
+            if len(value) > 14
         ]
         return values
 
