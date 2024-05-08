@@ -81,6 +81,25 @@ class MongoModule:
         except Exception as e:
             print(e)
         return self.users
+    
+    def find_one_document(self, collection: str, query: dict):
+        """Finds a document in the specified collection."""
+        if collection is None:
+            raise ValueError("The 'collection' parameter cannot be None")
+
+        try:
+            # Use the specified collection to fetch data
+            document = self.mongo_client.vault[collection].find_one(query)
+
+            if document is None:
+                return None
+
+            return document
+        except Exception as e:
+            print(
+                f"An error occurred while fetching data from collection '{collection}': {e}"
+            )
+            raise
 
     @add_env_suffix
     def get_all_data_from_collection(self, collection: str):
