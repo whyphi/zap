@@ -34,6 +34,12 @@ def create_member():
     data = members_api.current_request.json_body
     return member_service.create(data)
 
+@members_api.route("/members", methods=["DELETE"], cors=True)
+@auth(members_api, roles=[Roles.ADMIN])
+def delete_members():
+    data = members_api.current_request.json_body
+    return member_service.delete(data)
+
 @members_api.route("/members/{user_id}/roles", methods=["PATCH"], cors=True)
 @auth(members_api, roles=[Roles.ADMIN])
 def update_member_roles(user_id):

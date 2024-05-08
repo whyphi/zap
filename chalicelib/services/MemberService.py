@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import ConflictError
+from chalice import ConflictError, NotFoundError
 
 import json
 from bson import ObjectId
@@ -40,6 +40,37 @@ class MemberService:
             "success": True,
             "message": "User created successfully",
         }
+    
+    def delete(self, data: list[str]) -> dict:
+        """
+        Deletes user documents based on the provided IDs.
+
+        Args:
+            data (List[str]): A list of document IDs to be deleted.
+
+        Returns:
+            dict: A dictionary indicating the success of the deletion process.
+                Contains the following keys:
+
+                - "success" (bool): True if all documents were deleted successfully, False otherwise.
+                - "message" (str): A message indicating the result of the deletion process.
+
+        Raises:
+            NotFoundError: If no IDs are provided or if a document with one of the
+                provided IDs is not found in the database.
+        """
+        if not data:
+            raise NotFoundError("No IDs provided to delete")
+
+        for id in data:
+            if not mongo_module.delete_document_by_id(self.collection, id):
+                raise NotFoundError(f"Document with ID {id} not found")
+
+        return {
+            "success": True,
+            "message": "Documents deleted successfully",
+        }
+        
 
     def get_all(self):
         data = mongo_module.get_all_data_from_collection(self.collection)
