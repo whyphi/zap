@@ -296,6 +296,7 @@ class EventService:
             # Merge the existing event data with the new data
             updated_event = {**event, **data}
 
+            # Define array update query and filters
             update_query = {
                 "$set": {
                     "events.$[eventElem]": updated_event
@@ -306,7 +307,7 @@ class EventService:
                 {"eventElem.eventId": eventId}
             ]
 
-            # Modify the event in its category
+            # Modify the event in its category (rush collection)
             mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
@@ -314,7 +315,7 @@ class EventService:
                 array_filters=array_filters
             )
 
-            # Modify event data in the rush-event collection
+            # Modify actual event document (rush-event collection)
             mongo_module.update_document(
                 f"{self.collection_prefix}rush-event",
                 eventId,
