@@ -159,7 +159,7 @@ class MongoModule:
             return False
 
     @add_env_suffix
-    def update_document(self, collection, document_id, query):
+    def update_document(self, collection, document_id, query, array_filters=None):
         """
         Updates a document in the specified collection with the given ID.
 
@@ -172,8 +172,12 @@ class MongoModule:
             bool: True if the update was successful, False otherwise.
         """
         try:
+            update_options = {}
+            if array_filters:
+                update_options["array_filters"] = array_filters
+
             result = self.mongo_client.vault[collection].update_one(
-                {"_id": ObjectId(document_id)}, query
+                {"_id": ObjectId(document_id)}, query, **update_options
             )
 
             if result.matched_count > 0:

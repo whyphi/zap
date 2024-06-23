@@ -253,6 +253,8 @@ class EventService:
 
     def create_rush_event(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
+        data["lastModified"] = data["dateCreated"]
+
         data_copy = data.copy()
         data_copy.pop("categoryId", None)
 
@@ -273,6 +275,57 @@ class EventService:
         )
 
         return
+    
+    def modify_rush_event(self, data: dict):
+
+        try:
+            data["lastModified"] = datetime.datetime.now()
+
+            eventId = data["eventId"]
+
+            # Check if event exists in the rush-event collection
+            event = mongo_module.get_document_by_id(
+                f"{self.collection_prefix}rush-event", eventId
+            )
+
+            if not event:
+                raise Exception("Event does not exist.")
+
+            event_category_id = event["categoryId"]
+
+            # Merge the existing event data with the new data
+            updated_event = {**event, **data}
+
+            update_query = {
+                "$set": {
+                    "events.$[eventElem]": updated_event
+                }
+            }
+
+            array_filters = [
+                {"eventElem.eventId": eventId}
+            ]
+
+            # Modify the event in its category
+            mongo_module.update_document(
+                f"{self.collection_prefix}rush",
+                event_category_id,
+                update_query,
+                array_filters=array_filters
+            )
+
+            # Modify event data in the rush-event collection
+            mongo_module.update_document(
+                f"{self.collection_prefix}rush-event",
+                eventId,
+                {"$set": data},
+            )
+            return
+
+        
+        except Exception as e:
+            print("error is ", e)
+            raise BadRequestError(e)
 
     def get_rush_event(self, event_id: str, hide_attendees: bool = True):
         event = mongo_module.get_document_by_id(
