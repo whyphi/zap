@@ -296,6 +296,9 @@ class EventService:
             # Merge the existing event data with the new data
             updated_event = {**event, **data}
 
+            # categoryId not needed on rush collection array elements
+            updated_event.pop("categoryId")
+
             # Define array update query and filters
             update_query = {
                 "$set": {
