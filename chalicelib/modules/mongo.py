@@ -167,6 +167,11 @@ class MongoModule:
             collection (str): The name of the collection to update the document in.
             document_id (str): The ID of the document to update.
             query (dict): A dictionary containing the update operators.
+            array_filters (list, optional): A list of filters to apply when updating 
+                                            elements in an array field of the document.
+                                            Each filter in the list is a dictionary 
+                                            specifying the criteria for selecting 
+                                            array elements to be updated. Default is None.
 
         Returns:
             bool: True if the update was successful, False otherwise.
