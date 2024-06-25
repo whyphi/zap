@@ -95,7 +95,7 @@ def create_rush_event():
 
 @events_api.route("/events/rush", methods=["PATCH"], cors=True)
 @auth(events_api, roles=["admin"])
-def create_rush_event():
+def modify_rush_event():
     data = events_api.current_request.json_body
     return event_service.modify_rush_event(data)
     

@@ -179,7 +179,15 @@ class MongoModule:
         try:
             update_options = {}
             if array_filters:
+                # ensure array_filters is a list
+                if not isinstance(array_filters, list):
+                    raise ValueError("array_filters must be a list.")
+                # ensure each item contains a dictionary
+                for f in array_filters:
+                    if not isinstance(f, dict):
+                        raise ValueError("Each item in array_filters must be a dictionary.")
                 update_options["array_filters"] = array_filters
+
 
             result = self.mongo_client.vault[collection].update_one(
                 {"_id": ObjectId(document_id)}, query, **update_options
