@@ -113,7 +113,6 @@ def test_delete_interview_listing_with_no_responses(service):
     interview_service, mock_mongo = service
 
     interview_listing_id = "123"
-    mock_mongo.delete_document_by_id.return_value = False
     mock_mongo.get_document_by_id.return_value = SAMPLE_INTERVIEW_LISTING[0]
 
     interview_service.delete_interview_listing(interview_listing_id)
@@ -131,7 +130,6 @@ def test_delete_interview_listing(service):
     interview_service, mock_mongo = service
 
     interview_listing_id = "123"
-    mock_mongo.delete_document_by_id.return_value = False
     mock_mongo.get_document_by_id.return_value = SAMPLE_INTERVIEW_LISTING[1]
 
     interview_service.delete_interview_listing(interview_listing_id)

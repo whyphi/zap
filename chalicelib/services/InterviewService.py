@@ -58,6 +58,9 @@ class InterviewService:
         mongo_module.delete_document_by_id(
             f"{self.collection_prefix}listings", interview_id
         )
+        return {
+            "message": f"Interview Listing with ID {interview_id} and its associated responses have been successfully deleted."
+        }
 
 
 interview_service = InterviewService()
