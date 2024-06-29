@@ -43,5 +43,4 @@ app.register_blueprint(monitoring_api)
 
 @app.route("/")
 def index():
-    1 / 0  # raises an error
     return {"hello": "world"}
