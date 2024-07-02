@@ -73,6 +73,7 @@ def delete_event(event_id: str):
 def get_rush_events():
     return event_service.get_rush_categories_and_events()
 
+
 @events_api.route("/events/rush/{event_id}", methods=["GET"], cors=True)
 def get_rush_event(event_id):
     return event_service.get_rush_event(event_id)
@@ -90,6 +91,13 @@ def create_rush_category():
 def create_rush_event():
     data = events_api.current_request.json_body
     return event_service.create_rush_event(data)
+
+
+@events_api.route("/events/rush", methods=["PATCH"], cors=True)
+@auth(events_api, roles=["admin"])
+def modify_rush_event():
+    data = events_api.current_request.json_body
+    return event_service.modify_rush_event(data)
     
 
 @events_api.route("/events/rush/checkin/{event_id}", methods=["POST"], cors=True)

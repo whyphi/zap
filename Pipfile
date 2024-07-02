@@ -18,6 +18,7 @@ google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 thefuzz = "*"
+sentry-sdk = {extras = ["chalice"], version = "*"}
 
 [dev-packages]
 

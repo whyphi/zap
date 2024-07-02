@@ -159,7 +159,7 @@ class MongoModule:
             return False
 
     @add_env_suffix
-    def update_document(self, collection, document_id, query):
+    def update_document(self, collection, document_id, query, array_filters=None):
         """
         Updates a document in the specified collection with the given ID.
 
@@ -167,13 +167,30 @@ class MongoModule:
             collection (str): The name of the collection to update the document in.
             document_id (str): The ID of the document to update.
             query (dict): A dictionary containing the update operators.
+            array_filters (list, optional): A list of filters to apply when updating 
+                                            elements in an array field of the document.
+                                            Each filter in the list is a dictionary 
+                                            specifying the criteria for selecting 
+                                            array elements to be updated. Default is None.
 
         Returns:
             bool: True if the update was successful, False otherwise.
         """
         try:
+            update_options = {}
+            if array_filters:
+                # ensure array_filters is a list
+                if not isinstance(array_filters, list):
+                    raise ValueError("array_filters must be a list.")
+                # ensure each item contains a dictionary
+                for f in array_filters:
+                    if not isinstance(f, dict):
+                        raise ValueError("Each item in array_filters must be a dictionary.")
+                update_options["array_filters"] = array_filters
+
+
             result = self.mongo_client.vault[collection].update_one(
-                {"_id": ObjectId(document_id)}, query
+                {"_id": ObjectId(document_id)}, query, **update_options
             )
 
             if result.matched_count > 0:
