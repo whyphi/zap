@@ -206,6 +206,55 @@ class MongoModule:
             return False
 
     @add_env_suffix
+    def update_many_documents(self, collection: str, filter_query: dict, update_query: dict, array_filters=None):
+        """
+        Updates multiple documents in the specified collection that match the given filter query.
+
+        Args:
+            collection (str): The name of the collection to update the documents in.
+            filter_query (dict): A dictionary containing the filter criteria for selecting documents to update.
+            update_query (dict): A dictionary containing the update operators.
+            array_filters (list, optional): A list of filters to apply when updating 
+                                            elements in an array field of the document.
+                                            Each filter in the list is a dictionary 
+                                            specifying the criteria for selecting 
+                                            array elements to be updated. Default is None.
+
+        Returns:
+            dict: A dictionary containing the count of matched and modified documents.
+        """
+        try:
+            update_options = {}
+            if array_filters:
+                # ensure array_filters is a list
+                if not isinstance(array_filters, list):
+                    raise ValueError("array_filters must be a list.")
+                # ensure each item contains a dictionary
+                for f in array_filters:
+                    if not isinstance(f, dict):
+                        raise ValueError("Each item in array_filters must be a dictionary.")
+                update_options["array_filters"] = array_filters
+
+            result = self.mongo_client.vault[collection].update_many(
+                filter_query, update_query, **update_options
+            )
+
+            if result.matched_count > 0:
+                print(f"{result.matched_count} documents matched the filter query.")
+                print(f"{result.modified_count} documents were updated.")
+                return {
+                    "matched_count": result.matched_count,
+                    "modified_count": result.modified_count,
+                }
+            else:
+                print("No documents matched the filter query.")
+                return {"matched_count": 0, "modified_count": 0}
+        except Exception as e:
+            print(f"An error occurred while updating documents: {e}")
+            return {"matched_count": 0, "modified_count": 0}
+
+
+    @add_env_suffix
     def get_document_by_id(self, collection, document_id):
         """
         Retrieves a document from the specified collection with the given ID.
