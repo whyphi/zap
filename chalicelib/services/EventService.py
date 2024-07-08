@@ -332,20 +332,22 @@ class EventService:
             print("error is ", e)
             raise BadRequestError(e)
 
-    def modify_rush_settings(self, default_rush_category_id: Optional[str] ):
+    def modify_rush_settings(self, data: dict):
         """
         Updates defaultRushCategory from the rush collection
 
         Parameters
         ----------
-        default_rush_category_id : str
-            ID of the rush category to be default
+        data: dict
+            contains default_rush_category_id ID of the rush category to be default
 
         Raises
         ------
         BadRequestError
             If default_rush_category_id is not in the rush collection
         """
+        default_rush_category_id = data["defaultRushCategoryId"]
+        
         collection = f"{self.collection_prefix}rush"
 
         # Set all defaultRushCategory fields to false
@@ -355,7 +357,7 @@ class EventService:
             {"$set": {"defaultRushCategory": False}}
         )
 
-        print("default_rush...", default_rush_category_id, type(default_rush_category_id), default_rush_category_id == "null")
+        # if default_rush_category_id is "" --> reset defaultRushCategory
         if not default_rush_category_id:
             return
 

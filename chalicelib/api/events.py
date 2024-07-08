@@ -99,12 +99,11 @@ def modify_rush_event():
     data = events_api.current_request.json_body
     return event_service.modify_rush_event(data)
 
-@events_api.route("/events/rush/settings/{default_rush_category_id}", methods=["PATCH"], cors=True)
+@events_api.route("/events/rush/settings", methods=["PATCH"], cors=True)
 @auth(events_api, roles=["admin"])
-def modify_rush_settings(default_rush_category_id):
-    if default_rush_category_id == "null":
-        default_rush_category_id = None
-    return event_service.modify_rush_settings(default_rush_category_id)
+def modify_rush_settings():
+    data = events_api.current_request.json_body
+    return event_service.modify_rush_settings(data)
     
 
 @events_api.route("/events/rush/checkin/{event_id}", methods=["POST"], cors=True)
