@@ -206,7 +206,7 @@ class MongoModule:
             return False
 
     @add_env_suffix
-    def update_many_documents(self, collection: str, filter_query: dict, update_query: dict, array_filters=None):
+    def update_many_documents(self, collection: str, filter_query: dict, update_query: dict, array_filters=None) -> dict:
         """
         Updates multiple documents in the specified collection that match the given filter query.
 
