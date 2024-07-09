@@ -14,7 +14,7 @@ from chalicelib.api.events import events_api
 from chalicelib.api.accountability import accountability_api
 from chalicelib.api.monitoring import monitoring_api
 
-import os
+import json
 
 # Configure and initialize sentry
 sentry_sdk.init(
