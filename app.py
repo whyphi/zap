@@ -14,6 +14,7 @@ from chalicelib.api.events import events_api
 from chalicelib.api.accountability import accountability_api
 from chalicelib.api.monitoring import monitoring_api
 
+
 # Configure and initialize sentry
 sentry_sdk.init(
     dsn=boto3.client("ssm").get_parameter(Name="/Zap/sentry/dsn", WithDecryption=True)[
