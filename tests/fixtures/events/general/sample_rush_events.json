@@ -1,0 +1,44 @@
+[
+  {
+      "_id": "6689c9ad461be403487c0bf6",
+      "name": "Test default",
+      "defaultRushCategory": false,
+      "dateCreated": "2024-07-06T18:48:13.498000",
+      "events": []
+  },
+  {
+      "_id": "668ab770b97edcf7e0dd7c61",
+      "name": "Spring 2024",
+      "defaultRushCategory": false,
+      "dateCreated": "2024-07-07T11:42:40.365000",
+      "events": []
+  },
+  {
+      "_id": "668ab777b97edcf7e0dd7c62",
+      "name": "Fall 2024",
+      "defaultRushCategory": false,
+      "dateCreated": "2024-07-07T11:42:47.334000",
+      "events": [
+          {
+              "_id": "668ac7fd961912025eff6e1c",
+              "name": "Info Session 1",
+              "code": "info",
+              "location": "EPC 204",
+              "date": "2024-07-07T16:52:32.071Z",
+              "deadline": "2024-07-07T18:52:32.071Z",
+              "dateCreated": "2024-07-07T12:53:17.418000",
+              "lastModified": "2024-07-07T13:25:39.525000",
+              "attendees": [],
+              "numAttendees": 0,
+              "eventId": "668ac7fd961912025eff6e1c"
+          }
+      ]
+  },
+  {
+      "_id": "668eb4d9bb65e34f7746ae71",
+      "name": "Spring 2025",
+      "defaultRushCategory": false,
+      "dateCreated": "2024-07-10T12:20:41.851000",
+      "events": []
+  }
+]
