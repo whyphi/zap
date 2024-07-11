@@ -19,6 +19,7 @@ google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 thefuzz = "*"
 sentry-sdk = {extras = ["chalice"], version = "*"}
+mongomock = "*"
 
 [dev-packages]
 
