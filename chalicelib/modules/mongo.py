@@ -1,5 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from bson import ObjectId
+import mongomock
 import boto3
 import os
 
@@ -7,8 +8,13 @@ import os
 class MongoModule:
     """Manages connections to MongoDB."""
 
-    def __init__(self):
+    def __init__(self, use_mock=False):
         """Establishes connection to MongoDB server"""
+        self.use_mock = use_mock
+        if use_mock:
+            self.mongo_client = mongomock.MongoClient()
+            return
+        
         self.is_prod = os.environ.get("ENV") == "prod"
         self.ssm_client = boto3.client("ssm")
         self.user = self.ssm_client.get_parameter(

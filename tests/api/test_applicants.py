@@ -1,6 +1,5 @@
-from chalice.app import Request
 from chalice.test import Client
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 
 from app import app
