@@ -57,9 +57,26 @@ jobs:
       - run: pipenv requirements > requirements.txt
       - run: pip install -r requirements.txt
 
-      - name: Chalice deploy to dev
-        run: chalice deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        # Configure AWS Credential
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.ACCESS_KEY_SECRET }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+    
+      - name: Package chalice application
+        run: chalice package /tmp/packaged-app/
+
+      - name: Upload deployment file to S3 bucket
+        run: aws cloudformation package \
+              --template-file /tmp/packaged-app/sam.json \
+              --s3-bucket zap-deployment \
+              --output-template-file /tmp/packaged-app/packaged.yaml
+
+      - name: Deploy app using Cloudformation
+        run: aws cloudformation deploy \
+              --template-file /tmp/packaged-app/packaged.yaml \
+              --stack-name zap-stack-dev \
+              --capabilities CAPABILITY_IAM \
+              --s3-bucket zap-deployment
