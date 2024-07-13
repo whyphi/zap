@@ -5,6 +5,7 @@ from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
+from typing import Optional
 
 
 class EventService:
@@ -330,6 +331,47 @@ class EventService:
         except Exception as e:
             print("error is ", e)
             raise BadRequestError(e)
+
+    def modify_rush_settings(self, data: dict):
+        """
+        Updates defaultRushCategory from the rush collection
+
+        Parameters
+        ----------
+        data: dict
+            contains default_rush_category_id ID of the rush category to be default
+
+        Raises
+        ------
+        BadRequestError
+            If default_rush_category_id is not in the rush collection
+        """
+        default_rush_category_id = data["defaultRushCategoryId"]
+        
+        collection = f"{self.collection_prefix}rush"
+
+        # Set all defaultRushCategory fields to false
+        mongo_module.update_many_documents(
+            collection,
+            {},
+            {"$set": {"defaultRushCategory": False}}
+        )
+
+        # if default_rush_category_id is "" --> reset defaultRushCategory
+        if not default_rush_category_id:
+            return
+
+        # Update the specified document to set its defaultRushCategory to true
+        result = mongo_module.update_document_by_id(
+            collection,
+            default_rush_category_id,
+            {"defaultRushCategory": True}
+        )
+
+        if not result:
+            raise ValueError(f"Document with ID {default_rush_category_id} was not found or could not be updated.")
+
+        return
 
     def get_rush_event(self, event_id: str, hide_attendees: bool = True):
         event = mongo_module.get_document_by_id(
