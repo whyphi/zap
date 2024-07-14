@@ -5,8 +5,6 @@ from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
-from typing import Optional
-
 
 class EventService:
     class BSONEncoder(json.JSONEncoder):
@@ -19,17 +17,19 @@ class EventService:
                 return str(o)
             return super().default(o)
 
-    def __init__(self):
+    def __init__(self, mongo_module=mongo_module):
+        self.mongo_module = mongo_module
         self.collection_prefix = "events-"
 
     def create_timeframe(self, timeframe_data: dict):
         timeframe_data["dateCreated"] = datetime.datetime.now()
-        mongo_module.insert_document(
-            f"{self.collection_prefix}timeframe", timeframe_data
+        self.mongo_module.insert_document(
+            collection=f"{self.collection_prefix}timeframe", data=timeframe_data
         )
+        return {"msg": True}
 
     def get_timeframe(self, timeframe_id: str):
-        timeframe = mongo_module.get_document_by_id(
+        timeframe = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -37,7 +37,7 @@ class EventService:
 
     def get_all_timeframes(self):
         """Retrieve all timeframes from the database."""
-        timeframes = mongo_module.get_all_data_from_collection(
+        timeframes = self.mongo_module.get_all_data_from_collection(
             f"{self.collection_prefix}timeframe"
         )
 
@@ -45,7 +45,7 @@ class EventService:
 
     def delete_timeframe(self, timeframe_id: str):
         # Check if timeframe exists and if it doesn't return errors
-        timeframe = mongo_module.get_document_by_id(
+        timeframe = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -57,12 +57,12 @@ class EventService:
 
         # Delete all the events in the timeframe
         for event_id in event_ids:
-            mongo_module.delete_document_by_id(
+            self.mongo_module.delete_document_by_id(
                 f"{self.collection_prefix}event", event_id
             )
 
         # If timeframe exists, delete the timeframe document
-        mongo_module.delete_document_by_id(
+        self.mongo_module.delete_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -72,7 +72,7 @@ class EventService:
         event_data["usersAttended"] = []
 
         # Get Google Spreadsheet ID from timeframe
-        timeframe_doc = mongo_module.get_document_by_id(
+        timeframe_doc = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
         spreadsheet_id = timeframe_doc["spreadsheetId"]
@@ -86,14 +86,14 @@ class EventService:
         event_data["spreadsheetCol"] = col
 
         # Insert the event in event collection
-        event_id = mongo_module.insert_document(
+        event_id = self.mongo_module.insert_document(
             f"{self.collection_prefix}event", event_data
         )
 
         event_data["eventId"] = str(event_id)
 
         # Insert child event in timeframe collection
-        mongo_module.update_document(
+        self.mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
             {"$push": {"events": event_data}},
@@ -102,7 +102,7 @@ class EventService:
         return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
-        event = mongo_module.get_document_by_id(
+        event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -119,13 +119,13 @@ class EventService:
             dict -- Dictionary containing status and message.
         """
         user_id, user_email = user["id"], user["email"]
-        member = mongo_module.get_document_by_id(f"users", user_id)
+        member = self.mongo_module.get_document_by_id(f"users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
         user_name = member["name"]
 
-        event = mongo_module.get_document_by_id(
+        event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -139,7 +139,7 @@ class EventService:
         }
 
         # Get timeframe document to get Google Sheets info
-        timeframe = mongo_module.get_document_by_id(
+        timeframe = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", event["timeframeId"]
         )
 
@@ -173,7 +173,7 @@ class EventService:
         )
 
         # Update event collection with checkin data
-        mongo_module.update_document(
+        self.mongo_module.update_document(
             f"{self.collection_prefix}event",
             event_id,
             {"$push": {"usersAttended": checkin_data}},
@@ -207,7 +207,7 @@ class EventService:
 
     def delete(self, event_id: str):
         # Check if event exists and if it doesn't return errors
-        event = mongo_module.get_document_by_id(
+        event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -218,17 +218,17 @@ class EventService:
         timeframe_id = event["timeframeId"]
 
         # Remove event from timeframe
-        mongo_module.update_document(
+        self.mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
             {"$pull": {"events": {"_id": ObjectId(event_id)}}},
         )
 
         # Delete the event document
-        mongo_module.delete_document_by_id(f"{self.collection_prefix}event", event_id)
+        self.mongo_module.delete_document_by_id(f"{self.collection_prefix}event", event_id)
 
     def get_timeframe_sheets(self, timeframe_id: str):
-        timeframe = mongo_module.get_document_by_id(
+        timeframe = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -240,7 +240,7 @@ class EventService:
         return [sheet["title"] for sheet in sheets]
 
     def get_rush_categories_and_events(self):
-        rush_categories = mongo_module.get_all_data_from_collection(
+        rush_categories = self.mongo_module.get_all_data_from_collection(
             f"{self.collection_prefix}rush"
         )
 
@@ -249,7 +249,7 @@ class EventService:
     def create_rush_category(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
         data["events"] = []
-        mongo_module.insert_document(f"{self.collection_prefix}rush", data)
+        self.mongo_module.insert_document(f"{self.collection_prefix}rush", data)
         return
 
     def create_rush_event(self, data: dict):
@@ -262,14 +262,14 @@ class EventService:
         # Add event to its own collection
         data["attendees"] = []
         data["numAttendees"] = 0
-        event_id = mongo_module.insert_document(
+        event_id = self.mongo_module.insert_document(
             f"{self.collection_prefix}rush-event", data
         )
 
         data_copy["eventId"] = str(event_id)
 
         # Add event to rush category
-        mongo_module.update_document(
+        self.mongo_module.update_document(
             f"{self.collection_prefix}rush",
             data["categoryId"],
             {"$push": {"events": data_copy}},
@@ -285,7 +285,7 @@ class EventService:
             eventId = data["eventId"]
 
             # Check if event exists in the rush-event collection
-            event = mongo_module.get_document_by_id(
+            event = self.mongo_module.get_document_by_id(
                 f"{self.collection_prefix}rush-event", eventId
             )
 
@@ -312,7 +312,7 @@ class EventService:
             ]
 
             # Modify the event in its category (rush collection)
-            mongo_module.update_document(
+            self.mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
                 update_query,
@@ -320,7 +320,7 @@ class EventService:
             )
 
             # Modify actual event document (rush-event collection)
-            mongo_module.update_document(
+            self.mongo_module.update_document(
                 f"{self.collection_prefix}rush-event",
                 eventId,
                 {"$set": data},
@@ -351,7 +351,7 @@ class EventService:
         collection = f"{self.collection_prefix}rush"
 
         # Set all defaultRushCategory fields to false
-        mongo_module.update_many_documents(
+        self.mongo_module.update_many_documents(
             collection,
             {},
             {"$set": {"defaultRushCategory": False}}
@@ -362,7 +362,7 @@ class EventService:
             return
 
         # Update the specified document to set its defaultRushCategory to true
-        result = mongo_module.update_document_by_id(
+        result = self.mongo_module.update_document_by_id(
             collection,
             default_rush_category_id,
             {"defaultRushCategory": True}
@@ -374,7 +374,7 @@ class EventService:
         return
 
     def get_rush_event(self, event_id: str, hide_attendees: bool = True):
-        event = mongo_module.get_document_by_id(
+        event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
 
@@ -387,7 +387,7 @@ class EventService:
         return json.dumps(event, cls=self.BSONEncoder)
 
     def checkin_rush(self, event_id: str, user_data: dict):
-        event = mongo_module.get_document_by_id(
+        event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
 
@@ -404,7 +404,7 @@ class EventService:
         event["attendees"].append(user_data)
         event["numAttendees"] += 1
 
-        mongo_module.update_document(
+        self.mongo_module.update_document(
             f"{self.collection_prefix}rush-event",
             event_id,
             {"$set": event},
@@ -428,7 +428,7 @@ class EventService:
         """
         try:
             # Check if event exists in the rush-event collection
-            event = mongo_module.get_document_by_id(
+            event = self.mongo_module.get_document_by_id(
                 f"{self.collection_prefix}rush-event", event_id
             )
 
@@ -438,14 +438,14 @@ class EventService:
             event_category_id = event["categoryId"]
 
             # Delete the event from its category
-            mongo_module.update_document(
+            self.mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
                 {"$pull": {"events": {"eventId": event_id}}},
             )
 
             # Delete event data from the rush-event collection
-            mongo_module.delete_document_by_id(
+            self.mongo_module.delete_document_by_id(
                 f"{self.collection_prefix}rush-event", event_id
             )
             return
