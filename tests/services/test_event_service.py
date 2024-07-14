@@ -28,12 +28,12 @@ def event_service(mock_mongo_module):
 
 def test_insert_document(event_service, mock_mongo_module):
     CREATE_TIMEFRAME = { "name": "testTimeframeName", "spreadsheetId": "testSpreadsheetId" }
-    dateCreated = datetime.datetime.now()
+    date_created = datetime.datetime.now()
 
     with patch("chalicelib.services.EventService.datetime") as mock_datetime:
-        mock_datetime.datetime.now.return_value = dateCreated
+        mock_datetime.datetime.now.return_value = date_created
         result = event_service.create_timeframe(CREATE_TIMEFRAME)
-        CREATE_TIMEFRAME["dateCreated"] = dateCreated
+        CREATE_TIMEFRAME["date_created"] = date_created
         mock_mongo_module.insert_document.assert_called_once_with(
             collection="events-timeframe", data=CREATE_TIMEFRAME
         )
@@ -51,13 +51,28 @@ def test_get_timeframe(event_service, mock_mongo_module):
 
     assert result == json.dumps(SAMPLE_TIMEFRAMES[0])
 
+def test_get_all_timeframe(event_service, mock_mongo_module):
+    mock_mongo_module.get_all_data_from_collection.return_value = SAMPLE_TIMEFRAMES
+ 
+    result = event_service.get_all_timeframes()
+    mock_mongo_module.get_all_data_from_collection.assert_called_once_with(
+        collection="events-timeframe"
+    )
+
+    assert result == json.dumps(SAMPLE_TIMEFRAMES)
+
+def test_delete_timeframe(event_service, mock_mongo_module):
+    result = event_service.delete_timeframe(timeframe_id=SAMPLE_TIMEFRAMES[0]["_id"])
+    assert result["statusCode"] == 200
+
+
+# TODO: potentially add mocking for GoogleSheetsModule (otherwise test is not isolated)
+# def test_create_event(event_service, mock_mongo_module):
+#     CREATE_TIMEFRAME = { "name": "eventName", "tags": "tags", "sheetTab": "selectedSheetTab" }
+#     date_created = datetime.datetime.now()
+#     timeframe_id = "timeframeId"
+
 # TODO:
-
-# def get_all_timeframes(self):
-
-# def delete_timeframe(self, timeframe_id: str):
-
-# def create_event(self, timeframe_id: str, event_data: dict):
 
 # def get_event(self, event_id: str):
 

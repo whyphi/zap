@@ -65,6 +65,8 @@ class EventService:
         self.mongo_module.delete_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
+        
+        return {"statusCode": 200}
 
     def create_event(self, timeframe_id: str, event_data: dict):
         event_data["dateCreated"] = datetime.datetime.now()
