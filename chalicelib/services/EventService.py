@@ -30,7 +30,7 @@ class EventService:
 
     def get_timeframe(self, timeframe_id: str):
         timeframe = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}timeframe", timeframe_id
+            collection=f"{self.collection_prefix}timeframe", document_id=timeframe_id
         )
 
         return json.dumps(timeframe, cls=self.BSONEncoder)
