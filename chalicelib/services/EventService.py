@@ -5,6 +5,8 @@ from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
+from chalicelib.s3 import s3
+import uuid
 
 class EventService:
     class BSONEncoder(json.JSONEncoder):
@@ -255,8 +257,18 @@ class EventService:
         return
 
     def create_rush_event(self, data: dict):
+        event_id = str(uuid.uuid4())
         data["dateCreated"] = datetime.datetime.now()
         data["lastModified"] = data["dateCreated"]
+        data["eventId"] = event_id
+
+        # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
+        image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageName']}.png"
+        print("image path", image_path)
+        image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
+
+        # add image_url to data object (this also replaces the original base64 image url)
+        data["eventCoverImage"] = image_url
 
         data_copy = data.copy()
         data_copy.pop("categoryId", None)
@@ -264,11 +276,9 @@ class EventService:
         # Add event to its own collection
         data["attendees"] = []
         data["numAttendees"] = 0
-        event_id = self.mongo_module.insert_document(
+        self.mongo_module.insert_document(
             f"{self.collection_prefix}rush-event", data
         )
-
-        data_copy["eventId"] = str(event_id)
 
         # Add event to rush category
         self.mongo_module.update_document(
