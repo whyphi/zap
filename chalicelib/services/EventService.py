@@ -314,11 +314,11 @@ class EventService:
                 # remove previous eventCoverImage from s3 bucket
                 s3.delete_binary_data(object_id=image_path)
                 
-                # # upload eventCoverImage to s3 bucket
-                # image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
+                # upload eventCoverImage to s3 bucket
+                image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
 
-                # # add image_url to data object (this also replaces the original base64 image url)
-                # data["eventCoverImage"] = image_url
+                # add image_url to data object (this also replaces the original base64 image url)
+                data["eventCoverImage"] = image_url
 
 
             # Merge the existing event data with the new data
