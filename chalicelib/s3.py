@@ -39,7 +39,6 @@ class S3Client:
         
         return object_url
 
-    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
     def delete_binary_data(self, object_id: str) -> str:
         """Deletes object from s3 and returns response
         Args:
@@ -48,6 +47,8 @@ class S3Client:
 
         Returns:
             str: A message indicating the result of the deletion operation.
+            
+        Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
         if self.is_prod:
             path = f"prod/{object_id}"
