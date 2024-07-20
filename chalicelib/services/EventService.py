@@ -290,9 +290,11 @@ class EventService:
     def modify_rush_event(self, data: dict):
 
         try:
-            data["lastModified"] = datetime.datetime.now()
-
             event_id = data["_id"]
+            object_event_id = ObjectId(event_id)
+
+            data["lastModified"] = datetime.datetime.now()
+            data["_id"] = object_event_id
 
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
@@ -335,26 +337,33 @@ class EventService:
             }
 
             array_filters = [
-                {"eventElem._id": event_id}
+                {"eventElem._id": object_event_id}
             ]
 
             # Modify the event in its category (rush collection)
-            self.mongo_module.update_document(
-                f"{self.collection_prefix}rush",
-                event_category_id,
-                update_query,
+            update_category_result = self.mongo_module.update_document(
+                collection=f"{self.collection_prefix}rush",
+                document_id=event_category_id,
+                query=update_query,
                 array_filters=array_filters
             )
+            
+            if not update_category_result:
+                raise Exception("Error updating rush-event-category.")
 
             # cannot include _id on original document (immutable)
             data.pop("_id")
             
             # Modify actual event document (rush-event collection)
-            self.mongo_module.update_document(
+            updated_event_result = self.mongo_module.update_document(
                 f"{self.collection_prefix}rush-event",
                 event_id,
                 {"$set": data},
             )
+
+            if not updated_event_result:
+                raise Exception("Error updating rush-event-category.")
+                
             return
 
         
