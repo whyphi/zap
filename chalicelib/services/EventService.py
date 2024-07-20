@@ -5,6 +5,7 @@ from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
+from chalicelib.s3 import s3
 
 class EventService:
     class BSONEncoder(json.JSONEncoder):
@@ -255,8 +256,17 @@ class EventService:
         return
 
     def create_rush_event(self, data: dict):
+        event_id = ObjectId()
         data["dateCreated"] = datetime.datetime.now()
         data["lastModified"] = data["dateCreated"]
+        data["_id"] = event_id
+
+        # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
+        image_path = f"image/rush/{data['categoryId']}/{event_id}.png"
+        image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
+
+        # add image_url to data object (this also replaces the original base64 image url)
+        data["eventCoverImage"] = image_url
 
         data_copy = data.copy()
         data_copy.pop("categoryId", None)
@@ -264,11 +274,9 @@ class EventService:
         # Add event to its own collection
         data["attendees"] = []
         data["numAttendees"] = 0
-        event_id = self.mongo_module.insert_document(
+        self.mongo_module.insert_document(
             f"{self.collection_prefix}rush-event", data
         )
-
-        data_copy["eventId"] = str(event_id)
 
         # Add event to rush category
         self.mongo_module.update_document(
@@ -278,23 +286,40 @@ class EventService:
         )
 
         return
-    
+
     def modify_rush_event(self, data: dict):
 
         try:
             data["lastModified"] = datetime.datetime.now()
 
-            eventId = data["eventId"]
+            event_id = data["_id"]
 
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
-                f"{self.collection_prefix}rush-event", eventId
+                f"{self.collection_prefix}rush-event", event_id
             )
 
             if not event:
                 raise Exception("Event does not exist.")
 
             event_category_id = event["categoryId"]
+
+            # if eventCoverImage contains https://whyphi-zap.s3.amazonaws.com, no need to update anything, otherwise update s3
+            if "https://whyphi-zap.s3.amazonaws.com" not in data["eventCoverImage"]:
+                
+                # get image path
+                image_path = f"image/rush/{event_category_id}/{event_id}.png"
+                print("hello there ", image_path)
+                
+                # remove previous eventCoverImage from s3 bucket
+                s3.delete_binary_data(object_id=image_path)
+                
+                # upload eventCoverImage to s3 bucket
+                image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
+
+                # add image_url to data object (this also replaces the original base64 image url)
+                data["eventCoverImage"] = image_url
+
 
             # Merge the existing event data with the new data
             updated_event = {**event, **data}
@@ -310,7 +335,7 @@ class EventService:
             }
 
             array_filters = [
-                {"eventElem.eventId": eventId}
+                {"eventElem._id": event_id}
             ]
 
             # Modify the event in its category (rush collection)
@@ -321,10 +346,13 @@ class EventService:
                 array_filters=array_filters
             )
 
+            # cannot include _id on original document (immutable)
+            data.pop("_id")
+            
             # Modify actual event document (rush-event collection)
             self.mongo_module.update_document(
                 f"{self.collection_prefix}rush-event",
-                eventId,
+                event_id,
                 {"$set": data},
             )
             return
@@ -443,7 +471,7 @@ class EventService:
             self.mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
-                {"$pull": {"events": {"eventId": event_id}}},
+                {"$pull": {"events": {"_id": event_id}}},
             )
 
             # Delete event data from the rush-event collection

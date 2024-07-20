@@ -13,7 +13,7 @@ class S3Client:
         self.s3 = boto3.client("s3")
 
     def upload_binary_data(self, path: str, data: str) -> str:
-        """Uploads resume to S3 Bucket and returns path"""
+        """Uploads object to S3 Bucket and returns path"""
         # Set path
         if self.is_prod:
             path = f"prod/{path}"
@@ -38,5 +38,28 @@ class S3Client:
         object_url = s3_endpoint + path
         
         return object_url
+
+    def delete_binary_data(self, object_id: str) -> str:
+        """Deletes object from s3 and returns response
+        Args:
+            object_id (str): The key (path) of the object to delete from the S3 bucket.
+            e.g. dev/image/rush/66988908fd70b2c44bf2305d/199bb28f-b54c-48a3-9b94-1c95eab61f7d/infosession2.png
+
+        Returns:
+            str: A message indicating the result of the deletion operation.
+            
+        Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
+        """
+        if self.is_prod:
+            path = f"prod/{object_id}"
+        else:
+            path = f"dev/{object_id}"
+        
+        # delete binary data given bucket_name and key
+        response = self.s3.delete_object(
+            Bucket=self.bucket_name, Key=path
+        )
+        
+        return response
 
 s3 = S3Client()
