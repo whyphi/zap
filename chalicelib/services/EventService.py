@@ -268,17 +268,12 @@ class EventService:
         # add image_url to data object (this also replaces the original base64 image url)
         data["eventCoverImage"] = image_url
 
-        # initialize attendee info (for rush-event)
-        data["attendees"] = []
-        data["numAttendees"] = 0
-
         data_copy = data.copy()
-        # Remove catgoryId, attendees, and numAttendees from rush category (shouldn't be persisted)
         data_copy.pop("categoryId", None)
-        data_copy.pop("attendees", None)
-        data_copy.pop("numAttendees", None)
 
         # Add event to its own collection
+        data["attendees"] = []
+        data["numAttendees"] = 0
         self.mongo_module.insert_document(
             f"{self.collection_prefix}rush-event", data
         )
@@ -316,6 +311,7 @@ class EventService:
                 
                 # get image path
                 image_path = f"image/rush/{event_category_id}/{event_id}.png"
+                print("hello there ", image_path)
                 
                 # remove previous eventCoverImage from s3 bucket
                 s3.delete_binary_data(object_id=image_path)
@@ -330,10 +326,8 @@ class EventService:
             # Merge the existing event data with the new data
             updated_event = {**event, **data}
 
-            # Remove catgoryId, attendees, and numAttendees from rush category (shouldn't be persisted)
-            updated_event.pop("categoryId", None)
-            updated_event.pop("attendees", None)
-            updated_event.pop("numAttendees", None)
+            # categoryId not needed on rush collection array elements
+            updated_event.pop("categoryId")
 
             # Define array update query and filters
             update_query = {
@@ -472,38 +466,26 @@ class EventService:
             If the event does not exist in the rush-event collection
         """
         try:
-            # Get event_id as ObjectId
-            object_event_id = ObjectId(event_id)
-            
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
-                f"{self.collection_prefix}rush-event", object_event_id
+                f"{self.collection_prefix}rush-event", event_id
             )
-            
+
             if not event:
                 raise Exception("Event does not exist.")
 
             event_category_id = event["categoryId"]
 
-            # Get eventCoverImage path
-            image_path = f"image/rush/{event_category_id}/{event_id}.png"
-            
-            # remove previous eventCoverImage from s3 bucket
-            s3.delete_binary_data(object_id=image_path)
-            
-            # upload eventCoverImage to s3 bucket
-            s3.delete_binary_data(object_id=image_path)
-
             # Delete the event from its category
             self.mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
-                {"$pull": {"events": {"_id": object_event_id}}},
+                {"$pull": {"events": {"_id": event_id}}},
             )
 
             # Delete event data from the rush-event collection
             self.mongo_module.delete_document_by_id(
-                f"{self.collection_prefix}rush-event", object_event_id
+                f"{self.collection_prefix}rush-event", event_id
             )
             return
 
