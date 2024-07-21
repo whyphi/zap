@@ -52,7 +52,7 @@ class EventsRushService:
             "_id": attendees_id,
             "eventId": event_id,
             "attendees": [],
-            "numAtendees": 0
+            "numAttendees": 0
         }
         self.mongo_module.insert_document(
             collection=f"{self.collection_prefix}rush-event-attendees",
@@ -149,7 +149,6 @@ class EventsRushService:
                 
             return
 
-        
         except Exception as e:
             print("error is ", e)
             raise BadRequestError(e)
@@ -201,8 +200,7 @@ class EventsRushService:
         )
 
         if hide_attendees:
-            event.pop("attendees", None)
-            event.pop("numAttendees", None)
+            event.pop("attendeesId", None)
 
         event.pop("code")
 
@@ -212,6 +210,12 @@ class EventsRushService:
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
+        
+        attendees_oid = event["attendeesId"]
+        
+        attendees = self.mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush-event-attendees", attendees_oid
+        )
 
         code = user_data["code"]
         user_data.pop("code")
@@ -219,17 +223,18 @@ class EventsRushService:
         if code != event["code"]:
             raise UnauthorizedError("Invalid code.")
 
-        if any(d["email"] == user_data["email"] for d in event["attendees"]):
+        if any(d["email"] == user_data["email"] for d in attendees["attendees"]):
             raise BadRequestError("User has already checked in.")
 
         user_data["checkinTime"] = datetime.datetime.now()
-        event["attendees"].append(user_data)
-        event["numAttendees"] += 1
+        attendees["attendees"].append(user_data)
+        attendees["numAttendees"] += 1
 
+        # Update attendees collection with data
         self.mongo_module.update_document(
-            f"{self.collection_prefix}rush-event",
-            event_id,
-            {"$set": event},
+            collection=f"{self.collection_prefix}rush-event-attendees",
+            document_id=attendees_oid,
+            query={"$set": attendees},
         )
 
         return
@@ -260,6 +265,7 @@ class EventsRushService:
             if not event:
                 raise Exception("Event does not exist.")
 
+            attendees_oid = event["attendeesId"]
             event_category_id = event["categoryId"]
 
             # Get eventCoverImage path
@@ -273,15 +279,23 @@ class EventsRushService:
 
             # Delete the event from its category
             self.mongo_module.update_document(
-                f"{self.collection_prefix}rush",
-                event_category_id,
-                {"$pull": {"events": {"_id": event_oid}}},
+                collection=f"{self.collection_prefix}rush",
+                document_id=event_category_id,
+                query={"$pull": {"events": {"_id": event_oid}}},
             )
 
             # Delete event data from the rush-event collection
             self.mongo_module.delete_document_by_id(
-                f"{self.collection_prefix}rush-event", event_oid
+                collection=f"{self.collection_prefix}rush-event", 
+                document_id=event_oid
             )
+            
+            # Delete attendees data from rush-event-attendees collection
+            self.mongo_module.delete_document_by_id(
+                collection=f"{self.collection_prefix}rush-event-attendees", 
+                document_id=attendees_oid
+            )
+            
             return
 
         except Exception as e:
