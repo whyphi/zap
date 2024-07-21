@@ -47,14 +47,18 @@ class EventsRushService:
         data["eventCoverImage"] = image_url
 
         # initialize attendee info (for rush-event)
-        data["attendees"] = []
-        data["numAttendees"] = 0
-
-        data_copy = data.copy()
-        # Remove catgoryId, attendees, and numAttendees from rush category (shouldn't be persisted)
-        data_copy.pop("categoryId", None)
-        data_copy.pop("attendees", None)
-        data_copy.pop("numAttendees", None)
+        attendees_id = ObjectId()
+        attendees = {
+            "_id": attendees_id,
+            "eventId": event_id,
+            "attendees": [],
+            "numAtendees": 0
+        }
+        self.mongo_module.insert_document(
+            collection=f"{self.collection_prefix}rush-event-attendees",
+            data=attendees
+        )
+        data["attendeesId"] = attendees_id
 
         # Add event to its own collection
         self.mongo_module.insert_document(
@@ -65,7 +69,7 @@ class EventsRushService:
         self.mongo_module.update_document(
             f"{self.collection_prefix}rush",
             data["categoryId"],
-            {"$push": {"events": data_copy}},
+            {"$push": { "events": data }},
         )
 
         return
@@ -74,10 +78,10 @@ class EventsRushService:
 
         try:
             event_id = data["_id"]
-            object_event_id = ObjectId(event_id)
+            event_oid = ObjectId(event_id)
 
             data["lastModified"] = datetime.datetime.now()
-            data["_id"] = object_event_id
+            data["_id"] = event_oid
 
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
@@ -104,24 +108,19 @@ class EventsRushService:
                 # add image_url to data object (this also replaces the original base64 image url)
                 data["eventCoverImage"] = image_url
 
-
-            # Merge the existing event data with the new data
-            updated_event = {**event, **data}
-
-            # Remove catgoryId, attendees, and numAttendees from rush category (shouldn't be persisted)
-            updated_event.pop("categoryId", None)
-            updated_event.pop("attendees", None)
-            updated_event.pop("numAttendees", None)
+            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
+            # that data overrides the matching keys
+            data = { **event, **data }
 
             # Define array update query and filters
             update_query = {
                 "$set": {
-                    "events.$[eventElem]": updated_event
+                    "events.$[eventElem]": data
                 }
             }
 
             array_filters = [
-                {"eventElem._id": object_event_id}
+                {"eventElem._id": event_oid}
             ]
 
             # Modify the event in its category (rush collection)
@@ -251,11 +250,11 @@ class EventsRushService:
         """
         try:
             # Get event_id as ObjectId
-            object_event_id = ObjectId(event_id)
+            event_oid = ObjectId(event_id)
             
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
-                f"{self.collection_prefix}rush-event", object_event_id
+                f"{self.collection_prefix}rush-event", event_oid
             )
             
             if not event:
@@ -276,12 +275,12 @@ class EventsRushService:
             self.mongo_module.update_document(
                 f"{self.collection_prefix}rush",
                 event_category_id,
-                {"$pull": {"events": {"_id": object_event_id}}},
+                {"$pull": {"events": {"_id": event_oid}}},
             )
 
             # Delete event data from the rush-event collection
             self.mongo_module.delete_document_by_id(
-                f"{self.collection_prefix}rush-event", object_event_id
+                f"{self.collection_prefix}rush-event", event_oid
             )
             return
 
