@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from chalicelib.services.EventService import EventService
+from zap.chalicelib.services.EventsMemberService import EventService
 import datetime
 import json
 
