@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from chalicelib.services.EventService import EventService
+from chalicelib.services.EventsMemberService import EventsMemberService
 import datetime
 import json
 
@@ -24,13 +24,13 @@ def mock_mongo_module():
 
 @pytest.fixture
 def event_service(mock_mongo_module):
-    return EventService(mock_mongo_module)
+    return EventsMemberService(mock_mongo_module)
 
 def test_insert_document(event_service, mock_mongo_module):
     CREATE_TIMEFRAME = { "name": "testTimeframeName", "spreadsheetId": "testSpreadsheetId" }
     date_created = datetime.datetime.now()
 
-    with patch("chalicelib.services.EventService.datetime") as mock_datetime:
+    with patch("chalicelib.services.EventsMemberService.datetime") as mock_datetime:
         mock_datetime.datetime.now.return_value = date_created
         result = event_service.create_timeframe(CREATE_TIMEFRAME)
         CREATE_TIMEFRAME["date_created"] = date_created
@@ -72,7 +72,7 @@ def test_delete_timeframe(event_service, mock_mongo_module):
 #     date_created = datetime.datetime.now()
 #     timeframe_id = "timeframeId"
 
-# TODO:
+# TODO: test_events_member
 
 # def get_event(self, event_id: str):
 
@@ -81,6 +81,8 @@ def test_delete_timeframe(event_service, mock_mongo_module):
 # def delete(self, event_id: str):
 
 # def get_timeframe_sheets(self, timeframe_id: str):
+
+# TODO: test_events_rush
 
 # def get_rush_categories_and_events(self):
 
