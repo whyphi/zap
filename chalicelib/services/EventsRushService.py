@@ -262,6 +262,16 @@ class EventsRushService:
         # remove code from every rush event
         for event in rush_category["events"]:
             event.pop("code", None)
+            
+        # Sort events by the date field
+        try:
+            rush_category["events"].sort(
+                key=lambda e: datetime.datetime.strptime(e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                reverse=True
+            )
+        except ValueError as ve:
+            # Handle the case where the date format might be different or invalid
+            print(f"Date format error: {ve}")
 
         return json.dumps(rush_category, cls=self.BSONEncoder)
 
