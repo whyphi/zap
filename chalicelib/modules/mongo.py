@@ -105,14 +105,21 @@ class MongoModule:
             raise
 
     @add_env_suffix
-    def get_all_data_from_collection(self, collection: str):
-        """Fetches all data from the specified collection."""
-        if collection is None:
-            raise ValueError("The 'collection' parameter cannot be None")
+    def get_data_from_collection(self, collection: str, filter: dict = {}):
+        """
+        Fetches all data from the specified collection.
+        
+        Args:
+            collection (str): The name of the collection to update the document in.
+            filter (dict, optional): Dictionary of filters to be applied to collection query.
+
+        Returns:
+            list: List of documents in the collection that match filter.
+        """
 
         try:
             # Use the specified collection to fetch data
-            cursor = self.mongo_client.vault[collection].find()
+            cursor = self.mongo_client.vault[collection].find(filter)
             data = list(cursor)  # Convert the cursor to a list
 
             if data is None:

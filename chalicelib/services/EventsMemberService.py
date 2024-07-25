@@ -37,7 +37,7 @@ class EventsMemberService:
 
     def get_all_timeframes(self):
         """Retrieve all timeframes from the database."""
-        timeframes = self.mongo_module.get_all_data_from_collection(
+        timeframes = self.mongo_module.get_data_from_collection(
             f"{self.collection_prefix}timeframe"
         )
 
