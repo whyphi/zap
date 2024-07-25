@@ -52,10 +52,10 @@ def test_get_timeframe(event_service, mock_mongo_module):
     assert result == json.dumps(SAMPLE_TIMEFRAMES[0])
 
 def test_get_all_timeframe(event_service, mock_mongo_module):
-    mock_mongo_module.get_all_data_from_collection.return_value = SAMPLE_TIMEFRAMES
+    mock_mongo_module.get_data_from_collection.return_value = SAMPLE_TIMEFRAMES
  
     result = event_service.get_all_timeframes()
-    mock_mongo_module.get_all_data_from_collection.assert_called_once_with(
+    mock_mongo_module.get_data_from_collection.assert_called_once_with(
         collection="events-timeframe"
     )
 

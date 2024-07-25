@@ -49,6 +49,11 @@ def checkin_rush(event_id):
     return events_rush_service.checkin_rush(event_id, data)
 
 
+@events_rush_api.route("/events/rush/default", methods=["GET"], cors=True)
+def get_rush_events_default_category():
+    return events_rush_service.get_rush_events_default_category()
+
+
 @events_rush_api.route("/events/rush/{event_id}", methods=["DELETE"], cors=True)
 def delete_rush_event(event_id):
     return events_rush_service.delete_rush_event(event_id)

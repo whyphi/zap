@@ -21,8 +21,8 @@ class EventsRushService:
           self.collection_prefix = "events-"
 
     def get_rush_categories_and_events(self):
-        rush_categories = self.mongo_module.get_all_data_from_collection(
-            f"{self.collection_prefix}rush"
+        rush_categories = self.mongo_module.get_data_from_collection(
+            collection=f"{self.collection_prefix}rush"
         )
 
         return json.dumps(rush_categories, cls=self.BSONEncoder)
@@ -238,6 +238,23 @@ class EventsRushService:
         )
 
         return
+    
+    def get_rush_events_default_category(self):
+        rush_categories = self.mongo_module.get_data_from_collection(
+            collection=f"{self.collection_prefix}rush",
+            filter={"defaultRushCategory": True}
+        )
+        
+        if len(rush_categories) == 0:
+            return []
+        
+        rush_category = rush_categories[0]
+        
+        # remove code from every rush event
+        for event in rush_category["events"]:
+            event.pop("code", None)
+
+        return json.dumps(rush_category, cls=self.BSONEncoder)
 
     def delete_rush_event(self, event_id: str):
         """
