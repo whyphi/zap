@@ -248,7 +248,7 @@ class EventsRushService:
 
         return
     
-    def get_rush_events_default_category(self):
+    def get_rush_events_default_category(self, email: str):
         rush_categories = self.mongo_module.get_data_from_collection(
             collection=f"{self.collection_prefix}rush",
             filter={"defaultRushCategory": True}
@@ -262,6 +262,10 @@ class EventsRushService:
         # remove code from every rush event
         for event in rush_category["events"]:
             event.pop("code", None)
+            
+            # check if user attended event (boolean)
+            checkedIn = any(attendee["email"] == email for attendee in event["attendees"])
+            event["checkedIn"] = checkedIn
             
         # Sort events by the date field
         try:
