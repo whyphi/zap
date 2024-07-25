@@ -38,6 +38,8 @@ class EventsRushService:
         data["dateCreated"] = datetime.datetime.now()
         data["lastModified"] = data["dateCreated"]
         data["_id"] = event_id
+        data["attendees"] = []
+        data["numAttendees"] = 0
 
         # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
         image_path = f"image/rush/{data['categoryId']}/{event_id}.png"
@@ -45,20 +47,6 @@ class EventsRushService:
 
         # add image_url to data object (this also replaces the original base64 image url)
         data["eventCoverImage"] = image_url
-
-        # initialize attendee info (for rush-event)
-        attendees_id = ObjectId()
-        attendees = {
-            "_id": attendees_id,
-            "eventId": event_id,
-            "attendees": [],
-            "numAttendees": 0
-        }
-        self.mongo_module.insert_document(
-            collection=f"{self.collection_prefix}rush-event-attendees",
-            data=attendees
-        )
-        data["attendeesId"] = attendees_id
 
         # Add event to its own collection
         self.mongo_module.insert_document(
@@ -207,34 +195,55 @@ class EventsRushService:
         return json.dumps(event, cls=self.BSONEncoder)
 
     def checkin_rush(self, event_id: str, user_data: dict):
+        event_oid = ObjectId(event_id)
+        
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
-        )
-        
-        attendees_oid = event["attendeesId"]
-        
-        attendees = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}rush-event-attendees", attendees_oid
         )
 
         code = user_data["code"]
         user_data.pop("code")
+        
+        # Parse the timestamp string to a datetime object
+        deadline = datetime.datetime.strptime(event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        if datetime.datetime.now() > deadline:
+            raise UnauthorizedError("Event deadline has passed.")
 
         if code != event["code"]:
             raise UnauthorizedError("Invalid code.")
 
-        if any(d["email"] == user_data["email"] for d in attendees["attendees"]):
+        if any(d["email"] == user_data["email"] for d in event["attendees"]):
             raise BadRequestError("User has already checked in.")
 
         user_data["checkinTime"] = datetime.datetime.now()
-        attendees["attendees"].append(user_data)
-        attendees["numAttendees"] += 1
+        event["attendees"].append(user_data)
+        event["numAttendees"] += 1
 
-        # Update attendees collection with data
+        # STEP 1: update events-rush-event collection
+        mongo_module.update_document(
+            f"{self.collection_prefix}rush-event",
+            event_id,
+            {"$set": event},
+        )
+        
+        # Define array update query and filters
+        update_query = {
+            "$set": {
+                "events.$[eventElem]": event
+            }
+        }
+
+        array_filters = [
+            {"eventElem._id": event_oid}
+        ]
+
+        # STEP 2: Modify the event in its category (rush collection)
         self.mongo_module.update_document(
-            collection=f"{self.collection_prefix}rush-event-attendees",
-            document_id=attendees_oid,
-            query={"$set": attendees},
+            collection=f"{self.collection_prefix}rush",
+            document_id=event["categoryId"],
+            query=update_query,
+            array_filters=array_filters
         )
 
         return
@@ -282,7 +291,6 @@ class EventsRushService:
             if not event:
                 raise Exception("Event does not exist.")
 
-            attendees_oid = event["attendeesId"]
             event_category_id = event["categoryId"]
 
             # Get eventCoverImage path
@@ -305,12 +313,6 @@ class EventsRushService:
             self.mongo_module.delete_document_by_id(
                 collection=f"{self.collection_prefix}rush-event", 
                 document_id=event_oid
-            )
-            
-            # Delete attendees data from rush-event-attendees collection
-            self.mongo_module.delete_document_by_id(
-                collection=f"{self.collection_prefix}rush-event-attendees", 
-                document_id=attendees_oid
             )
             
             return
