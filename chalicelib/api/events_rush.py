@@ -43,10 +43,14 @@ def modify_rush_settings():
     return events_rush_service.modify_rush_settings(data)
     
 
-@events_rush_api.route("/events/rush/checkin/{event_id}", methods=["POST"], cors=True)
-def checkin_rush(event_id):
+@events_rush_api.route("/events/rush/checkin/{category_id}/{event_id}", methods=["POST"], cors=True)
+def checkin_rush(category_id: str, event_id: str):
     data = events_rush_api.current_request.json_body
-    return events_rush_service.checkin_rush(event_id, data)
+    return events_rush_service.checkin_rush(
+        category_id=category_id, 
+        event_id=event_id, 
+        user_data=data
+    )
 
 
 @events_rush_api.route("/events/rush/default", methods=["POST"], cors=True)

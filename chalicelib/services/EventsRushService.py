@@ -194,7 +194,7 @@ class EventsRushService:
 
         return json.dumps(event, cls=self.BSONEncoder)
 
-    def checkin_rush(self, event_id: str, user_data: dict):
+    def checkin_rush(self, category_id: str, event_id: str, user_data: dict):
         event_oid = ObjectId(event_id)
         
         event = self.mongo_module.get_document_by_id(
@@ -241,7 +241,7 @@ class EventsRushService:
         # STEP 2: Modify the event in its category (rush collection)
         self.mongo_module.update_document(
             collection=f"{self.collection_prefix}rush",
-            document_id=event["categoryId"],
+            document_id=category_id,
             query=update_query,
             array_filters=array_filters
         )
