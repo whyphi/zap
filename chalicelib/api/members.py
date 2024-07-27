@@ -6,6 +6,13 @@ from chalicelib.models.roles import Roles
 members_api = Blueprint(__name__)
 
 
+@members_api.route("/member/{user_id}", methods=["GET"], cors=True)
+@auth(members_api, roles=["admin", "member"])
+def get_member(user_id):
+    member = member_service.get_by_id(user_id)
+    return member if member else {}
+
+
 @members_api.route("/members", methods=["GET"], cors=True)
 @auth(members_api, roles=["admin", "member"])
 def get_all_members():
@@ -25,7 +32,7 @@ def onboard_member(user_id):
             "message": "User updated successfully.",
         }
     else:
-        { "status": False}
+        {"status": False}
 
 
 @members_api.route("/members", methods=["POST"], cors=True)
@@ -34,11 +41,13 @@ def create_member():
     data = members_api.current_request.json_body
     return member_service.create(data)
 
+
 @members_api.route("/members", methods=["DELETE"], cors=True)
 @auth(members_api, roles=[Roles.ADMIN])
 def delete_members():
     data = members_api.current_request.json_body
     return member_service.delete(data)
+
 
 @members_api.route("/members/{user_id}/roles", methods=["PATCH"], cors=True)
 @auth(members_api, roles=[Roles.ADMIN])

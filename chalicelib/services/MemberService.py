@@ -40,7 +40,7 @@ class MemberService:
             "success": True,
             "message": "User created successfully",
         }
-    
+
     def delete(self, data: list[str]) -> dict:
         """
         Deletes user documents based on the provided IDs.
@@ -70,7 +70,10 @@ class MemberService:
             "success": True,
             "message": "Documents deleted successfully",
         }
-        
+
+    def get_by_id(self, user_id: str):
+        data = mongo_module.get_document_by_id(self.collection, user_id)
+        return json.dumps(data, cls=self.BSONEncoder)
 
     def get_all(self):
         data = mongo_module.get_data_from_collection(self.collection)
