@@ -41,10 +41,9 @@ def test_get_all_applicants():
             with patch(
                 "chalicelib.services.ApplicantService.applicant_service.get_all"
             ) as mock_get_all:
-
                 mock_get_all.return_value = TEST_APPLICANTS
                 response = client.http.get(
-                    f"/applicants",
+                    "/applicants",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
@@ -56,7 +55,6 @@ def test_get_all_applicants():
 def test_get_all_applicants_from_listing():
     # Create a Chalice test client
     with Client(app) as client:
-
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
             mock_decode.return_value = {"role": "admin"}
@@ -65,7 +63,7 @@ def test_get_all_applicants_from_listing():
             ) as mock_get_all_from_listing:
                 mock_get_all_from_listing.return_value = TEST_APPLICANTS
                 response = client.http.get(
-                    f"/applicants/test_listing_id",
+                    "/applicants/test_listing_id",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 

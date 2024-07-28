@@ -1,9 +1,6 @@
 import boto3
 import os
-import json
-from datetime import datetime
 from chalicelib.utils import decode_base64
-
 
 
 class S3Client:
@@ -19,24 +16,27 @@ class S3Client:
             path = f"prod/{path}"
         else:
             path = f"dev/{path}"
-        
+
         # Split parts of base64 data
-        parts = data.split(',')
-        metadata, base64_data = parts[0], parts[1]        
+        parts = data.split(",")
+        metadata, base64_data = parts[0], parts[1]
 
         # Extract content type from metadata
-        content_type = metadata.split(';')[0][5:]  # Remove "data:" prefix
+        content_type = metadata.split(";")[0][5:]  # Remove "data:" prefix
         binary_data = decode_base64(base64_data)
-        
+
         # Upload binary data as object with content type set
         self.s3.put_object(
-            Bucket=self.bucket_name, Key=path, Body=binary_data, ContentType=content_type
+            Bucket=self.bucket_name,
+            Key=path,
+            Body=binary_data,
+            ContentType=content_type,
         )
 
         # Retrieve endpoint of object
         s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
         object_url = s3_endpoint + path
-        
+
         return object_url
 
     def delete_binary_data(self, object_id: str) -> str:
@@ -47,19 +47,18 @@ class S3Client:
 
         Returns:
             str: A message indicating the result of the deletion operation.
-            
+
         Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
         if self.is_prod:
             path = f"prod/{object_id}"
         else:
             path = f"dev/{object_id}"
-        
+
         # delete binary data given bucket_name and key
-        response = self.s3.delete_object(
-            Bucket=self.bucket_name, Key=path
-        )
-        
+        response = self.s3.delete_object(Bucket=self.bucket_name, Key=path)
+
         return response
+
 
 s3 = S3Client()

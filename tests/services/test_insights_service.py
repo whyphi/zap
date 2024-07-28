@@ -1,37 +1,37 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from chalicelib.services.InsightsService import InsightsService
 import copy
 import json
 
 # Load JSON data from a file (insights test - general)
-with open('tests/fixtures/insights/general/sample_applicants.json') as f:
+with open("tests/fixtures/insights/general/sample_applicants.json") as f:
     SAMPLE_APPLICANTS = json.load(f)
 
-with open('tests/fixtures/insights/general/sample_dashboard.json') as f:
+with open("tests/fixtures/insights/general/sample_dashboard.json") as f:
     SAMPLE_DASHBOARD = json.load(f)
 
-with open('tests/fixtures/insights/general/sample_distribution.json') as f:
+with open("tests/fixtures/insights/general/sample_distribution.json") as f:
     SAMPLE_DISTRIBUTION = json.load(f)
 
 # Load JSON data from a file (insights test - no applicants)
-with open('tests/fixtures/insights/noApplicants/sample_applicants.json') as f:
+with open("tests/fixtures/insights/noApplicants/sample_applicants.json") as f:
     SAMPLE_APPLICANTS_NO_APP = json.load(f)
 
-with open('tests/fixtures/insights/noApplicants/sample_dashboard.json') as f:
+with open("tests/fixtures/insights/noApplicants/sample_dashboard.json") as f:
     SAMPLE_DASHBOARD_NO_APP = json.load(f)
 
-with open('tests/fixtures/insights/noApplicants/sample_distribution.json') as f:
+with open("tests/fixtures/insights/noApplicants/sample_distribution.json") as f:
     SAMPLE_DISTRIBUTION_NO_APP = json.load(f)
 
 # Load JSON data from a file (insights test - applicant with no gpa)
-with open('tests/fixtures/insights/noGPAs/sample_applicants.json') as f:
+with open("tests/fixtures/insights/noGPAs/sample_applicants.json") as f:
     SAMPLE_APPLICANTS_NO_GPA = json.load(f)
 
-with open('tests/fixtures/insights/noGPAs/sample_dashboard.json') as f:
+with open("tests/fixtures/insights/noGPAs/sample_dashboard.json") as f:
     SAMPLE_DASHBOARD_NO_GPA = json.load(f)
 
-with open('tests/fixtures/insights/noGPAs/sample_distribution.json') as f:
+with open("tests/fixtures/insights/noGPAs/sample_distribution.json") as f:
     SAMPLE_DISTRIBUTION_NO_GPA = json.load(f)
 
 
@@ -51,8 +51,7 @@ def test_get_insights(service):
     result = insights_service.get_insights_from_listing(listing_id)
     # confirm that database was called once with correct inputs
     mock_db.get_applicants.assert_called_once_with(
-        table_name="zap-applications",
-        listing_id=listing_id
+        table_name="zap-applications", listing_id=listing_id
     )
 
     # Convert Python dictionary to JSON format for comparison
@@ -78,8 +77,7 @@ def test_get_insights_no_applicants(service):
     result = insights_service.get_insights_from_listing(listing_id)
     # confirm that database was called once with correct inputs
     mock_db.get_applicants.assert_called_once_with(
-        table_name="zap-applications",
-        listing_id=listing_id
+        table_name="zap-applications", listing_id=listing_id
     )
 
     # Convert Python dictionary to JSON format for comparison
@@ -105,8 +103,7 @@ def test_get_insights_no_gpas(service):
     result = insights_service.get_insights_from_listing(listing_id)
     # confirm that database was called once with correct inputs
     mock_db.get_applicants.assert_called_once_with(
-        table_name="zap-applications",
-        listing_id=listing_id
+        table_name="zap-applications", listing_id=listing_id
     )
 
     # Convert Python dictionary to JSON format for comparison

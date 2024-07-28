@@ -1,5 +1,5 @@
-from unittest.mock import patch
 from chalicelib.decorators import add_env_suffix
+
 
 def test_add_env_suffix_dev():
     def mocked_function(self, table_name: str, *args, **kwargs):
@@ -16,6 +16,7 @@ def test_add_env_suffix_dev():
 
     # Check if the suffix is added correctly
     assert result == "test-table-dev"
+
 
 def test_add_env_suffix_prod():
     def mocked_function(self, table_name: str, *args, **kwargs):
