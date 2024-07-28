@@ -13,6 +13,15 @@ def get_member(user_id):
     return member if member else {}
 
 
+@members_api.route("/member/{user_id}", methods=["PUT"], cors=True)
+@auth(members_api, roles=[Roles.MEMBER, Roles.ADMIN])
+def update_member(user_id):
+    data = members_api.current_request.json_body
+    return member_service.update(
+        user_id=user_id, data=data, headers=members_api.current_request.headers
+    )
+
+
 @members_api.route("/members", methods=["GET"], cors=True)
 @auth(members_api, roles=["admin", "member"])
 def get_all_members():
