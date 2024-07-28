@@ -33,6 +33,7 @@ def get_all_members():
 @auth(members_api, roles=[])
 def onboard_member(user_id):
     data = members_api.current_request.json_body
+    # TODO: If isNewUser is False, reject onboarding
     data["isNewUser"] = False
 
     if member_service.onboard(user_id, data):
@@ -41,7 +42,7 @@ def onboard_member(user_id):
             "message": "User updated successfully.",
         }
     else:
-        {"status": False}
+        return {"status": False}
 
 
 @members_api.route("/members", methods=["POST"], cors=True)
