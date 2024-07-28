@@ -58,3 +58,9 @@ def get_rush_events_default_category():
 @events_rush_api.route("/events/rush/{event_id}", methods=["DELETE"], cors=True)
 def delete_rush_event(event_id):
     return events_rush_service.delete_rush_event(event_id)
+
+
+@events_rush_api.route("/events/rush/{category_id}/analytics", methods=["GET"], cors=True)
+@auth(events_rush_api, roles=["admin"])
+def get_rush_category_analytics(category_id):
+    return events_rush_service.get_rush_category_analytics(category_id=category_id)
