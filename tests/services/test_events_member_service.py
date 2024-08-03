@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from chalicelib.services.EventsMemberService import EventsMemberService
 import datetime
 import json
@@ -16,18 +16,26 @@ with open("tests/fixtures/events/general/sample_rush_events.json") as f:
 with open("tests/fixtures/events/general/sample_rush_event.json") as f:
     SAMPLE_RUSH_EVENT = json.load(f)
 
+
 @pytest.fixture
 def mock_mongo_module():
-    with patch("chalicelib.modules.mongo.MongoModule", autospec=True) as MockMongoModule:
+    with patch(
+        "chalicelib.modules.mongo.MongoModule", autospec=True
+    ) as MockMongoModule:
         mock_instance = MockMongoModule(use_mock=True)
         yield mock_instance
+
 
 @pytest.fixture
 def event_service(mock_mongo_module):
     return EventsMemberService(mock_mongo_module)
 
+
 def test_insert_document(event_service, mock_mongo_module):
-    CREATE_TIMEFRAME = { "name": "testTimeframeName", "spreadsheetId": "testSpreadsheetId" }
+    CREATE_TIMEFRAME = {
+        "name": "testTimeframeName",
+        "spreadsheetId": "testSpreadsheetId",
+    }
     date_created = datetime.datetime.now()
 
     with patch("chalicelib.services.EventsMemberService.datetime") as mock_datetime:
@@ -40,10 +48,11 @@ def test_insert_document(event_service, mock_mongo_module):
 
         assert result == {"msg": True}
 
+
 def test_get_timeframe(event_service, mock_mongo_module):
     mock_mongo_module.get_document_by_id.return_value = SAMPLE_TIMEFRAMES[0]
     timeframe_id = SAMPLE_TIMEFRAMES[0]["_id"]
- 
+
     result = event_service.get_timeframe(timeframe_id=timeframe_id)
     mock_mongo_module.get_document_by_id.assert_called_once_with(
         collection="events-timeframe", document_id=timeframe_id
@@ -51,15 +60,17 @@ def test_get_timeframe(event_service, mock_mongo_module):
 
     assert result == json.dumps(SAMPLE_TIMEFRAMES[0])
 
+
 def test_get_all_timeframe(event_service, mock_mongo_module):
     mock_mongo_module.get_data_from_collection.return_value = SAMPLE_TIMEFRAMES
- 
+
     result = event_service.get_all_timeframes()
     mock_mongo_module.get_data_from_collection.assert_called_once_with(
         collection="events-timeframe"
     )
 
     assert result == json.dumps(SAMPLE_TIMEFRAMES)
+
 
 def test_delete_timeframe(event_service, mock_mongo_module):
     result = event_service.delete_timeframe(timeframe_id=SAMPLE_TIMEFRAMES[0]["_id"])

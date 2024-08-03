@@ -6,6 +6,7 @@ import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
 
+
 class EventsMemberService:
     class BSONEncoder(json.JSONEncoder):
         """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
@@ -65,7 +66,7 @@ class EventsMemberService:
         self.mongo_module.delete_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
-        
+
         return {"statusCode": 200}
 
     def create_event(self, timeframe_id: str, event_data: dict):
@@ -121,7 +122,7 @@ class EventsMemberService:
             dict -- Dictionary containing status and message.
         """
         user_id, user_email = user["id"], user["email"]
-        member = self.mongo_module.get_document_by_id(f"users", user_id)
+        member = self.mongo_module.get_document_by_id("users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
@@ -227,7 +228,9 @@ class EventsMemberService:
         )
 
         # Delete the event document
-        self.mongo_module.delete_document_by_id(f"{self.collection_prefix}event", event_id)
+        self.mongo_module.delete_document_by_id(
+            f"{self.collection_prefix}event", event_id
+        )
 
     def get_timeframe_sheets(self, timeframe_id: str):
         timeframe = self.mongo_module.get_document_by_id(

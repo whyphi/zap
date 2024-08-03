@@ -4,7 +4,6 @@ from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles
 
-from pydantic import ValidationError
 
 listings_api = Blueprint(__name__)
 

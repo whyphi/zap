@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch, Mock
 from chalicelib.services.ListingService import ListingService
 from chalice import NotFoundError
 from pydantic import ValidationError
@@ -151,7 +151,9 @@ def test_toggle_visibility_exception(service):
 
     mock_db.toggle_visibility.side_effect = Exception("Error")
 
-    result = json.loads(listing_service.toggle_visibility(SAMPLE_LISTINGS[0]["listingId"]))
+    result = json.loads(
+        listing_service.toggle_visibility(SAMPLE_LISTINGS[0]["listingId"])
+    )
     assert result["statusCode"] == 500
 
 
@@ -172,10 +174,12 @@ def test_update_field_route(service):
 
         mock_db.update_listing_field.return_value = mock_updated_listing
 
-        result = json.loads(listing_service.update_field_route(
-            SAMPLE_LISTINGS[0]["listingId"],
-            {"field": "title", "value": "new test title"},
-        ))
+        result = json.loads(
+            listing_service.update_field_route(
+                SAMPLE_LISTINGS[0]["listingId"],
+                {"field": "title", "value": "new test title"},
+            )
+        )
 
         assert result["statusCode"] == 200
         assert result["updated_listing"] == mock_updated_listing
@@ -225,9 +229,6 @@ def test_update_field_updated_listing_not_found(service):
             )
 
         assert str(exc_info.value) == "Listing not found"
-
-
-from unittest.mock import Mock
 
 
 def test_update_field_validation_error(service):

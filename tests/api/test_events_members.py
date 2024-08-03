@@ -10,6 +10,7 @@ with open("tests/fixtures/events/general/sample_timeframes.json") as f:
 with open("tests/fixtures/events/general/sample_timeframe_sheets.json") as f:
     SAMPLE_TIMEFRAME_SHEETS = json.load(f)
 
+
 def test_create_timeframe():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
@@ -20,7 +21,7 @@ def test_create_timeframe():
             ) as mock_create_timeframe:
                 mock_create_timeframe.return_value = {"msg": True}
                 response = client.http.post(
-                    f"/timeframes",
+                    "/timeframes",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
@@ -40,13 +41,14 @@ def test_get_all_timeframes():
             ) as mock_get_all_timeframes:
                 mock_get_all_timeframes.return_value = SAMPLE_TIMEFRAMES
                 response = client.http.get(
-                    f"/timeframes",
+                    "/timeframes",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 # Check the response status code and body
                 assert response.status_code == 200
                 assert response.json_body == SAMPLE_TIMEFRAMES
+
 
 def test_get_timeframe():
     # Create a Chalice test client
@@ -60,13 +62,14 @@ def test_get_timeframe():
             ) as mock_get_timeframe:
                 mock_get_timeframe.return_value = SAMPLE_TIMEFRAMES[0]
                 response = client.http.get(
-                    f"/timeframes/test_timeframe_id",
+                    "/timeframes/test_timeframe_id",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 # Check the response status code and body
                 assert response.status_code == 200
                 assert response.json_body == SAMPLE_TIMEFRAMES[0]
+
 
 def test_delete_timeframe():
     with Client(app) as client:
@@ -83,7 +86,7 @@ def test_delete_timeframe():
                 )
 
                 assert response.status_code == 200
-                assert response.json_body == {'status': True}
+                assert response.json_body == {"status": True}
 
 
 def test_create_event():
@@ -103,6 +106,7 @@ def test_create_event():
                 assert response.status_code == 200
                 assert response.json_body == {"msg": True}
 
+
 def test_get_event():
     # Create a Chalice test client
     with Client(app) as client:
@@ -115,13 +119,14 @@ def test_get_event():
             ) as mock_get_timeframe:
                 mock_get_timeframe.return_value = SAMPLE_TIMEFRAMES[0]
                 response = client.http.get(
-                    f"/timeframes/test_timeframe_id",
+                    "/timeframes/test_timeframe_id",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 # Check the response status code and body
                 assert response.status_code == 200
                 assert response.json_body == SAMPLE_TIMEFRAMES[0]
+
 
 def test_get_timeframe_sheets():
     # Create a Chalice test client
@@ -135,13 +140,14 @@ def test_get_timeframe_sheets():
             ) as mock_get_timeframe_sheets:
                 mock_get_timeframe_sheets.return_value = SAMPLE_TIMEFRAME_SHEETS
                 response = client.http.get(
-                    f"/timeframes/test_timeframe_id/sheets",
+                    "/timeframes/test_timeframe_id/sheets",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 # Check the response status code and body
                 assert response.status_code == 200
                 assert response.json_body == SAMPLE_TIMEFRAME_SHEETS
+
 
 def test_checkin():
     with Client(app) as client:
@@ -153,12 +159,13 @@ def test_checkin():
             ) as mock_checkin:
                 mock_checkin.return_value = {"msg": True}
                 response = client.http.post(
-                    f"/events/test_event_id/checkin",
+                    "/events/test_event_id/checkin",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 assert response.status_code == 200
                 assert response.json_body == {"msg": True}
+
 
 def test_delete_event():
     with Client(app) as client:
@@ -170,9 +177,9 @@ def test_delete_event():
             ) as mock_delete:
                 mock_delete.return_value = {"status": True}
                 response = client.http.delete(
-                    f"/events/test_event_id",
+                    "/events/test_event_id",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
                 assert response.status_code == 200
-                assert response.json_body == {'status': True}
+                assert response.json_body == {"status": True}
