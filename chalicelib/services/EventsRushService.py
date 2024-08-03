@@ -354,7 +354,8 @@ class EventsRushService:
                 else:
                     attendees[email] = { **attendee, "eventsAttended": [new_event] }
                     
+        result = { "categoryName": category["name"], "attendees": attendees }
         
-        return json.dumps(attendees, cls=self.BSONEncoder)
+        return json.dumps(result, cls=self.BSONEncoder)
         
 events_rush_service = EventsRushService()
