@@ -334,4 +334,28 @@ class EventsRushService:
         except Exception as e:
             raise BadRequestError(e)
 
+    def get_rush_category_analytics(self, category_id: str):
+        category = self.mongo_module.get_document_by_id(
+            f"{self.collection_prefix}rush", category_id
+        )
+        
+        # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
+        attendees = {}
+        
+        for event in category["events"]:
+            for attendee in event["attendees"]:
+                email =attendee["email"]
+                new_event = { 
+                    "eventId": event["_id"], 
+                    "eventName": event["name"] 
+                }
+                if email in attendees:
+                    attendees[email]["eventsAttended"].append(new_event)
+                else:
+                    attendees[email] = { **attendee, "eventsAttended": [new_event] }
+                    
+        result = { "categoryName": category["name"], "attendees": attendees }
+        
+        return json.dumps(result, cls=self.BSONEncoder)
+        
 events_rush_service = EventsRushService()
