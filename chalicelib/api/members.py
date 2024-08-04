@@ -64,3 +64,9 @@ def delete_members():
 def update_member_roles(user_id):
     data = members_api.current_request.json_body
     return member_service.update_roles(user_id, data["roles"])
+
+
+@members_api.route("/members/family-tree", methods=["GET"], cors=True)
+@auth(members_api, roles=[Roles.MEMBER])
+def get_family_tree():
+    return member_service.get_family_tree()

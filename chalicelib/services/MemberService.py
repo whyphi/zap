@@ -2,6 +2,7 @@ from chalicelib.modules.mongo import mongo_module
 from chalice import ConflictError, NotFoundError, UnauthorizedError
 
 from bson import ObjectId
+from collections import defaultdict
 import json
 import jwt
 import boto3
@@ -117,6 +118,20 @@ class MemberService:
             document_id,
             [{"$set": {"roles": roles}}],
         )
+
+    def get_family_tree(self):
+        data = mongo_module.get_data_from_collection(self.collection)
+
+        # Group by family
+        family_groups = defaultdict(list)
+
+        for member in data:
+            if "big" not in member or member["big"] == "":
+                continue
+            member["_id"] = str(member["_id"])
+            family_groups[member["family"]].append(member)
+
+        return family_groups
 
 
 member_service = MemberService()
