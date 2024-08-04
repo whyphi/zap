@@ -26,7 +26,7 @@ def test_get_insights_from_listing():
                     SAMPLE_DISTRIBUTION,
                 ]
                 response = client.http.get(
-                    f"/insights/listing/test_listing_id",
+                    "/insights/listing/test_listing_id",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 

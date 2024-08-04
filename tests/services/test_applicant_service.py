@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from chalicelib.services.ApplicantService import ApplicantService
 
 
@@ -33,12 +33,11 @@ def test_get_all_applicants(service):
     mock_db.get_all.return_value = sample_data
 
     result = applicant_service.get_all()
-    mock_db.get_all.assert_called_once_with(
-        table_name="zap-applications"
-    )
+    mock_db.get_all.assert_called_once_with(table_name="zap-applications")
 
     assert result == sample_data
     assert len(result) == 2
+
 
 def test_get_all_applicants_from_listing(service):
     applicant_service, mock_db = service
@@ -52,8 +51,7 @@ def test_get_all_applicants_from_listing(service):
 
     result = applicant_service.get_all_from_listing(listing_id)
     mock_db.get_applicants.assert_called_once_with(
-        table_name="zap-applications",
-        listing_id=listing_id
+        table_name="zap-applications", listing_id=listing_id
     )
 
     assert result == sample_data

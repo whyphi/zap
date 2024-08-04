@@ -101,10 +101,8 @@ def test_delete_item(db):
     db.put_data("test-table", SAMPLE_DATA[0])
 
     response = db.delete_item("test-table", {"id": 123})
-    assert response == True
+    assert response
 
     # TODO: Test case should fail, but isn't
     # response = db.delete_item("test-table", {"id": 124})
     # assert response == False
-
-

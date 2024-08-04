@@ -1,10 +1,8 @@
 from chalice import Blueprint
 from chalicelib.services.ApplicantService import applicant_service
-from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles
 
-from pydantic import ValidationError
 
 applicants_api = Blueprint(__name__)
 

@@ -122,11 +122,11 @@ class ListingService:
             else:
                 raise NotFoundError("Listing not found")
 
-        except NotFoundError as e:
+        except NotFoundError:
             # app.log.error(f"An error occurred: {str(e)}")
             return {"statusCode": 404, "message": "Listing not found"}
 
-        except Exception as e:
+        except Exception:
             # app.log.error(f"An error occurred: {str(e)}")
             return {"statusCode": 500, "message": "Internal Server Error"}
 

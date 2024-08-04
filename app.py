@@ -10,7 +10,8 @@ from chalicelib.api.applicants import applicants_api
 from chalicelib.api.announcements import announcements_api
 from chalicelib.api.insights import insights_api
 from chalicelib.api.members import members_api
-from chalicelib.api.events import events_api
+from chalicelib.api.events_member import events_member_api
+from chalicelib.api.events_rush import events_rush_api
 from chalicelib.api.accountability import accountability_api
 from chalicelib.api.monitoring import monitoring_api
 
@@ -37,7 +38,8 @@ app.register_blueprint(listings_api)
 app.register_blueprint(applicants_api)
 app.register_blueprint(insights_api)
 app.register_blueprint(members_api)
-app.register_blueprint(events_api)
+app.register_blueprint(events_member_api)
+app.register_blueprint(events_rush_api)
 app.register_blueprint(accountability_api)
 app.register_blueprint(monitoring_api)
 
