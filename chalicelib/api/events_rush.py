@@ -1,12 +1,14 @@
 from chalice import Blueprint
 from chalicelib.decorators import auth
 from chalicelib.services.EventsRushService import events_rush_service
+from chalicelib.models.roles import Roles
+
 
 events_rush_api = Blueprint(__name__)
 
 
 @events_rush_api.route("/events/rush", methods=["GET"], cors=True)
-@auth(events_rush_api, roles=["admin"])
+@auth(events_rush_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def get_rush_events():
     return events_rush_service.get_rush_categories_and_events()
 
