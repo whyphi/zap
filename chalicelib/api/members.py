@@ -7,7 +7,7 @@ members_api = Blueprint(__name__)
 
 
 @members_api.route("/member/{user_id}", methods=["GET"], cors=True)
-@auth(members_api, roles=["admin", "member"])
+@auth(members_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def get_member(user_id):
     member = member_service.get_by_id(user_id)
     return member if member else {}
@@ -23,7 +23,7 @@ def update_member(user_id):
 
 
 @members_api.route("/members", methods=["GET"], cors=True)
-@auth(members_api, roles=["admin", "member"])
+@auth(members_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def get_all_members():
     """Fetches all members who have access to WhyPhi."""
     return member_service.get_all()
