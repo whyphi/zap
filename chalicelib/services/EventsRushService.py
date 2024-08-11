@@ -182,7 +182,10 @@ class EventsRushService:
 
         return
 
-    def get_rush_event(self, event_id: str, hide_attendees: bool = True):
+    def get_rush_event(self, event_id: str, data: dict):
+        hide_attendees = data.get("hideAttendees", True)
+        hide_code = data.get("hideCode", True)
+        
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
@@ -190,7 +193,8 @@ class EventsRushService:
         if hide_attendees:
             event.pop("attendeesId", None)
 
-        event.pop("code")
+        if hide_code:
+            event.pop("code")
 
         return json.dumps(event, cls=self.BSONEncoder)
 
