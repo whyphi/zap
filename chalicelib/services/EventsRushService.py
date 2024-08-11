@@ -342,19 +342,31 @@ class EventsRushService:
         # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
         attendees = {}
         
+        # events: list of objects (event: { name, eventId })
+        events = []
+        
         for event in category["events"]:
+            new_event = { 
+                "eventId": event["_id"], 
+                "eventName": event["name"] 
+            }
+            
+            # accumulate list of events
+            events.append(new_event)
+            
+            # accumulate attendance
             for attendee in event["attendees"]:
-                email =attendee["email"]
-                new_event = { 
-                    "eventId": event["_id"], 
-                    "eventName": event["name"] 
-                }
+                email = attendee["email"]
                 if email in attendees:
                     attendees[email]["eventsAttended"].append(new_event)
                 else:
                     attendees[email] = { **attendee, "eventsAttended": [new_event] }
                     
-        result = { "categoryName": category["name"], "attendees": attendees }
+        result = { 
+            "categoryName": category["name"], 
+            "attendees": attendees,
+            "events": events,
+        }
         
         return json.dumps(result, cls=self.BSONEncoder)
         
