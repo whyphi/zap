@@ -43,8 +43,9 @@ def test_get_rush_event():
                 "chalicelib.services.EventsRushService.events_rush_service.get_rush_event",
             ) as mock_get_rush_event:
                 mock_get_rush_event.return_value = SAMPLE_RUSH_EVENT
-                response = client.http.get(
+                response = client.http.post(
                     "/events/rush/test_event_id",
+                    body={ "hideCode": False, "hideAttendees": False },
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
