@@ -182,7 +182,10 @@ class EventsRushService:
 
         return
 
-    def get_rush_event(self, event_id: str, hide_attendees: bool = True):
+    def get_rush_event(self, event_id: str, data: dict):
+        hide_attendees = data.get("hideAttendees", True)
+        hide_code = data.get("hideCode", True)
+        
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
@@ -190,7 +193,8 @@ class EventsRushService:
         if hide_attendees:
             event.pop("attendeesId", None)
 
-        event.pop("code")
+        if hide_code:
+            event.pop("code")
 
         return json.dumps(event, cls=self.BSONEncoder)
 
@@ -342,19 +346,31 @@ class EventsRushService:
         # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
         attendees = {}
         
+        # events: list of objects (event: { name, eventId })
+        events = []
+        
         for event in category["events"]:
+            new_event = { 
+                "eventId": event["_id"], 
+                "eventName": event["name"] 
+            }
+            
+            # accumulate list of events
+            events.append(new_event)
+            
+            # accumulate attendance
             for attendee in event["attendees"]:
-                email =attendee["email"]
-                new_event = { 
-                    "eventId": event["_id"], 
-                    "eventName": event["name"] 
-                }
+                email = attendee["email"]
                 if email in attendees:
                     attendees[email]["eventsAttended"].append(new_event)
                 else:
                     attendees[email] = { **attendee, "eventsAttended": [new_event] }
                     
-        result = { "categoryName": category["name"], "attendees": attendees }
+        result = { 
+            "categoryName": category["name"], 
+            "attendees": attendees,
+            "events": events,
+        }
         
         return json.dumps(result, cls=self.BSONEncoder)
         

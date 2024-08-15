@@ -13,9 +13,10 @@ def get_rush_events():
     return events_rush_service.get_rush_categories_and_events()
 
 
-@events_rush_api.route("/events/rush/{event_id}", methods=["GET"], cors=True)
+@events_rush_api.route("/events/rush/{event_id}", methods=["POST"], cors=True)
 def get_rush_event(event_id):
-    return events_rush_service.get_rush_event(event_id)
+    data = events_rush_api.current_request.json_body
+    return events_rush_service.get_rush_event(event_id=event_id, data=data)
 
 
 @events_rush_api.route("/events/rush/category", methods=["POST"], cors=True)
