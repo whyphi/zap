@@ -10,10 +10,6 @@ class MongoModule:
 
     def __init__(self, use_mock=False):
         """Establishes connection to MongoDB server"""
-        self.use_mock = use_mock
-        if use_mock:
-            self.mongo_client = mongomock.MongoClient()
-            return
         
         self.is_prod = os.environ.get("ENV") == "prod"
         self.ssm_client = boto3.client("ssm")
@@ -25,20 +21,21 @@ class MongoModule:
         )["Parameter"]["Value"]
         self.uri = f"mongodb+srv://{self.user}:{self.password}@cluster0.9gtht.mongodb.net/?retryWrites=true&w=majority"
 
-        self.mongo_client = MongoClient(self.uri)
+        # if use_mock is true -> use monogmock to execute tests with fake db
+        self.mongo_client = mongomock.MongoClient() if use_mock else MongoClient(self.uri)
 
     def add_env_suffix(func):
-        def wrapper(self, collection_name: str, *args, **kwargs):
+        def wrapper(self, collection: str, *args, **kwargs):
             # users collection is dependent on vault so suffix should not be appended
-            if collection_name == "users":
-                return func(self, collection_name, *args, **kwargs)
+            if collection == "users":
+                return func(self, collection, *args, **kwargs)
 
             if self.is_prod:
-                collection_name += "-prod"
+                collection += "-prod"
             else:
-                collection_name += "-dev"
+                collection += "-dev"
 
-            return func(self, collection_name, *args, **kwargs)
+            return func(self, collection, *args, **kwargs)
 
         return wrapper
 
