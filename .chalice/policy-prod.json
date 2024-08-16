@@ -6,6 +6,7 @@
 			"Effect": "Allow",
 			"Action": [
 				"s3:PutObject",
+				"s3:DeleteObject",
 				"dynamodb:Query",
 				"dynamodb:BatchGet*",
 				"dynamodb:DescribeStream",
