@@ -1,8 +1,11 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import ConflictError, NotFoundError
+from chalice import ConflictError, NotFoundError, UnauthorizedError
 
-import json
 from bson import ObjectId
+from collections import defaultdict
+import json
+import jwt
+import boto3
 
 
 class MemberService:
@@ -40,7 +43,7 @@ class MemberService:
             "success": True,
             "message": "User created successfully",
         }
-    
+
     def delete(self, data: list[str]) -> dict:
         """
         Deletes user documents based on the provided IDs.
@@ -70,14 +73,44 @@ class MemberService:
             "success": True,
             "message": "Documents deleted successfully",
         }
-        
+
+    def get_by_id(self, user_id: str):
+        data = mongo_module.get_document_by_id(self.collection, user_id)
+        return json.dumps(data, cls=self.BSONEncoder)
 
     def get_all(self):
-        data = mongo_module.get_all_data_from_collection(self.collection)
+        data = mongo_module.get_data_from_collection(self.collection)
         return json.dumps(data, cls=self.BSONEncoder)
 
     def onboard(self, document_id=str, data=dict) -> bool:
         return mongo_module.update_document_by_id(self.collection, document_id, data)
+
+    def update(self, user_id: str, data: dict, headers: dict) -> bool:
+        ssm_client = boto3.client("ssm")
+        auth_header = headers.get("Authorization", None)
+
+        if not auth_header:
+            raise UnauthorizedError("Authorization header is missing.")
+
+        _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
+
+        if not token:
+            raise UnauthorizedError("Token is missing.")
+
+        auth_secret = ssm_client.get_parameter(
+            Name="/Zap/AUTH_SECRET", WithDecryption=True
+        )["Parameter"]["Value"]
+        decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
+
+        if user_id != decoded["_id"]:
+            raise UnauthorizedError(
+                "User {user_id} is not authorized to update this user."
+            )
+
+        # NOTE: Performing an update on the path '_id' would modify the immutable field '_id'
+        data.pop("_id", None)
+
+        return mongo_module.update_document_by_id(self.collection, user_id, data)
 
     def update_roles(self, document_id=str, roles=list) -> bool:
         return mongo_module.update_document(
@@ -85,6 +118,20 @@ class MemberService:
             document_id,
             [{"$set": {"roles": roles}}],
         )
+
+    def get_family_tree(self):
+        data = mongo_module.get_data_from_collection(self.collection)
+
+        # Group by family
+        family_groups = defaultdict(list)
+
+        for member in data:
+            if "big" not in member or member["big"] == "":
+                continue
+            member["_id"] = str(member["_id"])
+            family_groups[member["family"]].append(member)
+
+        return family_groups
 
 
 member_service = MemberService()
