@@ -18,20 +18,18 @@ class EventsMemberService:
                 return str(o)
             return super().default(o)
 
-    def __init__(self, mongo_module=mongo_module):
-        self.mongo_module = mongo_module
+    def __init__(self):
         self.collection_prefix = "events-"
 
     def create_timeframe(self, timeframe_data: dict):
         timeframe_data["dateCreated"] = datetime.datetime.now()
-        self.mongo_module.insert_document(
-            collection=f"{self.collection_prefix}timeframe", data=timeframe_data
+        mongo_module.insert_document(
+            f"{self.collection_prefix}timeframe", timeframe_data
         )
-        return {"msg": True}
 
     def get_timeframe(self, timeframe_id: str):
-        timeframe = self.mongo_module.get_document_by_id(
-            collection=f"{self.collection_prefix}timeframe", document_id=timeframe_id
+        timeframe = mongo_module.get_document_by_id(
+            f"{self.collection_prefix}timeframe", timeframe_id
         )
 
         return json.dumps(timeframe, cls=self.BSONEncoder)
@@ -46,7 +44,7 @@ class EventsMemberService:
 
     def delete_timeframe(self, timeframe_id: str):
         # Check if timeframe exists and if it doesn't return errors
-        timeframe = self.mongo_module.get_document_by_id(
+        timeframe = mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -58,12 +56,12 @@ class EventsMemberService:
 
         # Delete all the events in the timeframe
         for event_id in event_ids:
-            self.mongo_module.delete_document_by_id(
+            mongo_module.delete_document_by_id(
                 f"{self.collection_prefix}event", event_id
             )
 
         # If timeframe exists, delete the timeframe document
-        self.mongo_module.delete_document_by_id(
+        mongo_module.delete_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
@@ -75,7 +73,7 @@ class EventsMemberService:
         event_data["usersAttended"] = []
 
         # Get Google Spreadsheet ID from timeframe
-        timeframe_doc = self.mongo_module.get_document_by_id(
+        timeframe_doc = mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
         spreadsheet_id = timeframe_doc["spreadsheetId"]
@@ -89,14 +87,14 @@ class EventsMemberService:
         event_data["spreadsheetCol"] = col
 
         # Insert the event in event collection
-        event_id = self.mongo_module.insert_document(
+        event_id = mongo_module.insert_document(
             f"{self.collection_prefix}event", event_data
         )
 
         event_data["eventId"] = str(event_id)
 
         # Insert child event in timeframe collection
-        self.mongo_module.update_document(
+        mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
             {"$push": {"events": event_data}},
@@ -105,7 +103,7 @@ class EventsMemberService:
         return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
-        event = self.mongo_module.get_document_by_id(
+        event = mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -128,7 +126,7 @@ class EventsMemberService:
 
         user_name = member["name"]
 
-        event = self.mongo_module.get_document_by_id(
+        event = mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -142,7 +140,7 @@ class EventsMemberService:
         }
 
         # Get timeframe document to get Google Sheets info
-        timeframe = self.mongo_module.get_document_by_id(
+        timeframe = mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", event["timeframeId"]
         )
 
@@ -176,7 +174,7 @@ class EventsMemberService:
         )
 
         # Update event collection with checkin data
-        self.mongo_module.update_document(
+        mongo_module.update_document(
             f"{self.collection_prefix}event",
             event_id,
             {"$push": {"usersAttended": checkin_data}},
@@ -210,7 +208,7 @@ class EventsMemberService:
 
     def delete(self, event_id: str):
         # Check if event exists and if it doesn't return errors
-        event = self.mongo_module.get_document_by_id(
+        event = mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
 
@@ -221,7 +219,7 @@ class EventsMemberService:
         timeframe_id = event["timeframeId"]
 
         # Remove event from timeframe
-        self.mongo_module.update_document(
+        mongo_module.update_document(
             f"{self.collection_prefix}timeframe",
             timeframe_id,
             {"$pull": {"events": {"_id": ObjectId(event_id)}}},
@@ -233,7 +231,7 @@ class EventsMemberService:
         )
 
     def get_timeframe_sheets(self, timeframe_id: str):
-        timeframe = self.mongo_module.get_document_by_id(
+        timeframe = mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
 
