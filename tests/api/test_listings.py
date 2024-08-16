@@ -41,7 +41,7 @@ def test_create_listing():
             ) as mock_create:
                 mock_create.return_value = {"msg": True}
                 response = client.http.post(
-                    f"/create",
+                    "/create",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
@@ -77,7 +77,7 @@ def test_get_all_listings():
             ) as mock_get_all:
                 mock_get_all.return_value = TEST_LISTINGS
                 response = client.http.get(
-                    f"/listings",
+                    "/listings",
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
@@ -162,7 +162,7 @@ def test_update_listing_field_route_not_found():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                assert response.json_body == None
+                assert response.json_body is None
 
 
 def test_update_listing_field_route_bad_request():
@@ -182,7 +182,7 @@ def test_update_listing_field_route_bad_request():
 
                 # body, status_code = response.json_body
 
-                assert response.json_body == None
+                assert response.json_body is None
 
 
 def test_update_listing_field_route_exception():
@@ -200,4 +200,4 @@ def test_update_listing_field_route_exception():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                assert response.json_body == None
+                assert response.json_body is None

@@ -1,11 +1,9 @@
 # TO BE COMPLETED: create api routes for analytics
 from chalice import Blueprint
 from chalicelib.services.InsightsService import insights_service
-from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles
 
-from pydantic import ValidationError
 
 insights_api = Blueprint(__name__)
 
