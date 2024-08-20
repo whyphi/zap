@@ -4,6 +4,7 @@ import json
 from bson import ObjectId
 import datetime
 from chalicelib.s3 import s3
+from chalicelib.utils import get_prev_image_version
 
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
@@ -42,7 +43,7 @@ class EventsRushService:
         data["numAttendees"] = 0
 
         # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
-        image_path = f"image/rush/{data['categoryId']}/{event_id}.png"
+        image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png" # MUST initialize version to v0
         image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
 
         # add image_url to data object (this also replaces the original base64 image url)
@@ -70,7 +71,11 @@ class EventsRushService:
 
             data["lastModified"] = datetime.datetime.now()
             data["_id"] = event_oid
-
+            
+            # get image versions
+            eventCoverImageVersion = data["eventCoverImageVersion"]
+            prevEventCoverImageVersion = get_prev_image_version(version=eventCoverImageVersion)
+            
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
                 f"{self.collection_prefix}rush-event", event_id
@@ -79,22 +84,24 @@ class EventsRushService:
             if not event:
                 raise Exception("Event does not exist.")
 
+            # update eventCoverImageVersion in db
+            event["eventCoverImageVersion"] = eventCoverImageVersion
+            
+            # get categoryId (for s3 path)
             event_category_id = event["categoryId"]
+            
+            # obtain image paths using versioning
+            image_path = f"image/rush/{event_category_id}/{event_id}/{eventCoverImageVersion}.png"
+            prev_image_path = f"image/rush/{event_category_id}/{event_id}/{prevEventCoverImageVersion}.png"
 
-            # if eventCoverImage contains https://whyphi-zap.s3.amazonaws.com, no need to update anything, otherwise update s3
-            if "https://whyphi-zap.s3.amazonaws.com" not in data["eventCoverImage"]:
-                
-                # get image path
-                image_path = f"image/rush/{event_category_id}/{event_id}.png"
-                
-                # remove previous eventCoverImage from s3 bucket
-                s3.delete_binary_data(object_id=image_path)
-                
-                # upload eventCoverImage to s3 bucket
-                image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
+            # remove previous eventCoverImage from s3 bucket
+            s3.delete_binary_data(object_id=prev_image_path)
+            
+            # upload eventCoverImage to s3 bucket
+            image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
 
-                # add image_url to data object (this also replaces the original base64 image url)
-                data["eventCoverImage"] = image_url
+            # add image_url to data object (this also replaces the original base64 image url)
+            data["eventCoverImage"] = image_url
 
             # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
             # that data overrides the matching keys
@@ -310,9 +317,10 @@ class EventsRushService:
                 raise Exception("Event does not exist.")
 
             event_category_id = event["categoryId"]
+            event_cover_image_version = event["eventCoverImageVersion"]
 
             # Get eventCoverImage path
-            image_path = f"image/rush/{event_category_id}/{event_id}.png"
+            image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
             
             # remove previous eventCoverImage from s3 bucket
             s3.delete_binary_data(object_id=image_path)
