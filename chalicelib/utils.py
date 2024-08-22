@@ -29,3 +29,6 @@ def get_file_extension_from_base64(base64_data):
     extension = extension_map.get(content_type, "dat")
 
     return extension
+
+def get_prev_image_version(version: str):
+    return "v" + str(int(version[1:]) - 1)
