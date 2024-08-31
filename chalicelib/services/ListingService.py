@@ -18,10 +18,13 @@ class ListingService:
     def __init__(self):
         pass
 
+    # TODO: prevent duplicate names... (also for rush-category)
     def create(self, data):
         listing_id = str(uuid.uuid4())
         data["listingId"] = listing_id
         data["isVisible"] = True
+
+        # TODO: check for dup name BEFORE going to rush-category creation
 
         # if includeEventsAttended, create corresponding rush category (and create foreign-key)
         if data["includeEventsAttended"]:
@@ -116,6 +119,7 @@ class ListingService:
         data = db.get_all(table_name="zap-listings")
         return data
 
+    # TODO: also delete corresponding rush-category
     def delete(self, id: str):
         try:
             # Perform delete operation in the database
