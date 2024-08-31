@@ -21,7 +21,7 @@ class ApplicantService:
         data = db.get_applicants(table_name="zap-applications", listing_id=id)
 
         # automated rush event logic (NOTE: does not override existing rush event logic)
-        rush_category_id = listing["rushCategoryId"]
+        rush_category_id = listing.get("rushCategoryId", None)
         if rush_category_id:
             analytics = self._get_rush_analytics(rush_category_id)
             attendees = analytics.get("attendees", {})
