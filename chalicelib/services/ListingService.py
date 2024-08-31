@@ -5,6 +5,7 @@ from chalicelib.db import db
 from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
+from chalicelib.services.EventsRushService import events_rush_service
 
 import json
 import uuid
@@ -21,6 +22,12 @@ class ListingService:
         listing_id = str(uuid.uuid4())
         data["listingId"] = listing_id
         data["isVisible"] = True
+
+        # if includeEventsAttended, create corresponding rush category (and create foreign-key)
+        if data["includeEventsAttended"]:
+            events_rush_data = {"name": data["title"], "defaultRushCategory": False}
+            rush_category_id = events_rush_service.create_rush_category(data=events_rush_data)
+            data["rushCategoryId"] = str(rush_category_id)
 
         db.put_data(table_name="zap-listings", data=data)
 

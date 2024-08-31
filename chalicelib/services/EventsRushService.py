@@ -31,8 +31,8 @@ class EventsRushService:
     def create_rush_category(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
         data["events"] = []
-        self.mongo_module.insert_document(f"{self.collection_prefix}rush", data)
-        return
+        id = self.mongo_module.insert_document(f"{self.collection_prefix}rush", data)
+        return id
 
     def create_rush_event(self, data: dict):
         event_id = ObjectId()
