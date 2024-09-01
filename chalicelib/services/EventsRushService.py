@@ -390,8 +390,8 @@ class EventsRushService:
         # return value
         attendance = {}
 
-        if len(rush_categories) == 0:
-            return attendance  # no rush categories exist
+        if not rush_categories:
+            return {}
 
         rush_category = rush_categories[0]
 
