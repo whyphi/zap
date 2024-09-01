@@ -6,6 +6,7 @@ import datetime
 from chalicelib.s3 import s3
 from chalicelib.utils import get_prev_image_version
 
+
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
         """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
@@ -18,8 +19,8 @@ class EventsRushService:
             return super().default(o)
 
     def __init__(self, mongo_module=mongo_module):
-          self.mongo_module = mongo_module
-          self.collection_prefix = "events-"
+        self.mongo_module = mongo_module
+        self.collection_prefix = "events-"
 
     def get_rush_categories_and_events(self):
         rush_categories = self.mongo_module.get_data_from_collection(
@@ -43,22 +44,20 @@ class EventsRushService:
         data["numAttendees"] = 0
 
         # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
-        image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png" # MUST initialize version to v0
+        image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png"  # MUST initialize version to v0
         image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
 
         # add image_url to data object (this also replaces the original base64 image url)
         data["eventCoverImage"] = image_url
 
         # Add event to its own collection
-        self.mongo_module.insert_document(
-            f"{self.collection_prefix}rush-event", data
-        )
+        self.mongo_module.insert_document(f"{self.collection_prefix}rush-event", data)
 
         # Add event to rush category
         self.mongo_module.update_document(
             f"{self.collection_prefix}rush",
             data["categoryId"],
-            {"$push": { "events": data }},
+            {"$push": {"events": data}},
         )
 
         return
@@ -71,11 +70,13 @@ class EventsRushService:
 
             data["lastModified"] = datetime.datetime.now()
             data["_id"] = event_oid
-            
+
             # get image versions
             eventCoverImageVersion = data["eventCoverImageVersion"]
-            prevEventCoverImageVersion = get_prev_image_version(version=eventCoverImageVersion)
-            
+            prevEventCoverImageVersion = get_prev_image_version(
+                version=eventCoverImageVersion
+            )
+
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
                 f"{self.collection_prefix}rush-event", event_id
@@ -86,52 +87,48 @@ class EventsRushService:
 
             # update eventCoverImageVersion in db
             event["eventCoverImageVersion"] = eventCoverImageVersion
-            
+
             # get categoryId (for s3 path)
             event_category_id = event["categoryId"]
-            
+
             # obtain image paths using versioning
             image_path = f"image/rush/{event_category_id}/{event_id}/{eventCoverImageVersion}.png"
             prev_image_path = f"image/rush/{event_category_id}/{event_id}/{prevEventCoverImageVersion}.png"
 
             # remove previous eventCoverImage from s3 bucket
             s3.delete_binary_data(object_id=prev_image_path)
-            
+
             # upload eventCoverImage to s3 bucket
-            image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
+            image_url = s3.upload_binary_data(
+                path=image_path, data=data["eventCoverImage"]
+            )
 
             # add image_url to data object (this also replaces the original base64 image url)
             data["eventCoverImage"] = image_url
 
-            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
+            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so
             # that data overrides the matching keys
-            data = { **event, **data }
+            data = {**event, **data}
 
             # Define array update query and filters
-            update_query = {
-                "$set": {
-                    "events.$[eventElem]": data
-                }
-            }
+            update_query = {"$set": {"events.$[eventElem]": data}}
 
-            array_filters = [
-                {"eventElem._id": event_oid}
-            ]
+            array_filters = [{"eventElem._id": event_oid}]
 
             # Modify the event in its category (rush collection)
             update_category_result = self.mongo_module.update_document(
                 collection=f"{self.collection_prefix}rush",
                 document_id=event_category_id,
                 query=update_query,
-                array_filters=array_filters
+                array_filters=array_filters,
             )
-            
+
             if not update_category_result:
                 raise Exception("Error updating rush-event-category.")
 
             # cannot include _id on original document (immutable)
             data.pop("_id")
-            
+
             # Modify actual event document (rush-event collection)
             updated_event_result = self.mongo_module.update_document(
                 f"{self.collection_prefix}rush-event",
@@ -141,7 +138,7 @@ class EventsRushService:
 
             if not updated_event_result:
                 raise Exception("Error updating rush-event-category.")
-                
+
             return
 
         except Exception as e:
@@ -163,14 +160,12 @@ class EventsRushService:
             If default_rush_category_id is not in the rush collection
         """
         default_rush_category_id = data["defaultRushCategoryId"]
-        
+
         collection = f"{self.collection_prefix}rush"
 
         # Set all defaultRushCategory fields to false
         self.mongo_module.update_many_documents(
-            collection,
-            {},
-            {"$set": {"defaultRushCategory": False}}
+            collection, {}, {"$set": {"defaultRushCategory": False}}
         )
 
         # if default_rush_category_id is "" --> reset defaultRushCategory
@@ -179,20 +174,20 @@ class EventsRushService:
 
         # Update the specified document to set its defaultRushCategory to true
         result = self.mongo_module.update_document_by_id(
-            collection,
-            default_rush_category_id,
-            {"defaultRushCategory": True}
+            collection, default_rush_category_id, {"defaultRushCategory": True}
         )
 
         if not result:
-            raise ValueError(f"Document with ID {default_rush_category_id} was not found or could not be updated.")
+            raise ValueError(
+                f"Document with ID {default_rush_category_id} was not found or could not be updated."
+            )
 
         return
 
     def get_rush_event(self, event_id: str, data: dict):
         hide_attendees = data.get("hideAttendees", True)
         hide_code = data.get("hideCode", True)
-        
+
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
@@ -207,16 +202,18 @@ class EventsRushService:
 
     def checkin_rush(self, event_id: str, user_data: dict):
         event_oid = ObjectId(event_id)
-        
+
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush-event", event_id
         )
 
         code = user_data["code"]
         user_data.pop("code")
-        
+
         # Parse the timestamp string to a datetime object
-        deadline = datetime.datetime.strptime(event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        deadline = datetime.datetime.strptime(
+            event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
 
         if datetime.datetime.now() > deadline:
             raise UnauthorizedError("Event deadline has passed.")
@@ -237,52 +234,50 @@ class EventsRushService:
             event_id,
             {"$set": event},
         )
-        
-        # Define array update query and filters
-        update_query = {
-            "$set": {
-                "events.$[eventElem]": event
-            }
-        }
 
-        array_filters = [
-            {"eventElem._id": event_oid}
-        ]
+        # Define array update query and filters
+        update_query = {"$set": {"events.$[eventElem]": event}}
+
+        array_filters = [{"eventElem._id": event_oid}]
 
         # STEP 2: Modify the event in its category (rush collection)
         self.mongo_module.update_document(
             collection=f"{self.collection_prefix}rush",
             document_id=event["categoryId"],
             query=update_query,
-            array_filters=array_filters
+            array_filters=array_filters,
         )
 
         return
-    
+
     def get_rush_events_default_category(self, data: dict):
         rush_categories = self.mongo_module.get_data_from_collection(
             collection=f"{self.collection_prefix}rush",
-            filter={"defaultRushCategory": True}
+            filter={"defaultRushCategory": True},
         )
-        
+
         if len(rush_categories) == 0:
             return []
-        
+
         rush_category = rush_categories[0]
-        
+
         # remove code from every rush event
         for event in rush_category["events"]:
             event.pop("code", None)
-            
+
             # check if user attended event (boolean)
-            checkedIn = any(attendee["email"] == data["email"] for attendee in event["attendees"])
+            checkedIn = any(
+                attendee["email"] == data["email"] for attendee in event["attendees"]
+            )
             event["checkedIn"] = checkedIn
-            
+
         # Sort events by the date field
         try:
             rush_category["events"].sort(
-                key=lambda e: datetime.datetime.strptime(e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                reverse=True
+                key=lambda e: datetime.datetime.strptime(
+                    e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                ),
+                reverse=True,
             )
         except ValueError as ve:
             # Handle the case where the date format might be different or invalid
@@ -307,12 +302,12 @@ class EventsRushService:
         try:
             # Get event_id as ObjectId
             event_oid = ObjectId(event_id)
-            
+
             # Check if event exists in the rush-event collection
             event = self.mongo_module.get_document_by_id(
                 f"{self.collection_prefix}rush-event", event_oid
             )
-            
+
             if not event:
                 raise Exception("Event does not exist.")
 
@@ -321,10 +316,10 @@ class EventsRushService:
 
             # Get eventCoverImage path
             image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
-            
+
             # remove previous eventCoverImage from s3 bucket
             s3.delete_binary_data(object_id=image_path)
-            
+
             # upload eventCoverImage to s3 bucket
             s3.delete_binary_data(object_id=image_path)
 
@@ -337,10 +332,9 @@ class EventsRushService:
 
             # Delete event data from the rush-event collection
             self.mongo_module.delete_document_by_id(
-                collection=f"{self.collection_prefix}rush-event", 
-                document_id=event_oid
+                collection=f"{self.collection_prefix}rush-event", document_id=event_oid
             )
-            
+
             return
 
         except Exception as e:
@@ -350,36 +344,33 @@ class EventsRushService:
         category = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}rush", category_id
         )
-        
+
         # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
         attendees = {}
-        
+
         # events: list of objects (event: { name, eventId })
         events = []
-        
+
         for event in category["events"]:
-            new_event = { 
-                "eventId": event["_id"], 
-                "eventName": event["name"] 
-            }
-            
+            new_event = {"eventId": event["_id"], "eventName": event["name"]}
+
             # accumulate list of events
             events.append(new_event)
-            
+
             # accumulate attendance
             for attendee in event["attendees"]:
                 email = attendee["email"]
                 if email in attendees:
                     attendees[email]["eventsAttended"].append(new_event)
                 else:
-                    attendees[email] = { **attendee, "eventsAttended": [new_event] }
-                    
-        result = { 
-            "categoryName": category["name"], 
+                    attendees[email] = {**attendee, "eventsAttended": [new_event]}
+
+        result = {
+            "categoryName": category["name"],
             "attendees": attendees,
             "events": events,
         }
-        
+
         return json.dumps(result, cls=self.BSONEncoder)
 
     def get_rush_attendance_by_email(self, email: str) -> dict:
@@ -393,27 +384,29 @@ class EventsRushService:
         """
         rush_categories: list[dict] = self.mongo_module.get_data_from_collection(
             collection=f"{self.collection_prefix}rush",
-            filter={"defaultRushCategory": True}
+            filter={"defaultRushCategory": True},
         )
 
         # return value
         attendance = {}
-        
+
         if len(rush_categories) == 0:
-            return attendance # no rush categories exist
-        
+            return attendance  # no rush categories exist
+
         rush_category = rush_categories[0]
-        
+
         events: dict = rush_category.get("events", {})
         for event in events:
+            event_name = event.get("name", "")
+            # initialize attendance to false (update if found matchin attendee)
+            attendance[event_name] = False
+
             attendees: list[dict] = event.get("attendees", [])
             for attendee in attendees:
-                event_name = event.get("name", "")
                 if attendee.get("email", "") == email:
                     attendance[event_name] = True
-                else:
-                    attendance[event_name] = False
 
         return attendance
+
 
 events_rush_service = EventsRushService()
