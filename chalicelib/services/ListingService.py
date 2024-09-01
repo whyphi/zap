@@ -5,6 +5,7 @@ from chalicelib.db import db
 from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
+from chalicelib.services.EventsRushService import events_rush_service
 
 import json
 import uuid
@@ -17,10 +18,18 @@ class ListingService:
     def __init__(self):
         pass
 
-    def create(self, data):
+    # TODO: prevent duplicate names... (also for rush-category)
+    def create(self, data: dict):
         listing_id = str(uuid.uuid4())
         data["listingId"] = listing_id
         data["isVisible"] = True
+
+        # TODO: check for dup name BEFORE going to rush-category creation
+        # if includeEventsAttended, create corresponding rush category (and create foreign-key)
+        if data.get("includeEventsAttended", None):
+            events_rush_data = {"name": data["title"], "defaultRushCategory": False}
+            rush_category_id = events_rush_service.create_rush_category(data=events_rush_data)
+            data["rushCategoryId"] = str(rush_category_id)
 
         db.put_data(table_name="zap-listings", data=data)
 
@@ -109,6 +118,7 @@ class ListingService:
         data = db.get_all(table_name="zap-listings")
         return data
 
+    # TODO: also delete corresponding rush-category
     def delete(self, id: str):
         try:
             # Perform delete operation in the database
