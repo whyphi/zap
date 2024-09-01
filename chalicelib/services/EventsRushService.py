@@ -381,5 +381,39 @@ class EventsRushService:
         }
         
         return json.dumps(result, cls=self.BSONEncoder)
+
+    def get_rush_attendance_by_email(self, email: str) -> dict:
+        """Gets list of rush events attended by `email` in the `defaultRushCategory`
+
+        Args:
+            email (str): Email of rusheee
+
+        Returns:
+            dict: Dictionary of event objects { event_name: bool }
+        """
+        rush_categories: list[dict] = self.mongo_module.get_data_from_collection(
+            collection=f"{self.collection_prefix}rush",
+            filter={"defaultRushCategory": True}
+        )
+
+        # return value
+        attendance = {}
         
+        if len(rush_categories) == 0:
+            return attendance # no rush categories exist
+        
+        rush_category = rush_categories[0]
+        
+        events: dict = rush_category.get("events", {})
+        for event in events:
+            attendees: list[dict] = event.get("attendees", [])
+            for attendee in attendees:
+                event_name = event.get("name", "")
+                if attendee.get("email", "") == email:
+                    attendance[event_name] = True
+                else:
+                    attendance[event_name] = False
+
+        return attendance
+
 events_rush_service = EventsRushService()

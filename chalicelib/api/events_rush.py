@@ -68,3 +68,9 @@ def delete_rush_event(event_id):
 @auth(events_rush_api, roles=[Roles.ADMIN])
 def get_rush_category_analytics(category_id):
     return events_rush_service.get_rush_category_analytics(category_id=category_id)
+
+
+@events_rush_api.route("/events/rush/attendance", methods=["POST"], cors=True)
+def get_rush_attendance_by_email():
+    data = events_rush_api.current_request.json_body
+    return events_rush_service.get_rush_attendance_by_email(email=data.get("email", ""))
