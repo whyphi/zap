@@ -19,15 +19,14 @@ class ListingService:
         pass
 
     # TODO: prevent duplicate names... (also for rush-category)
-    def create(self, data):
+    def create(self, data: dict):
         listing_id = str(uuid.uuid4())
         data["listingId"] = listing_id
         data["isVisible"] = True
 
         # TODO: check for dup name BEFORE going to rush-category creation
-
         # if includeEventsAttended, create corresponding rush category (and create foreign-key)
-        if data["includeEventsAttended"]:
+        if data.get("includeEventsAttended", None):
             events_rush_data = {"name": data["title"], "defaultRushCategory": False}
             rush_category_id = events_rush_service.create_rush_category(data=events_rush_data)
             data["rushCategoryId"] = str(rush_category_id)
