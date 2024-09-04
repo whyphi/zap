@@ -48,6 +48,7 @@ def test_get_all_applicants_from_listing(service):
         {"applicantId": "sample_id2", "name": "Bob"},
     ]
     mock_db.get_applicants.return_value = sample_data
+    mock_db.get_item.return_value = {}
 
     result = applicant_service.get_all_from_listing(listing_id)
     mock_db.get_applicants.assert_called_once_with(
