@@ -72,7 +72,8 @@ class EventsRushService:
             data["lastModified"] = datetime.datetime.now()
             data["_id"] = event_oid
             
-            # get image versions
+            # get existing image and image versions
+            eventCoverImage: str = data["eventCoverImage"]
             eventCoverImageVersion = data["eventCoverImageVersion"]
             prevEventCoverImageVersion = get_prev_image_version(version=eventCoverImageVersion)
             
@@ -94,14 +95,16 @@ class EventsRushService:
             image_path = f"image/rush/{event_category_id}/{event_id}/{eventCoverImageVersion}.png"
             prev_image_path = f"image/rush/{event_category_id}/{event_id}/{prevEventCoverImageVersion}.png"
 
-            # remove previous eventCoverImage from s3 bucket
-            s3.delete_binary_data(object_id=prev_image_path)
-            
-            # upload eventCoverImage to s3 bucket
-            image_url = s3.upload_binary_data(path=image_path, data=data["eventCoverImage"])
+            # only need to re-upload and delete old image if eventCoverImage does NOT contain https://whyphi-zap.s3.amazonaws.com
+            if "https://whyphi-zap.s3.amazonaws.com" not in eventCoverImage:
+                # remove previous eventCoverImage from s3 bucket
+                s3.delete_binary_data(object_id=prev_image_path)
+                
+                # upload eventCoverImage to s3 bucket
+                image_url = s3.upload_binary_data(path=image_path, data=eventCoverImage)
 
-            # add image_url to data object (this also replaces the original base64 image url)
-            data["eventCoverImage"] = image_url
+                # add image_url to data object (this also replaces the original base64 image url)
+                data["eventCoverImage"] = image_url
 
             # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
             # that data overrides the matching keys
