@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import NotFoundError, BadRequestError
+from chalice import NotFoundError, BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
 import datetime
@@ -121,7 +121,7 @@ class EventsMemberService:
         Returns:
             dict -- Dictionary containing status and message.
         """
-        user_id, user_email = user["id"], user["email"]
+        user_id, user_email, code = user["id"], user["email"], user["code"]
         member = self.mongo_module.get_document_by_id("users", user_id)
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
@@ -131,6 +131,9 @@ class EventsMemberService:
         event = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}event", event_id
         )
+
+        if code.strip() != event["code"].strip():
+            raise UnauthorizedError("Invalid code.")
 
         if any(d["userId"] == user_id for d in event["usersAttended"]):
             raise BadRequestError(f"{user_name} has already checked in.")
