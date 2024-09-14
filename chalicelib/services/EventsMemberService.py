@@ -132,7 +132,7 @@ class EventsMemberService:
             f"{self.collection_prefix}event", event_id
         )
 
-        if code.strip() != event["code"].strip():
+        if code.lower().strip() != event["code"].lower().strip():
             raise UnauthorizedError("Invalid code.")
 
         if any(d["userId"] == user_id for d in event["usersAttended"]):
