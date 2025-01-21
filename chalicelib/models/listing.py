@@ -12,6 +12,7 @@ class Listing(BaseModel):
     dateCreated: str
     deadline: str
     isVisible: Union[bool, None]
+    isEncrypted: Union[bool, None]
     questions: List[Question]
     title: str
 
@@ -23,6 +24,7 @@ class Listing(BaseModel):
             dateCreated=item.get("dateCreated"),
             deadline=item.get("deadline"),
             isVisible=item.get("isVisible"),
+            isEncrypted=item.get("isEncrypted"),
             questions=[Question(**q) for q in item.get("questions", [])],
             title=item.get("title"),
         )
