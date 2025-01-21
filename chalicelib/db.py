@@ -118,6 +118,38 @@ class DBResource:
         return None
 
     @add_env_suffix
+    def toggle_encryption(self, table_name: str, key: dict):
+        """Toggles the encryption boolean for an item identified by the key."""
+        # Get a reference to the DynamoDB table
+        table = self.resource.Table(table_name)
+
+        # Fetch the current item
+        listing_item = table.get_item(Key=key)
+        if "Item" not in listing_item:
+            return None
+
+        curr_listing = Listing.from_dynamodb_item(listing_item["Item"])
+
+        # If the item exists, update the isEncrypted field to the opposite value
+        if curr_listing:
+            is_encrypted = curr_listing.isEncrypted
+            updated_encryption_value = (
+                not is_encrypted if is_encrypted is not None else True
+            )
+
+            # Update the item with the new isEncrypted value
+            table.update_item(
+                Key=key,
+                UpdateExpression="SET isEncrypted = :value",
+                ExpressionAttributeValues={":value": updated_encryption_value},
+            )
+
+            return True
+
+        # Return None if the item doesn't exist
+        return None
+
+    @add_env_suffix
     def update_listing_field(
         self,
         table_name: str,
@@ -145,5 +177,6 @@ class DBResource:
         )
 
         return listing_item["Item"]
+
 
 db = DBResource()

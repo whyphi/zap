@@ -252,7 +252,7 @@ def test_update_field_validation_error(service):
     assert exc_msgs[0] == "1 validation error for UpdateFieldRequest"
     assert (
         exc_msgs[2]
-        == "Value error, Invalid field: non_existent_field. Allowed fields: ['listingId', 'dateCreated', 'deadline', 'isVisible', 'questions', 'title'] [type=value_error, input_value='non_existent_field', input_type=str]"
+        == "Value error, Invalid field: non_existent_field. Allowed fields: ['listingId', 'dateCreated', 'deadline', 'isVisible', 'isEncrypted', 'questions', 'title'] [type=value_error, input_value='non_existent_field', input_type=str]"
     )
 
 
