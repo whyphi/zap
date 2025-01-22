@@ -4,27 +4,27 @@ from typing import List, Dict
 
 class BroadcastService:
     def __init__(self):
-        self.sheets = GoogleSheetsModule()
-        self.JOBS_SHEET_ID = "SHEET_ID"  # Add this to SSM later
+        self.gs = GoogleSheetsModule()
+        self.JOBS_SHEET_ID = "1-KgZeWxiBn35ARMaZPYJkUJnYTVbfGpiVjxwwKP2jCQ"  # Add this to SSM later
         
     def parse_job_types(self, type_string: str) -> List[str]:
         """Parse the comma-separated type string into categories"""
         if not type_string:
             return []
         
-        # Split on commas and clean up each type
         types = [t.strip() for t in type_string.split(',')]
         return types
         
     def fetch_job_listings(self) -> Dict[str, List[Dict]]:
         """Fetches job listings and categorizes them by type"""
         try:
-            response = self.sheets.get_all_cells(self.JOBS_SHEET_ID, "2026 - Business")  
+            response = self.gs.get_all_cells(self.JOBS_SHEET_ID, "2026 - Business")  
             if not response.get("values"):
-                return {}
-                
-            headers = response["values"][0]
-            rows = response["values"][1:]  # Skip header row
+                return {
+                    "jobs": {}
+                }            
+            headers = response["values"][3]
+            rows = response["values"][4:] 
             
             # Initialize categories
             categorized_jobs = {
@@ -35,33 +35,45 @@ class BroadcastService:
                 "Other": []
             }
             
-            for row in rows:
-                # Create job entry with all columns
-                job_data = dict(zip(headers, row))
-                
-                # Parse the Type field to categorize the job
-                types = self.parse_job_types(job_data.get("Type", ""))
-                
-                # Clean up description (remove extra whitespace)
-                job_data["Description"] = " ".join(job_data.get("Description", "").split())
-                
-                # Add job to each relevant category
-                for job_type in types:
-                    for category in categorized_jobs.keys():
-                        if category.lower() in job_type.lower():
-                            categorized_jobs[category].append(job_data)
-                            break
-                    else:
-                        # If no category match found, add to Other
-                        if job_data not in categorized_jobs["Other"]:
-                            categorized_jobs["Other"].append(job_data)
+            recognized_categories = ["Tech", "Finance", "Consulting", "Marketing"]
             
+            for row in rows:
+                job_data = dict(zip(headers, row))
+
+                # clean up description
+                job_data["Description"] = " ".join(job_data.get("Description", "").split())
+
+                # e.g. "Software,Technology" → ["Software", "Technology"]
+                type_string = job_data.get("Type", "") or ""
+                types = self.parse_job_types(type_string)
+
+                matched_any_category = False
+                lower_types = [t.lower() for t in types]
+
+                for cat in recognized_categories:
+                    cat_lower = cat.lower()
+
+                    # if ANY of the job's type strings contains the category substring
+                    # e.g. "technology" contains "tech"
+                    if any(cat_lower in t for t in lower_types):
+                        categorized_jobs[cat].append(job_data)
+                        matched_any_category = True
+                        # no 'break' here if you want multi-category matching
+                        # if you want only the *first* category match, then uncomment the break:
+                        # break
+
+            if not matched_any_category:
+                categorized_jobs["Other"].append(job_data)
+                            
             # Remove empty categories
-            return {k: v for k, v in categorized_jobs.items() if v}
+            return {
+                "jobs": {k: v for k, v in categorized_jobs.items() if v}
+            }
                 
         except Exception as e:
-            print(f"Error fetching job listings: {str(e)}")
-            return {}
+            return {
+                "jobs": {}
+            }
     
     def generate_job_html(self, jobs: Dict[str, List[Dict]]) -> str:
         """Generates HTML for job listings"""
@@ -150,3 +162,5 @@ class BroadcastService:
                 text=content,  # Plain text version
                 html=content   # HTML version
             )
+            
+broadcast_service = BroadcastService()  
