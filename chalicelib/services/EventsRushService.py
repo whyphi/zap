@@ -194,7 +194,7 @@ class EventsRushService:
         return
 
     def get_rush_event(self, event_id: str, data: dict):
-        hide_attendees = data.get("hideAttendees", True)
+        hide_attendees = data.get("hideAttendees", False) # TODO: only hideAttendees if specifically requested
         hide_code = data.get("hideCode", True)
         
         event = self.mongo_module.get_document_by_id(
