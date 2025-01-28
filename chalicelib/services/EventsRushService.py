@@ -201,7 +201,7 @@ class EventsRushService:
         )
 
         if hide_attendees:
-            event.pop("attendeesId", None)
+            event.pop("attendees", None)
 
         if hide_code:
             event.pop("code")
@@ -215,7 +215,13 @@ class EventsRushService:
             f"{self.collection_prefix}rush-event", event_id
         )
 
-        code = user_data["code"]
+        raw_user_code: str = user_data.get("code", "")
+        user_code = raw_user_code.lower().strip()
+
+        raw_event_code: str | bool = event.get("code", False)
+        if raw_event_code:
+            event_code = raw_event_code.lower().strip()
+
         user_data.pop("code")
         
         # Parse the timestamp string to a datetime object
@@ -224,7 +230,7 @@ class EventsRushService:
         if datetime.datetime.now() > deadline:
             raise UnauthorizedError("Event deadline has passed.")
 
-        if code != event["code"]:
+        if user_code != event_code:
             raise UnauthorizedError("Invalid code.")
 
         if any(d["email"] == user_data["email"] for d in event["attendees"]):
