@@ -218,7 +218,7 @@ class EventsRushService:
         raw_user_code: str = user_data.get("code", "")
         user_code = raw_user_code.lower().strip()
 
-        raw_event_code: str | bool = event.get("code", False)
+        raw_event_code: str | bool = event.get("code", None)
         if raw_event_code:
             event_code = raw_event_code.lower().strip()
 
