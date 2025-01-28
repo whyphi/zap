@@ -5,6 +5,7 @@ from bson import ObjectId
 import datetime
 from chalicelib.s3 import s3
 from chalicelib.utils import get_prev_image_version
+from typing import Optional
 
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
@@ -218,7 +219,7 @@ class EventsRushService:
         raw_user_code: str = user_data.get("code", "")
         user_code = raw_user_code.lower().strip()
 
-        raw_event_code: str | bool = event.get("code", None)
+        raw_event_code: Optional[str] = event.get("code", None)
         if raw_event_code:
             event_code = raw_event_code.lower().strip()
 
