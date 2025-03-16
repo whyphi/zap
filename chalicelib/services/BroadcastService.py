@@ -112,7 +112,7 @@ class BroadcastService:
     def generate_newsletter_content(self, custom_content: str = "") -> Dict:
         """Generates the complete newsletter content"""
         jobs = self.fetch_job_listings()
-        jobs_html = self.generate_job_html(jobs)
+        jobs_html = self.generate_job_html(jobs["jobs"])
         
         # Combine all content with custom CSS
         css = """

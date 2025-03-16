@@ -1,15 +1,23 @@
 from chalice import Blueprint
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.modules.mongo import MongoModule
+from chalicelib.services.BroadcastService import broadcast_service
 import boto3
 
-announcements_api = Blueprint(__name__)
+broadcast_api = Blueprint(__name__)
 
 ses_client = boto3.client("ses")
 
+@broadcast_api.route("/broadcast-test", methods=["GET", "POST"], cors=True)
+def test_functions():
+    html = broadcast_service.generate_newsletter_content()
+    return {
+        "status": "ok",
+        "html": html
+    }
 
 # why is GET needed?
-@announcements_api.route("/announcement", methods=["GET", "POST"], cors=True)
+@broadcast_api.route("/broadcast", methods=["GET", "POST"], cors=True)
 def send_announcement():
     MongoServer = MongoModule()
     MongoServer.connect()
@@ -17,7 +25,7 @@ def send_announcement():
 
     emails = [user["email"] for user in users_data]
 
-    request = announcements_api.current_request
+    request = broadcast_api.current_request
     request_body = request.json_body
 
     for email in emails:
@@ -33,18 +41,18 @@ def send_announcement():
     return
 
 
-@announcements_api.route("/test-email")
+@broadcast_api.route("/test-email")
 def test_email():
     # PLEASE REPLACE WITH YOUR OWN EMAIL FOR TESTING
-    emails = ["cwilliam.gough@gmail.com"]
-
+    html = broadcast_service.generate_newsletter_content()
+    emails = ["vinli@bu.edu", "declanyg@bu.edu", "mhyan@bu.edu"]
+    
     for email in emails:
-        ses_destination = SesDestination(tos=[email])
-        ses.send_email(
-            source="techteampct@gmail.com",
-            destination=ses_destination,
-            subject="Subject Test",
-            text="test data",
-            html="<h1>test</h1>",
+        broadcast_service.send_newsletter(
+            subject="Test Email",
+            content=html["html"],
+            recipients=[email],
         )
     return f"Sent emails to {len(emails)} people: {emails}"
+
+
