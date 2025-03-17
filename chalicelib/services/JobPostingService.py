@@ -69,13 +69,13 @@ class JobPostingService:
     
 job_posting_service = JobPostingService()
 
-if __name__ == "__main__":
-    test_service = JobPostingService()
-    links = [('Simplify (Tech)', 'https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md'), 
-             ('Cvrve (Tech)','https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md'), 
-             ('Jobright.ai (Consulting)','https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md'), 
-             ('Jobright.ai (Marketing)','https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md')]
+# if __name__ == "__main__":
+#     test_service = JobPostingService()
+#     links = [('Simplify (Tech)', 'https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md'), 
+#              ('Cvrve (Tech)','https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md'), 
+#              ('Jobright.ai (Consulting)','https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md'), 
+#              ('Jobright.ai (Marketing)','https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md')]
     
-    for source, link in links:
-        postings = test_service.getJobs(link)
-        print(f"{source}:\n{postings}\n\n\n")
+#     for source, link in links:
+#         postings = test_service.getJobs(link)
+#         print(f"{source}:\n{postings}\n\n\n")
