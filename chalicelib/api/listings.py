@@ -54,6 +54,16 @@ def toggle_visibility(id):
         listings_api.log.debug(e)
 
 
+@listings_api.route("/listings/{id}/toggle/encryption", methods=["PATCH"], cors=True)
+@auth(listings_api, roles=[Roles.ADMIN])
+def toggle_encryption(id):
+    """Encrypts a listing with the given ID."""
+    try:
+        return listing_service.toggle_encryption(id)
+    except Exception as e:
+        listings_api.log.debug(e)
+
+
 @listings_api.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 @handle_exceptions

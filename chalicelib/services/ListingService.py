@@ -28,7 +28,9 @@ class ListingService:
         # if includeEventsAttended, create corresponding rush category (and create foreign-key)
         if data.get("includeEventsAttended", None):
             events_rush_data = {"name": data["title"], "defaultRushCategory": False}
-            rush_category_id = events_rush_service.create_rush_category(data=events_rush_data)
+            rush_category_id = events_rush_service.create_rush_category(
+                data=events_rush_data
+            )
             data["rushCategoryId"] = str(rush_category_id)
 
         db.put_data(table_name="zap-listings", data=data)
@@ -144,6 +146,22 @@ class ListingService:
         try:
             # Perform visibility toggle in the database
             data = db.toggle_visibility(
+                table_name="zap-listings", key={"listingId": id}
+            )
+
+            # Check the result and return the appropriate response
+            if data:
+                return json.dumps({"statusCode": 200})
+            else:
+                return json.dumps({"statusCode": 400, "message": "Invalid listing ID"})
+
+        except Exception as e:
+            return json.dumps({"statusCode": 500, "message": str(e)})
+
+    def toggle_encryption(self, id: str):
+        try:
+            # Perform encryption toggle in the database
+            data = db.toggle_encryption(
                 table_name="zap-listings", key={"listingId": id}
             )
 

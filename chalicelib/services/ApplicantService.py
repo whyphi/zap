@@ -2,6 +2,7 @@ from chalicelib.db import db
 from chalicelib.services.EventsRushService import events_rush_service
 from chalice import BadRequestError
 import json
+from chalicelib.utils import hash_value
 
 
 class ApplicantService:
@@ -31,6 +32,9 @@ class ApplicantService:
                 applicant["events"] = self._get_applicant_events(
                     email=applicant["email"], attendees=attendees, events=events
                 )
+
+        if "isEncrypted" in listing and listing["isEncrypted"]:
+            data = hash_value(data)
 
         return data
 
