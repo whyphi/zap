@@ -44,7 +44,7 @@ class JobPostingService:
             try:
                 role = cols[1].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").text
                 link = cols[1].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").get_attribute("href")
-            except:
+            except NoSuchElementException:
                 role = cols[1].text
             
             if link == "":
