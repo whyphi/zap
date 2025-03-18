@@ -2,7 +2,7 @@ import pytest
 from datetime import datetime, timedelta
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from chalicelib.services.JobPostingService import JobPostingService
+from chalicelib.services.JobPostingService import job_posting_service
 
 
 # Dummy classes to simulate Selenium elements
@@ -127,9 +127,7 @@ def job_service():
     """
     Creates a JobPostingService instance and overrides its driver with a dummy
     driver that returns a dummy table structure.
-    """
-    service = JobPostingService()
-    
+    """    
     today = datetime.today()
     date_within = today.strftime("%b %d")
     date_old = (today - timedelta(days=9)).strftime("%b %d")
@@ -173,9 +171,9 @@ def job_service():
     dummy_table = DummyTable(tbody=dummy_tbody)
     
     dummy_driver = DummyDriver(table=dummy_table)
-    service.driver = dummy_driver
+    job_posting_service.driver = dummy_driver
 
-    return service
+    return job_posting_service
 
 
 def test_get_jobs(job_service):

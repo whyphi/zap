@@ -26,7 +26,7 @@ class JobPostingService:
             webdriver.Chrome: A configured instance of the Chrome webdriver.
         """
         options = webdriver.ChromeOptions()
-        # Use default options if no extra arguments are provided.
+        # Use default options if no extra arguments are provided
         # "--headless":  Run Chrome in headless mode
         # "--disable-gpu":  Necessary for some environments
         # "--no-sandbox":  Good practice for running in Docker/Linux
