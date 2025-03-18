@@ -10,16 +10,40 @@ import re
 
 class JobPostingService:
     def __init__(self):
-        service = Service(ChromeDriverManager().install())
+        self.driver = self._create_webdriver()
+        self.gs = GoogleSheetsModule()
+    
+    def _create_webdriver(self) -> webdriver.Chrome:
+        """
+        Configures and creates a headless Chrome webdriver.
+
+        Returns:
+            webdriver.Chrome: A configured instance of Chrome webdriver.
+        """
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")  # Run Chrome in headless mode
         options.add_argument("--disable-gpu")  # Necessary for some environments
         options.add_argument("--no-sandbox")  # Good practice for running in Docker/Linux
-        webDriver = webdriver.Chrome(service=service, options=options)
-        self.driver = webDriver
-        self.gs = GoogleSheetsModule()
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+        return driver
     
     def getJobs(self, urlStr) -> List:
+        """
+        Fetches job postings from the given URL and returns a list of job details.
+
+        This method navigates to the provided URL, locates the first table element on the page,
+        and processes each row of the table body to extract job details such as the company name,
+        job role, application link, and posting date. The extraction stops once a job posting date
+        is determined to be more than one week old.
+
+        Args:
+            urlStr (str): The URL of the webpage containing job postings in a table format.
+
+        Returns:
+            List[dict]: A list of dictionaries, each containing keys 'company', 'role', 'link',
+            and 'date' for the individual job postings.
+        """
         self.driver.get(urlStr)
     
         table = self.driver.find_element(By.TAG_NAME, "table")
@@ -62,6 +86,18 @@ class JobPostingService:
         return jobs
     
     def getFinanceJobs(self) -> List[Dict]:
+        """
+        Retrieves finance job opportunities from a specified Google Sheets document (currently RecruitU).
+
+        This method utilizes the GoogleSheetsModule to fetch cell data from a predetermined Google Sheets
+        document. It processes the data by separating header information from job rows, identifying the required
+        columns (Company, Opportunity, Link, Deadline), and extracting relevant details. The method utilizes 
+        the _convert_serial_to_date() helper function to convert serial date formats into a human-readable string format.
+
+        Returns:
+            List[dict]: A list of dictionaries, each containing job information with keys 'company', 'role',
+            'link', and 'date'. Returns an empty list if no data is found or an error occurs.
+        """
         JOBS_SHEET_ID = "15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0"
         try:
             response = self.gs.get_all_cells(JOBS_SHEET_ID, "2027 Opportunities Tracker", "FORMULA")
@@ -88,10 +124,10 @@ class JobPostingService:
             hyperlink_regex = r'=HYPERLINK\("(.*?)","(.*?)"\)'
             for row in rows:
                 raw_link = row[link_idx]
-                # Use regex to extract the hyperlink URL.
+                # Use regex to extract the hyperlink URL
                 match = re.match(hyperlink_regex, raw_link)
                 if not match:
-                    # Skip this row if no match is found.
+                    # Skip this row if no match is found
                     continue
                 hyperlink_url = match.group(1)
                     
@@ -116,19 +152,35 @@ class JobPostingService:
         """
         Converts a serial date (as returned by Google Sheets when using FORMULA mode)
         into a human-readable string (e.g. "Mar 08").
+
         If conversion fails, returns the original value.
+
+        Args:
+            raw_date: The raw date value from Google Sheets (usually a serial number or string).
+
+        Returns:
+            str: A formatted date string or the original raw date if conversion is unsuccessful.
         """
         try:
-            # Attempt to convert raw_date to a float.
+            # Attempt to convert raw_date to a float
             serial = float(raw_date)
-            base_date = datetime(1899, 12, 30)  # Google Sheets base date.
+            base_date = datetime(1899, 12, 30)  # Google Sheets base date
             date_obj = base_date + timedelta(days=serial)
             return date_obj.strftime("%b %d")  # Example: "Mar 08"
         except Exception:
-            # If it's not a serial number, return it as-is.
+            # If it's not a serial number, return it as-is
             return raw_date
     
     def isMoreThanOneWeekAgo(self, dateStr: str) -> bool:
+        """
+        Determines if the given date string represents a date more than one week ago.
+
+        Args:
+            dateStr (str): A date string in the format "Mon DD" (e.g., "Mar 08").
+
+        Returns:
+            bool: True if the date is more than one week ago; False otherwise.
+        """
         current_year = datetime.today().year
         today = datetime.today()
         date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
