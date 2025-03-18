@@ -13,21 +13,32 @@ class JobPostingService:
         self.driver = self._create_webdriver()
         self.gs = GoogleSheetsModule()
     
-    def _create_webdriver(self) -> webdriver.Chrome:
+    def _create_webdriver(self, *chrome_args: str) -> webdriver.Chrome:
         """
-        Configures and creates a headless Chrome webdriver.
+        Configures and creates a headless Chrome webdriver with optional additional command-line options.
+
+        Args:
+            *chrome_args (str): Additional command-line arguments for ChromeOptions.
+                If none are provided, the default options ["--headless", "--disable-gpu", "--no-sandbox"]
+                will be used.
 
         Returns:
-            webdriver.Chrome: A configured instance of Chrome webdriver.
+            webdriver.Chrome: A configured instance of the Chrome webdriver.
         """
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")  # Run Chrome in headless mode
-        options.add_argument("--disable-gpu")  # Necessary for some environments
-        options.add_argument("--no-sandbox")  # Good practice for running in Docker/Linux
+        # Use default options if no extra arguments are provided.
+        # "--headless":  Run Chrome in headless mode
+        # "--disable-gpu":  Necessary for some environments
+        # "--no-sandbox":  Good practice for running in Docker/Linux
+        default_args = ["--headless", "--disable-gpu", "--no-sandbox"]
+        args_to_use = chrome_args if chrome_args else default_args
+        for arg in args_to_use:
+            options.add_argument(arg)
+        
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         return driver
-    
+
     def getJobs(self, urlStr) -> List:
         """
         Fetches job postings from the given URL and returns a list of job details.
