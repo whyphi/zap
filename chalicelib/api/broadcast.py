@@ -41,11 +41,11 @@ def send_announcement():
     return
 
 
-@broadcast_api.route("/test-email")
+@broadcast_api.route("/test-email", methods=["GET", "POST"], cors=True)
 def test_email():
     # PLEASE REPLACE WITH YOUR OWN EMAIL FOR TESTING
     html = broadcast_service.generate_newsletter_content()
-    emails = ["vinli@bu.edu", "declanyg@bu.edu", "mhyan@bu.edu"]
+    emails = ["vinli@bu.edu", "mhyan@bu.edu"]
     
     for email in emails:
         broadcast_service.send_newsletter(
