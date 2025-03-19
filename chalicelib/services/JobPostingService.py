@@ -47,6 +47,9 @@ class JobPostingService:
         and processes each row of the table body to extract job details such as the company name,
         job role, application link, and posting date. The extraction stops once a job posting date
         is determined to be more than one week old.
+        
+        **Due to this function's reliance on specific Github repo README formatting, this function
+        will need to be updated/abstracted to handle changes to the repos in the future.
 
         Args:
             urlStr (str): The URL of the webpage containing job postings in a table format.
@@ -60,16 +63,12 @@ class JobPostingService:
         table = self.driver.find_element(By.TAG_NAME, "table")
         body = table.find_element(By.TAG_NAME, "tbody")
         rows = body.find_elements(By.TAG_NAME, "tr")
-        
-        # print(rows)
-        
+                
         prevRowCompany = ""
         jobs = []
         for row in rows:
             cols = row.find_elements(By.XPATH, "td")
-            # print(cols)
             date = cols[-1].text
-            # print(date)
             if (self.isMoreThanOneWeekAgo(date)):
                 break
             
