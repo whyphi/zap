@@ -151,7 +151,7 @@ def job_service():
     #   - Column 3: Provides link via <a> lookup
     #   - Last column: Date within one week
     row2 = DummyRow([
-        DummyCol(text="ignored", raise_strong=True),              # col0: missing company info
+        DummyCol(text="↳", raise_strong=True),                    # col0: missing company info -> triggers fallback
         DummyCol(text="Developer", raise_strong=True),            # col1: missing role nested data; fallback to text "Developer"
         DummyCol(text="Extra"),                                   # col2: extra
         DummyCol(text="ignored", strong_a_href="http://job2.com"),  # col3: link fallback used since role branch didn't set link
