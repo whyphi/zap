@@ -61,11 +61,15 @@ class JobPostingService:
         body = table.find_element(By.TAG_NAME, "tbody")
         rows = body.find_elements(By.TAG_NAME, "tr")
         
+        # print(rows)
+        
         prevRowCompany = ""
         jobs = []
         for row in rows:
             cols = row.find_elements(By.XPATH, "td")
+            # print(cols)
             date = cols[-1].text
+            # print(date)
             if (self.isMoreThanOneWeekAgo(date)):
                 break
             
@@ -77,7 +81,15 @@ class JobPostingService:
                 company = cols[0].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").text
                 prevRowCompany = company
             except NoSuchElementException:
-                company = prevRowCompany
+                try:
+                    company = cols[0].text
+                    if company == "↳":
+                        company = prevRowCompany
+                    else:
+                        prevRowCompany = company
+                except Exception:
+                    company = "N/A"
+                    
             
             try:
                 role = cols[1].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").text
