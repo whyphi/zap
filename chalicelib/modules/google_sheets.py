@@ -34,12 +34,12 @@ class GoogleSheetsModule:
         )
         return response
 
-    def get_all_cells(self, spreadsheet_id: str, sheet_name: str):
+    def get_all_cells(self, spreadsheet_id: str, sheet_name: str, render_option="FORMATTED_VALUE"):
         range = f"{sheet_name}!A1:Z"
         response = (
             self.service.spreadsheets()
             .values()
-            .get(spreadsheetId=spreadsheet_id, range=range)
+            .get(spreadsheetId=spreadsheet_id, range=range, valueRenderOption=render_option)
             .execute()
         )
         return response
