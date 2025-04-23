@@ -5,12 +5,34 @@ from typing import List, Dict
 class BroadcastService:
     def __init__(self):
         self.ps = job_posting_service
-    
+        # Map each section to its SVG image URL.
+        # Update the URLs/paths as needed.
+        self.svg_mapping = {
+            "Finance": "https://whyphi-public.s3.us-east-1.amazonaws.com/finance_opportunities.jpg",
+            "Tech": "https://whyphi-public.s3.us-east-1.amazonaws.com/tech_opportunities.jpg",
+            "Consulting": "https://whyphi-public.s3.us-east-1.amazonaws.com/consulting_opportunities.jpg",
+            "Marketing": "https://whyphi-public.s3.us-east-1.amazonaws.com/marketing_opportunities.jpg",
+        }
+        # Header and footer SVGs.
+        self.header_svg = "https://whyphi-public.s3.us-east-1.amazonaws.com/newsletter_cover.jpg"
+        self.footer_svg = "https://whyphi-public.s3.us-east-1.amazonaws.com/job_opportunities.jpg"
+
     def generate_section_html(self, section_title: str, jobs: List[Dict]) -> str:
         """
         Generates an HTML section for a given list of jobs.
+        Each section includes an icon from the corresponding SVG.
         """
-        html = f"<div class='jobs-section'><h2>{section_title} Opportunities</h2><ul class='job-list'>"
+        # Retrieve the SVG for this section, if available.
+        svg_img = self.svg_mapping.get(section_title, "")
+        image_html = (
+            f"<img src='{svg_img}' alt='{section_title} icon' class='section-icon'>"
+            if svg_img else ""
+        )
+        html = (
+            f"<div class='jobs-section'>"
+            f"<div class='section-header'>{image_html}<h2>{section_title} Opportunities</h2></div>"
+            f"<ul class='job-list'>"
+        )
         for job in jobs:
             company = job.get("company", "N/A")
             role = job.get("role", "N/A")
@@ -57,27 +79,61 @@ class BroadcastService:
         consulting_section = self.generate_section_html("Consulting", consulting_jobs)
         marketing_section = self.generate_section_html("Marketing", marketing_jobs)
         
-        # Common CSS for styling the newsletter sections
+        # CSS updated to style the newsletter with header, footer, and section icons.
         css = """
         <style>
-            .jobs-section { margin: 20px 0; }
-            .job-list { list-style-type: none; padding-left: 0; }
-            .job-item { 
-                margin-bottom: 15px;
-                padding: 10px;
-                border-left: 3px solid #007bff;
-                background-color: #f8f9fa;
+            .newsletter {
+                font-family: 'Helvetica', Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                color: #333;
             }
-            .job-header { margin-bottom: 5px; }
-            .company-name { color: #007bff; text-decoration: none; }
-            .deadline { color: #6c757d; margin-left: 10px; }
-            .job-role { margin: 5px 0; color: #212529; }
+            .newsletter-header, .newsletter-footer {
+                text-align: center;
+                margin: 20px 0;
+            }
+            .newsletter-header img, .newsletter-footer img {
+                max-width: 100%;
+            }
+            .jobs-section {
+                margin: 15px 0;
+                padding: 15px;
+                background-color: #fff;
+                border-bottom: 1px solid #eee;
+            }
+            .section-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+            .section-header h2 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 500;
+            }
+            .job-list {
+                list-style-type: none;
+                padding-left: 0;
+            }
+            .job-item {
+                margin-bottom: 10px;
+                padding: 8px 0;
+                border-left: 2px solid #ddd;
+                padding-left: 10px;
+            }
+            .custom-content {
+                margin-bottom: 20px;
+            }
         </style>
         """
         
         full_html = f"""
         {css}
         <div class="newsletter">
+            <div class="newsletter-header">
+                <img src="{self.header_svg}" alt="Newsletter Header">
+            </div>
             <div class="custom-content">
                 {custom_content}
             </div>
@@ -85,6 +141,9 @@ class BroadcastService:
             {tech_section}
             {consulting_section}
             {marketing_section}
+            <div class="newsletter-footer">
+                <img src="{self.footer_svg}" alt="Newsletter Footer">
+            </div>
         </div>
         """
         

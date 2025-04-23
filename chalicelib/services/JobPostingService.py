@@ -203,12 +203,17 @@ class JobPostingService:
         Returns:
             bool: True if the date is more than one week ago; False otherwise.
         """
-        current_year = datetime.today().year
-        today = datetime.today()
-        date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
-        one_week_ago = today - timedelta(days=8)
-        if date_obj < one_week_ago:
-            return True
-        return False
+        try:
+            current_year = datetime.today().year
+            today = datetime.today()
+            date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
+            one_week_ago = today - timedelta(days=8)
+            if date_obj < one_week_ago:
+                return True
+            return False
+        except ValueError:
+            # If the string doesn't match the expected date format, return False
+            # This ensures non-date strings like "On Site 2025" don't break the flow
+            return False
     
 job_posting_service = JobPostingService()

@@ -45,7 +45,7 @@ def send_announcement():
 def test_email():
     # PLEASE REPLACE WITH YOUR OWN EMAIL FOR TESTING
     html = broadcast_service.generate_newsletter_content()
-    emails = ["vinli@bu.edu", "mhyan@bu.edu"]
+    emails = ["vinli@bu.edu"]
     
     for email in emails:
         broadcast_service.send_newsletter(
