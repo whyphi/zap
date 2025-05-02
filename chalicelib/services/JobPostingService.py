@@ -122,9 +122,13 @@ class JobPostingService:
         """
         JOBS_SHEET_ID = "15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0"
         try:
+            # First get the sheet data with FORMULA render option to parse hyperlink formulas
             response = self.gs.get_all_cells(JOBS_SHEET_ID, "2027 Opportunities Tracker", "FORMULA")
             if not response.get("values"):
                 return []
+            
+            # Get the same data with cell hyperlinks (for UI-inserted links)
+            sheet_data = self.gs.get_sheet_with_grid_data(JOBS_SHEET_ID, "2027 Opportunities Tracker")
             
             # 2. Separate headers from rows
             headers = response["values"][5]
@@ -144,21 +148,35 @@ class JobPostingService:
             # 4. Loop through rows and extract only the columns we want
             job_listings = []
             hyperlink_regex = r'=HYPERLINK\("(.*?)","(.*?)"\)'
-            for row in rows:
-                raw_link = row[link_idx]
-                # Use regex to extract the hyperlink URL
-                match = re.match(hyperlink_regex, raw_link)
-                if not match:
-                    # Skip this row if no match is found
+            for row_idx, row in enumerate(rows):
+                if link_idx >= len(row):
                     continue
-                hyperlink_url = match.group(1)
-                    
-                raw_date = row[deadline_idx]
+                raw_link = row[link_idx]
+                # Try to extract hyperlink URL from formula first
+                hyperlink_url = None
+                match = re.match(hyperlink_regex, raw_link)
+                if match:
+                    hyperlink_url = match.group(1)
+                else:
+                    # If no formula hyperlink, try to get UI-inserted hyperlink from sheet_data
+                    try:
+                        # Row index is +6 because we started at row 6 in the response data
+                        # Add 1 more because Google Sheets API is 0-indexed but our row_idx starts at 0
+                        grid_row_idx = row_idx + 6 + 1
+                        hyperlink_url = self.gs.get_hyperlink_from_grid_data(sheet_data, grid_row_idx, link_idx)
+                    except Exception as e:
+                        print(f"Error getting UI hyperlink: {e}")
+                
+                # If no hyperlink found from either method, skip this row
+                if not hyperlink_url:
+                    continue
+                
+                raw_date = row[deadline_idx] if deadline_idx < len(row) else "N/A"
                 date_str = self._convert_serial_to_date(raw_date)
                 
                 job = {
-                    "company": row[company_idx],
-                    "role": row[opp_idx],
+                    "company": row[company_idx] if company_idx < len(row) else "N/A",
+                    "role": row[opp_idx] if opp_idx < len(row) else "N/A",
                     "link": hyperlink_url,
                     "date": date_str
                 }
@@ -203,12 +221,22 @@ class JobPostingService:
         Returns:
             bool: True if the date is more than one week ago; False otherwise.
         """
-        current_year = datetime.today().year
-        today = datetime.today()
-        date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
-        one_week_ago = today - timedelta(days=8)
-        if date_obj < one_week_ago:
-            return True
-        return False
+        try:
+            current_year = datetime.today().year
+            today = datetime.today()
+            date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
+            one_week_ago = today - timedelta(days=8)
+            if date_obj < one_week_ago:
+                return True
+            return False
+        except Exception:
+            # hotfix for if dateStr is not in the format "Mon DD", but intead is in the format 'DDd', i.e. "15d"
+            try:
+                date_obj = dateStr[:-1]
+                if int(date_obj) <= 7:
+                    return True
+                return False
+            except Exception:
+                return False
     
 job_posting_service = JobPostingService()
