@@ -229,7 +229,8 @@ class BroadcastService:
         <div class="job-sources">
             <p>All jobs listed are within 7 days of being posted. They are being posted from these job repositories:</p>
             <p>Tech:
-            <a href="https://github.com/SimplifyJobs/Summer2025-Internships" target="_blank">SimplifyJobs</a><br> and <a href="https://github.com/cvrve/Summer2025-Internships" target="_blank">Cvrve</a></p>
+            <a href="https://github.com/SimplifyJobs/Summer2025-Internships" target="_blank">SimplifyJobs</a> 
+            and <a href="https://github.com/cvrve/Summer2025-Internships" target="_blank">Cvrve</a></p>
             <p>Finance:
             <a href="https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/" target="_blank">RecruitU</a></p>
             <p>Consulting:
