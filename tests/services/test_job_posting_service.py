@@ -229,6 +229,14 @@ def test_get_finance_jobs(job_service):
     class DummyGS:
         def get_all_cells(self, sheet_id, sheet_name, mode):
             return dummy_response
+            
+        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
+            # Return empty grid data, as our test is using formula-based hyperlinks
+            return {"sheets": [{"data": [{"rowData": []}]}]}
+            
+        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
+            # This won't be used in our test case as we're using formula-based hyperlinks
+            return None
 
     job_service.gs = DummyGS()
 
