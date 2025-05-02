@@ -40,6 +40,29 @@ def send_announcement():
 
     return
 
+beta_list = ["vinli@bu.edu", 
+             "mhyan@bu.edu", 
+             "wderocco@bu.edu",
+             "ppcer@bu.edu",
+             "wollmann@bu.edu",
+             "wvar@bu.edu",
+             "suehoang@bu.edu",
+             "huixinc@bu.edu",
+             "rinzoh@bu.edu",
+             "yjain@bu.edu",
+             "aleclin@bu.edu",
+             "loicchan@bu.edu",
+             "ichang01@bu.edu",
+             "pobnial@bu.edu",
+             "shkang@bu.edu",
+             "sunnylu@bu.edu",
+             "slime123@bu.edu",
+             "swayam55@bu.edu",
+             "natcaro1@bu.edu",
+             "jbetan@bu.edu",
+             "evekwan@bu.edu",
+             "marlas@bu.edu",
+             "hjchen6@bu.edu"]
 
 @broadcast_api.route("/test-email", methods=["GET", "POST"], cors=True)
 def test_email():
