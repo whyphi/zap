@@ -138,6 +138,11 @@ class GoogleSheetsModule:
         """
         Retrieves full grid data including cell metadata with hyperlink information.
         
+        Grid data is a detailed representation of sheet contents returned by the Google Sheets API
+        when includeGridData=True. It contains comprehensive information about each cell including
+        values, formatting, data validation rules, hyperlinks, notes, and other metadata. This
+        structure allows access to all cell information beyond just the displayed values.
+        
         Args:
             spreadsheet_id (str): The ID of the spreadsheet.
             sheet_name (str): The name of the sheet to retrieve.
@@ -147,13 +152,9 @@ class GoogleSheetsModule:
         """
         # Get the sheet ID first
         sheets = self.get_sheets(spreadsheet_id, include_properties=True)
-        sheet_id = None
-        for sheet in sheets:
-            if sheet.get("title") == sheet_name:
-                sheet_id = sheet.get("sheetId")
-                break
+        sheet_id = next((sheet.get("sheetId") for sheet in sheets if sheet.get("title") == sheet_name), None)
         
-        if not sheet_id:
+        if sheet_id is None:
             return None
         
         # Request the sheet with full grid data including hyperlinks
@@ -180,7 +181,11 @@ class GoogleSheetsModule:
         Returns:
             str: The hyperlink URL or None if not found.
         """
-        if not sheet_data or "data" not in sheet_data or not sheet_data["data"]:
+        if sheet_data is None:
+            return None
+        if "data" not in sheet_data:
+            return None
+        if sheet_data["data"] is None:
             return None
             
         grid_data = sheet_data["data"][0]
