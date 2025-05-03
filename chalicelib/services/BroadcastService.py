@@ -47,7 +47,7 @@ class BroadcastService:
         html += "</div>"
         return html
 
-    def generate_newsletter_content(self, custom_content: str = "Thanks for signing up for the PCT Weekly Newsletter beta test! We would love to incorporate your feedback as much as possible so if you do, please reach out to Matthew at mhyan@bu.edu or Vincent at vinli@bu.edu or through slack.") -> Dict:
+    def generate_newsletter_content(self, custom_content: str = "Thanks for signing up for the PCT Weekly Newsletter beta test! We would love to incorporate your feedback as much as possible so if you do, please reach out to Matthew at mhyan@bu.edu or Vincent at vinli@bu.edu or through slack.\nBest of luck with finals this week!") -> Dict:
         """
         Generates a complete newsletter with four sections:
             - Finance: Data from Google Sheets
@@ -227,7 +227,7 @@ class BroadcastService:
         # Job sources text
         job_sources_html = """
         <div class="job-sources">
-            <p>All jobs listed are within 7 days of being posted. They are being posted from these job repositories:</p>
+            <p>All jobs listed have been posted within the last 7 days from these repositories:</p>
             <p>Tech:
             <a href="https://github.com/SimplifyJobs/Summer2025-Internships" target="_blank">SimplifyJobs</a> 
             and <a href="https://github.com/cvrve/Summer2025-Internships" target="_blank">Cvrve</a></p>
@@ -237,7 +237,7 @@ class BroadcastService:
             <a href="https://github.com/jobright-ai/2025-Consultant-Internship" target="_blank">Jobright-ai</a></p>
             <p>Marketing:
             <a href="https://github.com/jobright-ai/2025-Marketing-Internship" target="_blank">Jobright-ai</a></p>
-            <p>Please check these repositories often as they usually update daily. Best of luck with your job search!</p>
+            <p>These repositories are updated daily, so please check them often. Best of luck with your job search!</p>
         </div>
         """
         
