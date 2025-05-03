@@ -1,6 +1,43 @@
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.services.JobPostingService import job_posting_service
+from chalicelib.utils import get_newsletter_css
 from typing import List, Dict
+
+# Job sources constant for better maintainability
+JOB_SOURCE_LIST = {
+    "Tech": [
+        {
+            "name": "SimplifyJobs", 
+            "link": "https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md", 
+            "display_link": "https://github.com/SimplifyJobs/Summer2025-Internships"
+         },
+        {
+            "name": "Cvrve", 
+            "link": "https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md", 
+            "display_link": "https://github.com/cvrve/Summer2025-Internships"
+         }
+    ],
+    "Finance": [
+        {
+            "name": "RecruitU", 
+            "link": "https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/", 
+            "display_link": "https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/"}
+    ],
+    "Consulting": [
+        {
+            "name": "Jobright-ai", 
+            "link": "https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md", 
+            "display_link": "https://github.com/jobright-ai/2025-Consultant-Internship"
+         }
+    ],
+    "Marketing": [
+        {
+            "name": "Jobright-ai", 
+            "link": "https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md", 
+            "display_link": "https://github.com/jobright-ai/2025-Marketing-Internship"
+         }
+    ]
+}
 
 class BroadcastService:
     def __init__(self):
@@ -58,19 +95,21 @@ class BroadcastService:
         Returns:
             Dict: A dictionary with HTML content and the raw job data.
         """
-        # Finance jobs from Google Sheets
+        # Finance jobs from RecruitU Google Sheets
         finance_jobs = self.ps.getFinanceJobs()
         
-        # Tech jobs: Merge data from both Simplify and Crve GitHub repos
-        tech_jobs_simplify = self.ps.getJobs("https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md")
-        tech_jobs_cvre = self.ps.getJobs("https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md")
-        tech_jobs = tech_jobs_simplify + tech_jobs_cvre
+        # Fetch jobs from sources defined in JOB_SOURCE_LIST
+        tech_jobs = []
+        for source in JOB_SOURCE_LIST["Tech"]:
+            tech_jobs += self.ps.getJobs(source["link"])
         
-        # Consulting jobs from jobright-ai Consultant GitHub repo
-        consulting_jobs = self.ps.getJobs("https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md")
+        consulting_jobs = []
+        for source in JOB_SOURCE_LIST["Consulting"]:
+            consulting_jobs += self.ps.getJobs(source["link"])
         
-        # Marketing jobs from jobright-ai Marketing GitHub repo
-        marketing_jobs = self.ps.getJobs("https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md")
+        marketing_jobs = []
+        for source in JOB_SOURCE_LIST["Marketing"]:
+            marketing_jobs += self.ps.getJobs(source["link"])
         
         # Generate HTML for each section
         finance_section = self.generate_section_html("Finance", finance_jobs)
@@ -78,165 +117,24 @@ class BroadcastService:
         consulting_section = self.generate_section_html("Consulting", consulting_jobs)
         marketing_section = self.generate_section_html("Marketing", marketing_jobs)
         
-        # Updated CSS for styling the newsletter to match the provided image
-        css = """
-        <style>
-            body {
-                margin: 0;
-                padding: 0;
-                font-family: Arial, sans-serif;
-                color: #333;
-                background-color: #f5f5f5;
-            }
-            
-            .newsletter-container {
-                max-width: 650px;
-                margin: 0 auto;
-                background-color: #fff;
-                padding: 0;
-                text-align: left;
-                border-left: 1px solid #ddd;
-                border-right: 1px solid #ddd;
-            }
-            
-            .newsletter-header {
-                background-image: url('https://whyphi-public.s3.us-east-1.amazonaws.com/newsletter_cover.jpg');
-                background-size: cover;
-                background-position: center;
-                padding: 30px 20px 10px;
-                text-align: center;
-                height: 100px; /* Fixed height to ensure proper display */
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .newsletter-title {
-                font-family: 'Times New Roman', Times, serif;
-                font-size: 48px;
-                font-weight: bold;
-                color: #000;
-                margin: 0;
-                padding: 0;
-                text-align: center;
-            }
-            
-            .newsletter-subtitle {
-                font-size: 20px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                border-top: 1px solid #888;
-                border-bottom: 1px solid #888;
-                padding: 5px 0;
-                margin: 10px 0 20px;
-                text-align: center;
-            }
-            
-            .welcome-message {
-                padding: 20px;
-                background-color: #fff;
-                text-align: center;
-            }
-            
-            .main-content {
-                padding: 0 20px;
-            }
-            
-            .section-banner {
-                width: 100%;
-                margin: 0 0 15px 0;
-                overflow: hidden;
-            }
-            
-            .section-banner img {
-                width: 100%;
-                display: block;
-            }
-            
-            .job-opportunities-banner {
-                width: 100%;
-                margin: 20px 0 0 0;
-                overflow: hidden;
-            }
-            
-            .job-opportunities-banner img {
-                width: 100%;
-                display: block;
-            }
-            
-            .job-sources {
-                background-color: #f9f9f9;
-                padding: 15px;
-                margin: 0 0 20px 0;
-                font-size: 14px;
-                line-height: 1.5;
-                border-bottom: 1px solid #eee;
-            }
-            
-            .section-title {
-                font-size: 28px;
-                text-transform: uppercase;
-                text-align: center;
-                background-color: #f2f2f2;
-                padding: 15px;
-                margin: 0 0 20px;
-                border: none;
-            }
-            
-            .jobs-section {
-                margin-bottom: 40px;
-            }
-            
-            .job-item {
-                margin-bottom: 20px;
-                padding: 0 0 15px 0;
-                border-bottom: 1px dotted #ddd;
-            }
-            
-            .job-title {
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-            
-            .job-details {
-                font-size: 14px;
-            }
-            
-            .events-section {
-                margin-bottom: 40px;
-            }
-            
-            .footer {
-                text-align: center;
-                padding: 20px;
-                border-top: 1px solid #ddd;
-            }
-            
-            .social-links {
-                text-align: center;
-                margin: 20px 0;
-            }
-            
-            .social-links a {
-                margin: 0 10px;
-                text-decoration: none;
-            }
-        </style>
-        """
+        # Get CSS from utils function
+        css = get_newsletter_css()
         
-        # Job sources text
+        # Generate job sources HTML dynamically from JOB_SOURCE_LIST
         job_sources_html = """
         <div class="job-sources">
             <p>All jobs listed have been posted within the last 7 days from these repositories:</p>
-            <p>Tech:
-            <a href="https://github.com/SimplifyJobs/Summer2025-Internships" target="_blank">SimplifyJobs</a> 
-            and <a href="https://github.com/cvrve/Summer2025-Internships" target="_blank">Cvrve</a></p>
-            <p>Finance:
-            <a href="https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/" target="_blank">RecruitU</a></p>
-            <p>Consulting:
-            <a href="https://github.com/jobright-ai/2025-Consultant-Internship" target="_blank">Jobright-ai</a></p>
-            <p>Marketing:
-            <a href="https://github.com/jobright-ai/2025-Marketing-Internship" target="_blank">Jobright-ai</a></p>
+        """
+        
+        for category, sources in JOB_SOURCE_LIST.items():
+            job_sources_html += f"<p>{category}: "
+            links = []
+            for i, source in enumerate(sources):
+                links.append(f'<a href="{source["display_link"]}" target="_blank">{source["name"]}</a>')
+            
+            job_sources_html += " and ".join(links) + "</p>"
+        
+        job_sources_html += """
             <p>These repositories are updated daily, so please check them often. Best of luck with your job search!</p>
         </div>
         """
