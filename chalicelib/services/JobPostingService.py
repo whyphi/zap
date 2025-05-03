@@ -122,7 +122,7 @@ class JobPostingService:
         """
         JOBS_SHEET_ID = "15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0"
         try:
-            # First get the sheet data with FORMULA render option to parse hyperlink formulas
+            # Get sheet data with FORMULA render option to parse hyperlink formulas
             response = self.gs.get_all_cells(JOBS_SHEET_ID, "2027 Opportunities Tracker", "FORMULA")
             if not response.get("values"):
                 return []
@@ -130,11 +130,16 @@ class JobPostingService:
             # Get the same data with cell hyperlinks (for UI-inserted links)
             sheet_data = self.gs.get_sheet_with_grid_data(JOBS_SHEET_ID, "2027 Opportunities Tracker")
             
-            # 2. Separate headers from rows
-            headers = response["values"][5]
-            rows = response["values"][6:31]
+            # Define constants for row indices to improve readability and maintainability
+            HEADER_ROW_INDEX = 5
+            DATA_START_ROW_INDEX = 6
+            DATA_END_ROW_INDEX = 31
             
-            # 3. Find the column indices for the columns we want
+            # Separate headers from rows
+            headers = response["values"][HEADER_ROW_INDEX]
+            rows = response["values"][DATA_START_ROW_INDEX:DATA_END_ROW_INDEX]
+            
+            # Find the column indices for the columns we want
             company_idx = headers.index("Company")
             opp_idx = headers.index("Opportunity")
             link_idx = headers.index("Link")
@@ -145,7 +150,7 @@ class JobPostingService:
             else:
                 deadline_idx = deadline_idxs[0]
             
-            # 4. Loop through rows and extract only the columns we want
+            # Loop through rows and extract only the columns we want
             job_listings = []
             hyperlink_regex = r'=HYPERLINK\("(.*?)","(.*?)"\)'
             for row_idx, row in enumerate(rows):
@@ -162,7 +167,7 @@ class JobPostingService:
                     try:
                         # Row index is +6 because we started at row 6 in the response data
                         # Add 1 more because Google Sheets API is 0-indexed but our row_idx starts at 0
-                        grid_row_idx = row_idx + 6 + 1
+                        grid_row_idx = row_idx + DATA_START_ROW_INDEX + 1
                         hyperlink_url = self.gs.get_hyperlink_from_grid_data(sheet_data, grid_row_idx, link_idx)
                     except Exception as e:
                         print(f"Error getting UI hyperlink: {e}")
@@ -229,14 +234,17 @@ class JobPostingService:
             if date_obj < one_week_ago:
                 return True
             return False
-        except Exception:
-            # hotfix for if dateStr is not in the format "Mon DD", but intead is in the format 'DDd', i.e. "15d"
+        except ValueError as e:
+            print(f"Error parsing date in standard format: {e}")
+            # Hotfix: if dateStr is not in the format "Mon DD", but instead in the format 'DDd', i.e. "15d"
+            # TODO: Keep an eye out for more edge cases and add them to the hotfix
             try:
                 date_obj = dateStr[:-1]
                 if int(date_obj) <= 7:
                     return True
                 return False
-            except Exception:
+            except (ValueError, IndexError) as e:
+                print(f"Error parsing date in alternative format: {e}")
                 return False
     
 job_posting_service = JobPostingService()
