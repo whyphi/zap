@@ -54,3 +54,151 @@ def hash_value(value):
 
         # Return a truncated version of the hashed value
         return hashed_value[:random_length]
+
+
+def get_newsletter_css():
+    """Returns the CSS styling for the newsletter."""
+    return """
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+                color: #333;
+                background-color: #f5f5f5;
+            }
+            
+            .newsletter-container {
+                max-width: 650px;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 0;
+                text-align: left;
+                border-left: 1px solid #ddd;
+                border-right: 1px solid #ddd;
+            }
+            
+            .newsletter-header {
+                background-image: url('https://whyphi-public.s3.us-east-1.amazonaws.com/newsletter_cover.jpg');
+                background-size: cover;
+                background-position: center;
+                padding: 30px 20px 10px;
+                text-align: center;
+                height: 100px; /* Fixed height to ensure proper display */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .newsletter-title {
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 48px;
+                font-weight: bold;
+                color: #000;
+                margin: 0;
+                padding: 0;
+                text-align: center;
+            }
+            
+            .newsletter-subtitle {
+                font-size: 20px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                border-top: 1px solid #888;
+                border-bottom: 1px solid #888;
+                padding: 5px 0;
+                margin: 10px 0 20px;
+                text-align: center;
+            }
+            
+            .welcome-message {
+                padding: 20px;
+                background-color: #fff;
+                text-align: center;
+            }
+            
+            .main-content {
+                padding: 0 20px;
+            }
+            
+            .section-banner {
+                width: 100%;
+                margin: 0 0 15px 0;
+                overflow: hidden;
+            }
+            
+            .section-banner img {
+                width: 100%;
+                display: block;
+            }
+            
+            .job-opportunities-banner {
+                width: 100%;
+                margin: 20px 0 0 0;
+                overflow: hidden;
+            }
+            
+            .job-opportunities-banner img {
+                width: 100%;
+                display: block;
+            }
+            
+            .job-sources {
+                background-color: #f9f9f9;
+                padding: 15px;
+                margin: 0 0 20px 0;
+                font-size: 14px;
+                line-height: 1.5;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .section-title {
+                font-size: 28px;
+                text-transform: uppercase;
+                text-align: center;
+                background-color: #f2f2f2;
+                padding: 15px;
+                margin: 0 0 20px;
+                border: none;
+            }
+            
+            .jobs-section {
+                margin-bottom: 40px;
+            }
+            
+            .job-item {
+                margin-bottom: 20px;
+                padding: 0 0 15px 0;
+                border-bottom: 1px dotted #ddd;
+            }
+            
+            .job-title {
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            
+            .job-details {
+                font-size: 14px;
+            }
+            
+            .events-section {
+                margin-bottom: 40px;
+            }
+            
+            .footer {
+                text-align: center;
+                padding: 20px;
+                border-top: 1px solid #ddd;
+            }
+            
+            .social-links {
+                text-align: center;
+                margin: 20px 0;
+            }
+            
+            .social-links a {
+                margin: 0 10px;
+                text-decoration: none;
+            }
+        </style>
+    """
