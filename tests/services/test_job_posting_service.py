@@ -308,3 +308,79 @@ def test_is_more_than_one_week_ago(job_service):
 
     assert job_service.isMoreThanOneWeekAgo(date_within) is False
     assert job_service.isMoreThanOneWeekAgo(date_old) is True
+
+
+def test_get_finance_jobs_ui_hyperlink(job_service):
+    """
+    Tests the getFinanceJobs method specifically for UI-inserted hyperlinks.
+    
+    This test simulates a scenario where:
+    1. The cell doesn't contain a HYPERLINK formula
+    2. The hyperlink is extracted from grid_data using get_hyperlink_from_grid_data
+    """
+    # Create a dummy response with a row that has no HYPERLINK formula
+    dummy_response = {
+        "values": [
+            [], [], [], [], [],
+            ["Company", "Opportunity", "Link", "Deadline"],
+            ["CompanyC", "Analyst", 'Click here', "44197"]  # No HYPERLINK formula
+        ]
+    }
+
+    # Define a custom DummyGS class that returns a UI-inserted hyperlink
+    class DummyGS:
+        def get_all_cells(self, sheet_id, sheet_name, mode):
+            return dummy_response
+            
+        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
+            # Return some dummy grid data
+            return {"sheets": [{"data": [{"rowData": []}]}]}
+            
+        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
+            # Now we return a URL
+            if row_idx == 7 and col_idx == 2:  # Position of "Click here" cell
+                return "http://ui-inserted-link.com"
+            return None
+
+    job_service.gs = DummyGS()
+
+    jobs = job_service.getFinanceJobs()
+
+    assert len(jobs) == 1
+    assert jobs[0]["company"] == "CompanyC"
+    assert jobs[0]["role"] == "Analyst"
+    assert jobs[0]["link"] == "http://ui-inserted-link.com"  # Link from get_hyperlink_from_grid_data
+    assert jobs[0]["date"] == "Jan 01"  # Converted from serial 44197
+
+
+def test_get_finance_jobs_no_hyperlink(job_service):
+    """
+    Tests that rows without any hyperlink (neither formula-based nor UI-inserted)
+    are skipped in the results.
+    """
+    # Create a dummy response with a row that has no HYPERLINK formula
+    dummy_response = {
+        "values": [
+            [], [], [], [], [],
+            ["Company", "Opportunity", "Link", "Deadline"],
+            ["CompanyD", "Developer", 'Click here', "44197"]  # No HYPERLINK formula
+        ]
+    }
+
+    # Define a DummyGS class where get_hyperlink_from_grid_data also returns None
+    class DummyGS:
+        def get_all_cells(self, sheet_id, sheet_name, mode):
+            return dummy_response
+            
+        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
+            return {"sheets": [{"data": [{"rowData": []}]}]}
+            
+        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
+            return None
+
+    job_service.gs = DummyGS()
+
+    jobs = job_service.getFinanceJobs()
+
+    # The row should be skipped because no hyperlink was found
+    assert len(jobs) == 0
