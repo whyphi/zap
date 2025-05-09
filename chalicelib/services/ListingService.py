@@ -1,6 +1,7 @@
 from chalice import NotFoundError, Response
 from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
+from chalicelib.repositories.listings_repository import listings_repo
 from chalicelib.db import db
 from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
@@ -117,7 +118,7 @@ class ListingService:
         return data
 
     def get_all(self):
-        data = db.get_all(table_name="zap-listings")
+        data = listings_repo.get_all_listings()
         return data
 
     # TODO: also delete corresponding rush-category
