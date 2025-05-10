@@ -54,3 +54,19 @@ def hash_value(value):
 
         # Return a truncated version of the hashed value
         return hashed_value[:random_length]
+
+
+def to_camel_case(snake_str):
+    components = snake_str.split("_")
+    return components[0] + "".join(x.title() for x in components[1:])
+
+
+def convert_to_camel_case(data):
+    if isinstance(data, list):
+        return [convert_to_camel_case(item) for item in data]
+    elif isinstance(data, dict):
+        return {
+            to_camel_case(key): convert_to_camel_case(value)
+            for key, value in data.items()
+        }
+    return data

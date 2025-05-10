@@ -7,7 +7,7 @@ from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.services.EventsRushService import events_rush_service
-
+from chalicelib.utils import convert_to_camel_case
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -118,8 +118,16 @@ class ListingService:
         return data
 
     def get_all(self):
-        data = self.listings_repo.get_all()
-        return data
+        try:
+            data = self.listings_repo.get_all()
+            if data:
+                return convert_to_camel_case(data)
+            else:
+                raise NotFoundError(f"Error fetching listings.")
+
+        except Exception as e:
+            print(f"Error fetching listings: {str(e)}")
+            return None
 
     # TODO: also delete corresponding rush-category
     def delete(self, id: str):
