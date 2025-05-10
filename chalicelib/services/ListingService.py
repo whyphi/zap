@@ -114,8 +114,16 @@ class ListingService:
             return {"msg": False, "error": str(e)}
 
     def get(self, id: str):
-        data = db.get_item(table_name="zap-listings", key={"listingId": id})
-        return data
+        try:
+            data = self.listings_repo.get_by_id(id_value=id)
+            if data:
+                return convert_to_camel_case(data)
+            else:
+                raise NotFoundError(f"Error fetching listings.")
+
+        except Exception as e:
+            print(f"Error fetching listing {id}: {str(e)}")
+            return None
 
     def get_all(self):
         try:
