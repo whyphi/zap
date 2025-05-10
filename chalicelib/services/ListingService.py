@@ -1,4 +1,4 @@
-from chalice import NotFoundError, Response
+from chalice import NotFoundError, Response, BadRequestError
 from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.repositories.repository_factory import RepositoryFactory
@@ -7,7 +7,7 @@ from chalicelib.s3 import s3
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.services.EventsRushService import events_rush_service
-from chalicelib.utils import convert_to_camel_case
+from chalicelib.utils import convert_to_camel_case, convert_to_snake_case
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -21,20 +21,23 @@ class ListingService:
 
     # TODO: prevent duplicate names... (also for rush-category)
     def create(self, data: dict):
-        listing_id = str(uuid.uuid4())
-        data["listingId"] = listing_id
-        data["isVisible"] = True
+        data = convert_to_snake_case(data=data)
+        id = str(uuid.uuid4())
+        data["id"] = id
+        data["is_visible"] = True
+        data["date_created"] = datetime.now(timezone.utc).isoformat()
+        data["is_encrypted"] = False
 
         # TODO: check for dup name BEFORE going to rush-category creation
         # if includeEventsAttended, create corresponding rush category (and create foreign-key)
-        if data.get("includeEventsAttended", None):
-            events_rush_data = {"name": data["title"], "defaultRushCategory": False}
-            rush_category_id = events_rush_service.create_rush_category(
-                data=events_rush_data
-            )
-            data["rushCategoryId"] = str(rush_category_id)
+        # if data.get("includeEventsAttended", None):
+        #     events_rush_data = {"name": data["title"], "defaultRushCategory": False}
+        #     rush_category_id = events_rush_service.create_rush_category(
+        #         data=events_rush_data
+        #     )
+        #     data["rushCategoryId"] = str(rush_category_id)
 
-        db.put_data(table_name="zap-listings", data=data)
+        self.listings_repo.create(data=data)
 
         return {"msg": True}
 

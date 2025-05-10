@@ -1,6 +1,7 @@
 import base64
 import random
 import hashlib
+import re
 
 
 def decode_base64(base64_data):
@@ -67,6 +68,21 @@ def convert_to_camel_case(data):
     elif isinstance(data, dict):
         return {
             to_camel_case(key): convert_to_camel_case(value)
+            for key, value in data.items()
+        }
+    return data
+
+
+def to_snake_case(camel_str):
+    return re.sub(r"([A-Z])", r"_\1", camel_str).lower()
+
+
+def convert_to_snake_case(data):
+    if isinstance(data, list):
+        return [convert_to_snake_case(item) for item in data]
+    elif isinstance(data, dict):
+        return {
+            to_snake_case(key): convert_to_camel_case(value)
             for key, value in data.items()
         }
     return data

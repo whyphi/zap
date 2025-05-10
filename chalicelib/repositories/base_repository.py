@@ -1,3 +1,4 @@
+from chalice import NotFoundError, Response, BadRequestError
 from typing import Dict, List, Optional, Any, Union
 from supabase import Client
 from postgrest.exceptions import APIError
@@ -58,12 +59,15 @@ class BaseRepository:
             response = self.client.table(self.table_name).insert(data).execute()
             return response.data[0] if response.data else None
         except APIError as e:
-            print(f"API Error creating record in {self.table_name}: {str(e)}")
-            print(f"Error code: {e.code}, Message: {e.message}, Hint: {e.hint}")
-            return None
+            print(
+                f"API Error creating record in {self.table_name}: Error code: {e.code}, Message: {e.message}, Hint: {e.hint}"
+            )
+            raise BadRequestError(e.message)
         except Exception as e:
             print(f"Unexpected error creating record in {self.table_name}: {str(e)}")
-            return None
+            raise BadRequestError(
+                f"Unexpected error creating record in {self.table_name}"
+            )
 
     def update(self, id_field: str, id_value: str, data: Dict) -> Optional[Dict]:
         """Update an existing record by its ID field"""
