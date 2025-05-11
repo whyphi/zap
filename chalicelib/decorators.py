@@ -1,6 +1,11 @@
 import boto3
 import jwt
+import logging
+
 from chalice import UnauthorizedError
+from chalicelib.models.roles import Roles
+
+logger = logging.getLogger(__name__)
 
 
 def add_env_suffix(func):
@@ -52,7 +57,7 @@ def auth(blueprint, roles):
                 raise UnauthorizedError("Authorization header is missing.")
 
             _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
-            if not token:
+            if token is None:
                 raise UnauthorizedError("Token is missing.")
 
             try:
@@ -61,13 +66,23 @@ def auth(blueprint, roles):
                     Name="/Zap/AUTH_SECRET", WithDecryption=True
                 )["Parameter"]["Value"]
                 decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
-                # TODO: if decoded role is not part of given, reject auth
+                user_roles = [Roles(role) for role in decoded.get("roles", [])]
+                print(user_roles, roles)
+                if not any(role in user_roles for role in roles):
+                    logger.error(
+                        f"User with roles {user_roles} tried to access a resource requiring roles {roles}"
+                    )
+                    raise UnauthorizedError(
+                        "You do not have permission to access this resource. "
+                    )
 
                 return func(*args, **kwargs)
 
             except jwt.ExpiredSignatureError:
+                logger.error("Token has expired.")
                 raise UnauthorizedError("Token has expired.")
             except jwt.InvalidTokenError:
+                logger.error("Invalid token.")
                 raise UnauthorizedError("Invalid token.")
 
         return wrapper
