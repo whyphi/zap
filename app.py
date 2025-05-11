@@ -38,6 +38,8 @@ sentry_sdk.init(
 )
 
 app = Chalice(app_name="zap")
+
+# Register APIs
 app.register_blueprint(broadcast_api)
 app.register_blueprint(listings_api)
 app.register_blueprint(applicants_api)
