@@ -83,7 +83,7 @@ def test_auth_raises_when_authorization_header_missing(mock_blueprint):
     mock_blueprint.current_request.headers = {}
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
-    def protected_route(*_):
+    def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
     with pytest.raises(UnauthorizedError, match="Authorization header is missing"):
@@ -94,7 +94,7 @@ def test_auth_raises_when_token_is_malformed(mock_blueprint):
     mock_blueprint.current_request.headers = {"Authorization": "InvalidHeader"}
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
-    def protected_route(*_):
+    def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
     with pytest.raises(UnauthorizedError, match="Token is missing"):
@@ -112,7 +112,7 @@ def test_auth_raises_when_token_expired(mock_blueprint, mock_ssm):
     }
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
-    def protected_route(*_):
+    def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
     with pytest.raises(UnauthorizedError, match="Token has expired"):
@@ -129,7 +129,7 @@ def test_auth_raises_when_token_signature_is_invalid(mock_blueprint):
     mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
-    def protected_route(*_):
+    def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
     # Patch SSM to return correct secret (which won’t match token)
@@ -157,7 +157,7 @@ def test_auth_raises_when_role_not_authorized(mock_blueprint, mock_ssm):
     mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
-    def protected_route(*_):
+    def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
     with pytest.raises(
