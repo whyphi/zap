@@ -5,6 +5,7 @@ from bson import ObjectId
 import datetime
 from chalicelib.s3 import s3
 from chalicelib.utils import get_prev_image_version
+from typing import Optional
 
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
@@ -193,7 +194,7 @@ class EventsRushService:
         return
 
     def get_rush_event(self, event_id: str, data: dict):
-        hide_attendees = data.get("hideAttendees", True)
+        hide_attendees = data.get("hideAttendees", False) # TODO: only hideAttendees if specifically requested
         hide_code = data.get("hideCode", True)
         
         event = self.mongo_module.get_document_by_id(
@@ -201,7 +202,7 @@ class EventsRushService:
         )
 
         if hide_attendees:
-            event.pop("attendeesId", None)
+            event.pop("attendees", None)
 
         if hide_code:
             event.pop("code")
@@ -215,7 +216,13 @@ class EventsRushService:
             f"{self.collection_prefix}rush-event", event_id
         )
 
-        code = user_data["code"]
+        raw_user_code: str = user_data.get("code", "")
+        user_code = raw_user_code.lower().strip()
+
+        raw_event_code: Optional[str] = event.get("code", None)
+        if raw_event_code:
+            event_code = raw_event_code.lower().strip()
+
         user_data.pop("code")
         
         # Parse the timestamp string to a datetime object
@@ -224,7 +231,7 @@ class EventsRushService:
         if datetime.datetime.now() > deadline:
             raise UnauthorizedError("Event deadline has passed.")
 
-        if code != event["code"]:
+        if user_code != event_code:
             raise UnauthorizedError("Invalid code.")
 
         if any(d["email"] == user_data["email"] for d in event["attendees"]):

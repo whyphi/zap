@@ -74,6 +74,11 @@ class EventsMemberService:
         event_data["timeframeId"] = timeframe_id
         event_data["usersAttended"] = []
 
+        from chalicelib.services.MemberService import member_service
+
+        # Get current member count for member participation stats
+        event_data["currentMemberCount"] = len(json.loads(member_service.get_all()))
+
         # Get Google Spreadsheet ID from timeframe
         timeframe_doc = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
