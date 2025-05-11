@@ -67,7 +67,6 @@ def auth(blueprint, roles):
                 )["Parameter"]["Value"]
                 decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
                 user_roles = [Roles(role) for role in decoded.get("roles", [])]
-                print(user_roles, roles)
                 if not any(role in user_roles for role in roles):
                     logger.error(
                         f"User with roles {user_roles} tried to access a resource requiring roles {roles}"
