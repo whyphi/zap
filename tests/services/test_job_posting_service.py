@@ -178,13 +178,13 @@ def job_service():
 
 def test_get_jobs(job_service):
     """
-    Tests the getJobs() method:
+    Tests the get_jobs() method:
       - Verifies that the driver navigates to the provided URL.
       - Processes rows until a row with a date older than one week is encountered.
       - Uses nested element lookups where available and falls back to previous row's company or plain text.
     """
     test_url = "http://example.com/jobs"
-    jobs = job_service.getJobs(test_url)
+    jobs = job_service.get_jobs(test_url)
 
     assert job_service.driver.called_url == test_url
 
@@ -211,7 +211,7 @@ def test_get_jobs(job_service):
 
 def test_get_finance_jobs(job_service):
     """
-    Verifies that getFinanceJobs correctly processes a dummy Google Sheets response.
+    Verifies that get_finance_jobs correctly processes a dummy Google Sheets response.
     The response is simulated to include a header row at index 5 and two data rows.
     """
     # Create a dummy response similar to what GoogleSheetsModule would return
@@ -240,7 +240,7 @@ def test_get_finance_jobs(job_service):
 
     job_service.gs = DummyGS()
 
-    jobs = job_service.getFinanceJobs()
+    jobs = job_service.get_finance_jobs()
 
     assert len(jobs) == 2
 
@@ -260,7 +260,7 @@ def test_get_finance_jobs(job_service):
 
 def test_get_finance_jobs_empty(job_service):
     """
-    Verifies that if the Google Sheets response does not contain 'values', getFinanceJobs returns an empty list.
+    Verifies that if the Google Sheets response does not contain 'values', get_finance_jobs returns an empty list.
     """
     dummy_response = {}  # No "values" key
     class DummyGS:
@@ -268,7 +268,7 @@ def test_get_finance_jobs_empty(job_service):
             return dummy_response
     job_service.gs = DummyGS()
 
-    jobs = job_service.getFinanceJobs()
+    jobs = job_service.get_finance_jobs()
     assert jobs == []
 
 
@@ -282,7 +282,7 @@ def test_get_finance_jobs_exception(job_service, capsys):
             raise Exception("Test Exception")
     job_service.gs = DummyGS()
 
-    jobs = job_service.getFinanceJobs()
+    jobs = job_service.get_finance_jobs()
     # Exception should be caught and method should return empty list
     assert jobs == []
 
@@ -300,19 +300,19 @@ def test_convert_serial_to_date(job_service):
 
 def test_is_more_than_one_week_ago(job_service):
     """
-    Tests isMoreThanOneWeekAgo with dates within and beyond one week.
+    Tests is_more_than_one_week_ago with dates within and beyond one week.
     """
     today = datetime.today()
     date_within = (today - timedelta(days=5)).strftime("%b %d")
     date_old = (today - timedelta(days=9)).strftime("%b %d")
 
-    assert job_service.isMoreThanOneWeekAgo(date_within) is False
-    assert job_service.isMoreThanOneWeekAgo(date_old) is True
+    assert job_service.is_more_than_one_week_ago(date_within) is False
+    assert job_service.is_more_than_one_week_ago(date_old) is True
 
 
 def test_get_finance_jobs_ui_hyperlink(job_service):
     """
-    Tests the getFinanceJobs method specifically for UI-inserted hyperlinks.
+    Tests the get_finance_jobs method specifically for UI-inserted hyperlinks.
     
     This test simulates a scenario where:
     1. The cell doesn't contain a HYPERLINK formula
@@ -344,7 +344,7 @@ def test_get_finance_jobs_ui_hyperlink(job_service):
 
     job_service.gs = DummyGS()
 
-    jobs = job_service.getFinanceJobs()
+    jobs = job_service.get_finance_jobs()
 
     assert len(jobs) == 1
     assert jobs[0]["company"] == "CompanyC"
@@ -380,7 +380,7 @@ def test_get_finance_jobs_no_hyperlink(job_service):
 
     job_service.gs = DummyGS()
 
-    jobs = job_service.getFinanceJobs()
+    jobs = job_service.get_finance_jobs()
 
     # The row should be skipped because no hyperlink was found
     assert len(jobs) == 0
