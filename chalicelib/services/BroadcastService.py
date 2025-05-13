@@ -84,7 +84,7 @@ class BroadcastService:
         html += "</div>"
         return html
 
-    def generate_newsletter_content(self, custom_content: str = "Thanks for signing up for the PCT Weekly Newsletter beta test! We would love to incorporate your feedback as much as possible so if you do, please reach out to Matthew at mhyan@bu.edu or Vincent at vinli@bu.edu or through slack.\nBest of luck with finals this week!") -> Dict:
+    def generate_newsletter_content(self, custom_content: str = "Thanks for signing up for the PCT Weekly Newsletter beta test! We would love to incorporate your feedback as much as possible so if you do, please fill out this form: https://forms.gle/nW8cJPzXvHnyfkzV9 or reach out to Matthew and Vincent at mhyan@bu.edu and vinli@bu.edu or through slack.\nBest of luck with finals this week!") -> Dict:
         """
         Generates a complete newsletter with four sections:
             - Finance: Data from Google Sheets
@@ -96,20 +96,20 @@ class BroadcastService:
             Dict: A dictionary with HTML content and the raw job data.
         """
         # Finance jobs from RecruitU Google Sheets
-        finance_jobs = self.ps.getFinanceJobs()
+        finance_jobs = self.ps.get_finance_jobs()
         
         # Fetch jobs from sources defined in JOB_SOURCE_LIST
         tech_jobs = []
         for source in JOB_SOURCE_LIST["Tech"]:
-            tech_jobs += self.ps.getJobs(source["link"])
+            tech_jobs += self.ps.get_jobs(source["link"])
         
         consulting_jobs = []
         for source in JOB_SOURCE_LIST["Consulting"]:
-            consulting_jobs += self.ps.getJobs(source["link"])
+            consulting_jobs += self.ps.get_jobs(source["link"])
         
         marketing_jobs = []
         for source in JOB_SOURCE_LIST["Marketing"]:
-            marketing_jobs += self.ps.getJobs(source["link"])
+            marketing_jobs += self.ps.get_jobs(source["link"])
         
         # Generate HTML for each section
         finance_section = self.generate_section_html("Finance", finance_jobs)

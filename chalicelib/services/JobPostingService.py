@@ -39,7 +39,7 @@ class JobPostingService:
         driver = webdriver.Chrome(service=service, options=options)
         return driver
 
-    def getJobs(self, urlStr) -> List:
+    def get_jobs(self, urlStr) -> List:
         """
         Fetches job postings from the given URL and returns a list of job details.
 
@@ -69,7 +69,7 @@ class JobPostingService:
         for row in rows:
             cols = row.find_elements(By.XPATH, "td")
             date = cols[-1].text
-            if (self.isMoreThanOneWeekAgo(date)):
+            if (self.is_more_than_one_week_ago(date)):
                 break
             
             company = ""
@@ -107,7 +107,7 @@ class JobPostingService:
         
         return jobs
     
-    def getFinanceJobs(self) -> List[Dict]:
+    def get_finance_jobs(self) -> List[Dict]:
         """
         Retrieves finance job opportunities from a specified Google Sheets document (currently RecruitU).
 
@@ -216,7 +216,7 @@ class JobPostingService:
             # If it's not a serial number, return it as-is
             return raw_date
     
-    def isMoreThanOneWeekAgo(self, dateStr: str) -> bool:
+    def is_more_than_one_week_ago(self, dateStr: str) -> bool:
         """
         Determines if the given date string represents a date more than one week ago.
 
