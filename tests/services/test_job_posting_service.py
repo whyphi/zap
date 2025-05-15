@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from chalicelib.services.JobPostingService import job_posting_service
+from unittest.mock import MagicMock
 
 
 # Dummy classes to simulate Selenium elements
@@ -214,9 +215,8 @@ def test_get_finance_jobs(job_service):
     Verifies that get_finance_jobs correctly processes a dummy Google Sheets response.
     The response is simulated to include a header row at index 5 and two data rows.
     """
-    # Create a dummy response similar to what GoogleSheetsModule would return
-    # Note: The service expects the headers at index 5 and rows 6:31 as data
-    dummy_response = {
+    mocked_gs = MagicMock()
+    mocked_gs.get_all_cells.return_value = {
         "values": [
             [], [], [], [], [],
             ["Company", "Opportunity", "Link", "Deadline"],
@@ -224,34 +224,17 @@ def test_get_finance_jobs(job_service):
             ["CompanyB", "Manager", '=HYPERLINK("http://jobB.com","Job B")', "Not a serial"]
         ]
     }
-
-    # Replace Google Sheets module with one that returns dummy response
-    class DummyGS:
-        def get_all_cells(self, sheet_id, sheet_name, mode):
-            return dummy_response
-            
-        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
-            # Return empty grid data, as our test is using formula-based hyperlinks
-            return {"sheets": [{"data": [{"rowData": []}]}]}
-            
-        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
-            # This won't be used in our test case as we're using formula-based hyperlinks
-            return None
-
-    job_service.gs = DummyGS()
+    mocked_gs.get_sheet_with_grid_data.return_value = {"sheets": [{"data": [{"rowData": []}]}]}
+    mocked_gs.get_hyperlink_from_grid_data.return_value = None
+    job_service.gs = mocked_gs
 
     jobs = job_service.get_finance_jobs()
 
     assert len(jobs) == 2
-
-    # For first row, serial "44197" should convert to date
-    # (44197 corresponds to 2021-01-01 when using base date 1899-12-30.)
     assert jobs[0]["company"] == "CompanyA"
     assert jobs[0]["role"] == "Engineer"
     assert jobs[0]["link"] == "http://jobA.com"
     assert jobs[0]["date"] == "Jan 01"
-
-    # For second row, conversion should fail and return original string
     assert jobs[1]["company"] == "CompanyB"
     assert jobs[1]["role"] == "Manager"
     assert jobs[1]["link"] == "http://jobB.com"
@@ -262,11 +245,9 @@ def test_get_finance_jobs_empty(job_service):
     """
     Verifies that if the Google Sheets response does not contain 'values', get_finance_jobs returns an empty list.
     """
-    dummy_response = {}  # No "values" key
-    class DummyGS:
-        def get_all_cells(self, sheet_id, sheet_name, mode):
-            return dummy_response
-    job_service.gs = DummyGS()
+    mocked_gs = MagicMock()
+    mocked_gs.get_all_cells.return_value = {}
+    job_service.gs = mocked_gs
 
     jobs = job_service.get_finance_jobs()
     assert jobs == []
@@ -277,13 +258,11 @@ def test_get_finance_jobs_exception(job_service, capsys):
     Verifies that if an exception is raised while fetching data from Google Sheets,
     getFinanceJobs returns an empty list.
     """
-    class DummyGS:
-        def get_all_cells(self, sheet_id, sheet_name, mode):
-            raise Exception("Test Exception")
-    job_service.gs = DummyGS()
+    mocked_gs = MagicMock()
+    mocked_gs.get_all_cells.side_effect = Exception("Test Exception")
+    job_service.gs = mocked_gs
 
     jobs = job_service.get_finance_jobs()
-    # Exception should be caught and method should return empty list
     assert jobs == []
 
 
@@ -313,44 +292,26 @@ def test_is_more_than_one_week_ago(job_service):
 def test_get_finance_jobs_ui_hyperlink(job_service):
     """
     Tests the get_finance_jobs method specifically for UI-inserted hyperlinks.
-    
-    This test simulates a scenario where:
-    1. The cell doesn't contain a HYPERLINK formula
-    2. The hyperlink is extracted from grid_data using get_hyperlink_from_grid_data
     """
-    # Create a dummy response with a row that has no HYPERLINK formula
-    dummy_response = {
+    mocked_gs = MagicMock()
+    mocked_gs.get_all_cells.return_value = {
         "values": [
             [], [], [], [], [],
             ["Company", "Opportunity", "Link", "Deadline"],
-            ["CompanyC", "Analyst", 'Click here', "44197"]  # No HYPERLINK formula
+            ["CompanyC", "Analyst", 'Click here', "44197"]
         ]
     }
-
-    # Define a custom DummyGS class that returns a UI-inserted hyperlink
-    class DummyGS:
-        def get_all_cells(self, sheet_id, sheet_name, mode):
-            return dummy_response
-            
-        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
-            # Return some dummy grid data
-            return {"sheets": [{"data": [{"rowData": []}]}]}
-            
-        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
-            # Now we return a URL
-            if row_idx == 7 and col_idx == 2:  # Position of "Click here" cell
-                return "http://ui-inserted-link.com"
-            return None
-
-    job_service.gs = DummyGS()
+    mocked_gs.get_sheet_with_grid_data.return_value = {"sheets": [{"data": [{"rowData": []}]}]}
+    mocked_gs.get_hyperlink_from_grid_data.return_value = "http://ui-inserted-link.com"
+    job_service.gs = mocked_gs
 
     jobs = job_service.get_finance_jobs()
 
     assert len(jobs) == 1
     assert jobs[0]["company"] == "CompanyC"
     assert jobs[0]["role"] == "Analyst"
-    assert jobs[0]["link"] == "http://ui-inserted-link.com"  # Link from get_hyperlink_from_grid_data
-    assert jobs[0]["date"] == "Jan 01"  # Converted from serial 44197
+    assert jobs[0]["link"] == "http://ui-inserted-link.com"
+    assert jobs[0]["date"] == "Jan 01"
 
 
 def test_get_finance_jobs_no_hyperlink(job_service):
@@ -358,29 +319,17 @@ def test_get_finance_jobs_no_hyperlink(job_service):
     Tests that rows without any hyperlink (neither formula-based nor UI-inserted)
     are skipped in the results.
     """
-    # Create a dummy response with a row that has no HYPERLINK formula
-    dummy_response = {
+    mocked_gs = MagicMock()
+    mocked_gs.get_all_cells.return_value = {
         "values": [
             [], [], [], [], [],
             ["Company", "Opportunity", "Link", "Deadline"],
-            ["CompanyD", "Developer", 'Click here', "44197"]  # No HYPERLINK formula
+            ["CompanyD", "Developer", 'Click here', "44197"]
         ]
     }
-
-    # Define a DummyGS class where get_hyperlink_from_grid_data also returns None
-    class DummyGS:
-        def get_all_cells(self, sheet_id, sheet_name, mode):
-            return dummy_response
-            
-        def get_sheet_with_grid_data(self, sheet_id, sheet_name):
-            return {"sheets": [{"data": [{"rowData": []}]}]}
-            
-        def get_hyperlink_from_grid_data(self, sheet_data, row_idx, col_idx):
-            return None
-
-    job_service.gs = DummyGS()
+    mocked_gs.get_sheet_with_grid_data.return_value = {"sheets": [{"data": [{"rowData": []}]}]}
+    mocked_gs.get_hyperlink_from_grid_data.return_value = None
+    job_service.gs = mocked_gs
 
     jobs = job_service.get_finance_jobs()
-
-    # The row should be skipped because no hyperlink was found
     assert len(jobs) == 0
