@@ -24,6 +24,7 @@ ruff = "*"
 mongomock = "*"
 selenium = "*"
 webdriver-manager = "*"
+vulture = "*"
 
 [dev-packages]
 

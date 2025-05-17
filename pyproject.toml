@@ -1,0 +1,6 @@
+[tool.vulture]
+exclude = ["*file*.py", "dir/"]
+ignore_decorators = ["@auth", "@*.route"]
+min_confidence = 80
+sort_by_size = true
+verbose = true
