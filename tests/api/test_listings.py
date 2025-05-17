@@ -162,7 +162,11 @@ def test_update_listing_field_route_not_found():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                assert response.json_body is None
+                assert response.json_body == {
+                    "Message": "Not found",
+                    "Code": "NotFoundError",
+                }
+                assert response.status_code == 404
 
 
 def test_update_listing_field_route_bad_request():
@@ -180,9 +184,11 @@ def test_update_listing_field_route_bad_request():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                # body, status_code = response.json_body
-
-                assert response.json_body is None
+                assert response.json_body == {
+                    "Code": "BadRequestError",
+                    "Message": "Bad request",
+                }
+                assert response.status_code == 400
 
 
 def test_update_listing_field_route_exception():

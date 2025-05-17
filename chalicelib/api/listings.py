@@ -38,39 +38,27 @@ def get_all_listings():
 @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def delete_listing(id):
     """Deletes a listing with the given ID."""
-    try:
-        return listing_service.delete(id)
-    except Exception as e:
-        listings_api.log.debug(e)
+    return listing_service.delete(id)
 
 
 @listings_api.route("/listings/{id}/toggle/visibility", methods=["PATCH"], cors=True)
 @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def toggle_visibility(id):
     """Toggles visibilility of a given <listing_id>"""
-    try:
-        return listing_service.toggle_visibility(id)
-    except Exception as e:
-        listings_api.log.debug(e)
+    return listing_service.toggle_visibility(id)
 
 
 @listings_api.route("/listings/{id}/toggle/encryption", methods=["PATCH"], cors=True)
 @auth(listings_api, roles=[Roles.ADMIN])
 def toggle_encryption(id):
     """Encrypts a listing with the given ID."""
-    try:
-        return listing_service.toggle_encryption(id)
-    except Exception as e:
-        listings_api.log.debug(e)
+    return listing_service.toggle_encryption(id)
 
 
 @listings_api.route("/listings/{id}/update-field", methods=["PATCH"], cors=True)
 @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 @handle_exceptions
 def update_listing_field_route(id):
-    try:
-        return listing_service.update_field_route(
-            id, listings_api.current_request.json_body
-        )
-    except Exception as e:
-        listings_api.log.debug(e)
+    return listing_service.update_field_route(
+        id, listings_api.current_request.json_body
+    )
