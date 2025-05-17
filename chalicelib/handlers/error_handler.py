@@ -1,5 +1,5 @@
 from chalice import Response
-from chalice import NotFoundError, BadRequestError
+from chalice import NotFoundError, BadRequestError, ChaliceViewError
 import logging
 
 
@@ -9,17 +9,21 @@ def handle_exceptions(func):
             return func(*args, **kwargs)
 
         except BadRequestError as e:
-            logging.error(f"An unexpected error occurred: {str(e)}")
-            raise BadRequestError(str(e))
+            logging.warning(f"[{func.__name__}] BadRequestError: {str(e)}")
+            raise
 
         except NotFoundError as e:
-            logging.error(f"An unexpected error occurred: {str(e)}")
-            raise NotFoundError(str(e))
+            logging.warning(f"[{func.__name__}] NotFoundError: {str(e)}")
+            raise
+
+        except ChaliceViewError as e:
+            logging.error(f"[{func.__name__}] ChaliceViewError: {str(e)}")
+            raise
 
         except Exception as e:
-            logging.error(f"An unexpected error occurred: {str(e)}")
+            logging.exception(f"[{func.__name__}] Unexpected error")
             return Response(
-                body=f"An unexpected error occurred: {str(e)}",
+                body={"error": "Internal Server Error", "message": str(e)},
                 headers={"Content-Type": "application/json"},
                 status_code=500,
             )
