@@ -26,6 +26,7 @@ def call_on_exit(method_name):
 class JobPostingService:
     def __init__(self):
         self.driver = None
+        self.driver = None
         self.gs = GoogleSheetsModule()
 
 
