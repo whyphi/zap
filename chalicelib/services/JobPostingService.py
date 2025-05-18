@@ -10,7 +10,7 @@ import re
 
 class JobPostingService:
     def __init__(self):
-        self.driver = self._create_webdriver()
+        self.driver = None
         self.gs = GoogleSheetsModule()
     
     def _create_webdriver(self, *chrome_args: str) -> webdriver.Chrome:
@@ -58,6 +58,8 @@ class JobPostingService:
             List[dict]: A list of dictionaries, each containing keys 'company', 'role', 'link',
             and 'date' for the individual job postings.
         """
+        self.driver = self._create_webdriver()
+        
         self.driver.get(urlStr)
     
         table = self.driver.find_element(By.TAG_NAME, "table")
@@ -104,6 +106,8 @@ class JobPostingService:
                       "link": link,
                       "date": date}
             jobs.append(newJob)
+            
+        self.driver.quit()
         
         return jobs
     

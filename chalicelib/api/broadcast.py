@@ -5,6 +5,7 @@ from chalicelib.decorators import auth
 from chalicelib.services.BroadcastService import broadcast_service
 from chalicelib.models.roles import Roles
 import boto3
+from datetime import datetime
 
 broadcast_api = Blueprint(__name__)
 
@@ -50,9 +51,11 @@ def test_email():
     html = broadcast_service.generate_newsletter_content()
     emails = ["vinli@bu.edu", "mhyan@bu.edu"]
     
+    todays_date = datetime.now().strftime("%Y-%m-%d")
+    
     for email in emails:
         broadcast_service.send_newsletter(
-            subject="PCT Weekly Newsletter Beta Test",
+            subject=f"PCT Weekly Newsletter Beta Test {todays_date}",
             content=html["html"],
             recipients=[email],
         )
