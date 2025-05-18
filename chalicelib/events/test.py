@@ -4,6 +4,8 @@ from chalice.app import CloudWatchEvent
 
 from chalicelib.services.BroadcastService import broadcast_service
 from datetime import datetime
+from chalicelib.services.BroadcastService import broadcast_service
+from datetime import datetime
 
 test_events = Blueprint(__name__)
 
