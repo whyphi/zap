@@ -63,10 +63,9 @@ def generate_token(payload, secret):
 
 
 def test_auth_allows_valid_token_with_required_role(mock_blueprint, mock_ssm):
-    secret = "SAMPLE_AUTH_SECRET"
     token = generate_token(
         {"exp": datetime.now(timezone.utc) + timedelta(minutes=30), "roles": ["admin"]},
-        secret,
+        "SAMPLE_AUTH_SECRET",
     )
     mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
 
@@ -97,15 +96,16 @@ def test_auth_raises_when_token_is_malformed(mock_blueprint):
     def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
-    with pytest.raises(UnauthorizedError, match="Token is missing"):
+    with pytest.raises(UnauthorizedError) as e:
         protected_route(mock_blueprint)
+
+    assert "Token is missing." == str(e.value)
 
 
 def test_auth_raises_when_token_expired(mock_blueprint, mock_ssm):
-    secret = "SAMPLE_AUTH_SECRET"
     expired_token = generate_token(
         {"exp": datetime.now(timezone.utc) - timedelta(minutes=1), "roles": ["admin"]},
-        secret,
+        "SAMPLE_AUTH_SECRET",
     )
     mock_blueprint.current_request.headers = {
         "Authorization": f"Bearer {expired_token}"
@@ -115,17 +115,20 @@ def test_auth_raises_when_token_expired(mock_blueprint, mock_ssm):
     def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
-    with pytest.raises(UnauthorizedError, match="Token has expired"):
+    with pytest.raises(UnauthorizedError) as e:
         protected_route(mock_blueprint)
+
+    assert "Token has expired." == str(e.value)
 
 
 def test_auth_raises_when_token_signature_is_invalid(mock_blueprint):
-    invalid_secret = "WRONG_SECRET"
-    payload = {
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
-        "roles": ["admin"],
-    }
-    token = generate_token(payload, invalid_secret)
+    token = generate_token(
+        {
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+            "roles": ["admin"],
+        },
+        "WRONG_SECRET",
+    )
     mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
 
     @auth(mock_blueprint, roles=[Roles.ADMIN])
@@ -140,19 +143,19 @@ def test_auth_raises_when_token_signature_is_invalid(mock_blueprint):
         }
         mock_boto_client.return_value = mock_ssm_client
 
-        # Act + Assert
-        with pytest.raises(UnauthorizedError, match="Invalid token"):
+        with pytest.raises(UnauthorizedError) as e:
             protected_route(mock_blueprint)
+
+    assert "Invalid token." == str(e.value)
 
 
 def test_auth_raises_when_role_not_authorized(mock_blueprint, mock_ssm):
-    secret = "SAMPLE_AUTH_SECRET"
     token = generate_token(
         {
             "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
             "roles": ["member"],
         },
-        secret,
+        "SAMPLE_AUTH_SECRET",
     )
     mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
 
@@ -160,7 +163,7 @@ def test_auth_raises_when_role_not_authorized(mock_blueprint, mock_ssm):
     def protected_route(*_):  # pragma: no cover
         return {"message": "should not reach"}
 
-    with pytest.raises(
-        UnauthorizedError, match="You do not have permission to access this resource."
-    ):
+    with pytest.raises(UnauthorizedError) as e:
         protected_route(mock_blueprint)
+
+    assert "You do not have permission to access this resource." == str(e.value)

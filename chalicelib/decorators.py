@@ -72,7 +72,7 @@ def auth(blueprint, roles):
                         f"User with roles {user_roles} tried to access a resource requiring roles {roles}"
                     )
                     raise UnauthorizedError(
-                        "You do not have permission to access this resource. "
+                        "You do not have permission to access this resource."
                     )
 
                 return func(*args, **kwargs)
