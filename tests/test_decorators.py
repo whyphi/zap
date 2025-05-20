@@ -17,7 +17,6 @@ def test_add_env_suffix_dev():
 
     # Call the decorated function with 'env=False'
     result = decorated_function(instance_mock, "test-table", env=False)
-
     # Check if the suffix is added correctly
     assert result == "test-table-dev"
 
