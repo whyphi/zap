@@ -117,28 +117,12 @@ class ListingService:
             return {"msg": False, "error": str(e)}
 
     def get(self, id: str):
-        try:
-            data = self.listings_repo.get_by_id(id_value=id)
-            if data:
-                return convert_to_camel_case(data)
-            else:
-                raise NotFoundError(f"Error fetching listings.")
-
-        except Exception as e:
-            print(f"Error fetching listing {id}: {str(e)}")
-            return None
+        data = self.listings_repo.get_by_id(id_value=id)
+        return convert_to_camel_case(data)
 
     def get_all(self):
-        try:
-            data = self.listings_repo.get_all()
-            if data:
-                return convert_to_camel_case(data)
-            else:
-                raise NotFoundError(f"Error fetching listings.")
-
-        except Exception as e:
-            print(f"Error fetching listings: {str(e)}")
-            return None
+        data = self.listings_repo.get_all()
+        return convert_to_camel_case(data)
 
     # TODO: also delete corresponding rush-category
     def delete(self, id: str):

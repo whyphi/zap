@@ -23,7 +23,7 @@ class RepositoryFactory:
     @staticmethod
     def create(config: RepositoryConfig) -> BaseRepository:
         """Create a repository instance with the given configuration"""
-        return BaseRepository(table_name=config.table_name)
+        return BaseRepository(table_name=config.table_name, id_field=config.id_field)
 
     @classmethod
     def listings(cls) -> BaseRepository:
