@@ -17,7 +17,7 @@ def test_get_rush_events():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.get_rush_categories_and_events",
             ) as mock_get_rush_categories_and_events:
@@ -38,14 +38,14 @@ def test_get_rush_event():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.get_rush_event",
             ) as mock_get_rush_event:
                 mock_get_rush_event.return_value = SAMPLE_RUSH_EVENT
                 response = client.http.post(
                     "/events/rush/test_event_id",
-                    body={ "hideCode": False, "hideAttendees": False },
+                    body={"hideCode": False, "hideAttendees": False},
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
@@ -58,7 +58,7 @@ def test_create_rush_category():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.create_rush_category"
             ) as mock_create_rush_category:
@@ -76,7 +76,7 @@ def test_create_rush_event():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.create_rush_event"
             ) as mock_create_rush_event:
@@ -94,7 +94,7 @@ def test_modify_rush_event():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.modify_rush_event"
             ) as mock_modify_rush_event:
@@ -112,7 +112,7 @@ def test_modify_rush_settings():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.modify_rush_settings"
             ) as mock_modify_rush_settings:
@@ -130,7 +130,7 @@ def test_checkin_rush():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.checkin_rush"
             ) as mock_checkin_rush:
@@ -148,7 +148,7 @@ def test_delete_rush_event():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsRushService.events_rush_service.delete_rush_event",
             ) as mock_delete_rush_event:
