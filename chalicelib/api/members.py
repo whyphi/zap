@@ -1,4 +1,4 @@
-from chalice import Blueprint
+from chalice.app import Blueprint
 from chalicelib.services.MemberService import member_service
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles
@@ -17,8 +17,9 @@ def get_member(user_id):
 @auth(members_api, roles=[Roles.MEMBER, Roles.ADMIN])
 def update_member(user_id):
     data = members_api.current_request.json_body
+    headers = dict(members_api.current_request.headers)
     return member_service.update(
-        user_id=user_id, data=data, headers=members_api.current_request.headers
+        user_id=user_id, data=data, headers=headers
     )
 
 

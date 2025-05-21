@@ -1,4 +1,4 @@
-from chalice import Blueprint
+from chalice.app import Blueprint
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.modules.mongo import MongoModule
 from chalicelib.services.BroadcastService import broadcast_service

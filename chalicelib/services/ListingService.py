@@ -1,4 +1,4 @@
-from chalice import NotFoundError, Response
+from chalice.app import NotFoundError, Response
 from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.db import db

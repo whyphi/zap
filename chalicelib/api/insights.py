@@ -1,5 +1,5 @@
 # TO BE COMPLETED: create api routes for analytics
-from chalice import Blueprint
+from chalice.app import Blueprint
 from chalicelib.services.InsightsService import insights_service
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles

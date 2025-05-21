@@ -1,5 +1,4 @@
-from chalice import Blueprint, Rate
-from chalice.app import CloudWatchEvent
+from chalice.app import CloudWatchEvent, Blueprint, Rate
 
 
 test_events = Blueprint(__name__)
