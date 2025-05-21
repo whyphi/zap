@@ -1,4 +1,4 @@
-from chalice import Blueprint
+from chalice.app import Blueprint
 from chalicelib.services.ListingService import listing_service
 from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.decorators import auth
