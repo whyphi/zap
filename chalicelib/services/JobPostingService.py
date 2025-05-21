@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 from typing import List, Dict
 import re
 
+
 class JobPostingService:
     def __init__(self):
-        self.driver = self._create_webdriver()
+        self.driver = None
         self.gs = GoogleSheetsModule()
-    
+
     def _create_webdriver(self, *chrome_args: str) -> webdriver.Chrome:
         """
         Configures and creates a headless Chrome webdriver with optional additional command-line options.
@@ -25,6 +26,10 @@ class JobPostingService:
         Returns:
             webdriver.Chrome: A configured instance of the Chrome webdriver.
         """
+        # Return existing driver if possible
+        if self.driver is not None:
+            return self.driver
+
         options = webdriver.ChromeOptions()
         # Use default options if no extra arguments are provided
         # "--headless":  Run Chrome in headless mode
@@ -34,10 +39,22 @@ class JobPostingService:
         args_to_use = chrome_args if chrome_args else default_args
         for arg in args_to_use:
             options.add_argument(arg)
-        
+
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         return driver
+
+    def _get_driver(self) -> webdriver.Chrome:
+        """Returns the existing driver or creates one if not already initialized."""
+        if self.driver is None:
+            self.driver = self._create_webdriver()
+        return self.driver
+
+    def _close_driver(self):
+        """Quits the driver to prevent extensive CPU usage."""
+        if self.driver:
+            self.driver.quit()
+            self.driver = None
 
     def getJobs(self, urlStr) -> List:
         """
@@ -47,7 +64,7 @@ class JobPostingService:
         and processes each row of the table body to extract job details such as the company name,
         job role, application link, and posting date. The extraction stops once a job posting date
         is determined to be more than one week old.
-        
+
         **Due to this function's reliance on specific Github repo README formatting, this function
         will need to be updated/abstracted to handle changes to the repos in the future.
 
@@ -58,26 +75,38 @@ class JobPostingService:
             List[dict]: A list of dictionaries, each containing keys 'company', 'role', 'link',
             and 'date' for the individual job postings.
         """
-        self.driver.get(urlStr)
-    
-        table = self.driver.find_element(By.TAG_NAME, "table")
+        # Open fresh driver (or an existing one)
+        driver = self._get_driver()
+        driver.get(urlStr)
+
+        table = driver.find_element(By.TAG_NAME, "table")
         body = table.find_element(By.TAG_NAME, "tbody")
         rows = body.find_elements(By.TAG_NAME, "tr")
-                
+
+        # Close driver (to prevent unecessary cpu usage)
+        # TODO: We need to execute this after the function either 1) returns, 2) excepts, or simple 3) ends.
+        # Otherwise, the following lines will error out
+        self._close_driver()
+
         prevRowCompany = ""
         jobs = []
         for row in rows:
             cols = row.find_elements(By.XPATH, "td")
             date = cols[-1].text
-            if (self.isMoreThanOneWeekAgo(date)):
+            if self.isMoreThanOneWeekAgo(date):
                 break
-            
+
             company = ""
             role = ""
             link = ""
-            
+
             try:
-                company = cols[0].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").text
+                company = (
+                    cols[0]
+                    .find_element(By.TAG_NAME, "strong")
+                    .find_element(By.TAG_NAME, "a")
+                    .text
+                )
                 prevRowCompany = company
             except NoSuchElementException:
                 try:
@@ -88,32 +117,38 @@ class JobPostingService:
                         prevRowCompany = company
                 except Exception:
                     company = "N/A"
-                    
-            
+
             try:
-                role = cols[1].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").text
-                link = cols[1].find_element(By.TAG_NAME, "strong").find_element(By.TAG_NAME, "a").get_attribute("href")
+                role = (
+                    cols[1]
+                    .find_element(By.TAG_NAME, "strong")
+                    .find_element(By.TAG_NAME, "a")
+                    .text
+                )
+                link = (
+                    cols[1]
+                    .find_element(By.TAG_NAME, "strong")
+                    .find_element(By.TAG_NAME, "a")
+                    .get_attribute("href")
+                )
             except NoSuchElementException:
                 role = cols[1].text
-            
+
             if link == "":
                 link = cols[3].find_element(By.TAG_NAME, "a").get_attribute("href")
-                
-            newJob = {"company": company, 
-                      "role": role,
-                      "link": link,
-                      "date": date}
+
+            newJob = {"company": company, "role": role, "link": link, "date": date}
             jobs.append(newJob)
-        
+
         return jobs
-    
+
     def getFinanceJobs(self) -> List[Dict]:
         """
         Retrieves finance job opportunities from a specified Google Sheets document (currently RecruitU).
 
         This method utilizes the GoogleSheetsModule to fetch cell data from a predetermined Google Sheets
         document. It processes the data by separating header information from job rows, identifying the required
-        columns (Company, Opportunity, Link, Deadline), and extracting relevant details. The method utilizes 
+        columns (Company, Opportunity, Link, Deadline), and extracting relevant details. The method utilizes
         the _convert_serial_to_date() helper function to convert serial date formats into a human-readable string format.
 
         Returns:
@@ -122,25 +157,29 @@ class JobPostingService:
         """
         JOBS_SHEET_ID = "15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0"
         try:
-            response = self.gs.get_all_cells(JOBS_SHEET_ID, "2027 Opportunities Tracker", "FORMULA")
+            response = self.gs.get_all_cells(
+                JOBS_SHEET_ID, "2027 Opportunities Tracker", "FORMULA"
+            )
             if not response.get("values"):
                 return []
-            
+
             # 2. Separate headers from rows
             headers = response["values"][5]
             rows = response["values"][6:31]
-            
+
             # 3. Find the column indices for the columns we want
             company_idx = headers.index("Company")
             opp_idx = headers.index("Opportunity")
             link_idx = headers.index("Link")
-            
-            deadline_idxs = [i for i, header in enumerate(headers) if header == "Deadline"]
+
+            deadline_idxs = [
+                i for i, header in enumerate(headers) if header == "Deadline"
+            ]
             if len(deadline_idxs) > 1:
                 deadline_idx = deadline_idxs[1]
             else:
                 deadline_idx = deadline_idxs[0]
-            
+
             # 4. Loop through rows and extract only the columns we want
             job_listings = []
             hyperlink_regex = r'=HYPERLINK\("(.*?)","(.*?)"\)'
@@ -152,24 +191,24 @@ class JobPostingService:
                     # Skip this row if no match is found
                     continue
                 hyperlink_url = match.group(1)
-                    
+
                 raw_date = row[deadline_idx]
                 date_str = self._convert_serial_to_date(raw_date)
-                
+
                 job = {
                     "company": row[company_idx],
                     "role": row[opp_idx],
                     "link": hyperlink_url,
-                    "date": date_str
+                    "date": date_str,
                 }
                 job_listings.append(job)
-            
+
             return job_listings
 
         except Exception as e:
             print(e)
             return []
-        
+
     def _convert_serial_to_date(self, raw_date) -> str:
         """
         Converts a serial date (as returned by Google Sheets when using FORMULA mode)
@@ -192,7 +231,7 @@ class JobPostingService:
         except Exception:
             # If it's not a serial number, return it as-is
             return raw_date
-    
+
     def isMoreThanOneWeekAgo(self, dateStr: str) -> bool:
         """
         Determines if the given date string represents a date more than one week ago.
@@ -210,5 +249,6 @@ class JobPostingService:
         if date_obj < one_week_ago:
             return True
         return False
-    
+
+
 job_posting_service = JobPostingService()
