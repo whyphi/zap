@@ -35,7 +35,7 @@ def test_create_listing():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.create"
             ) as mock_create:
@@ -53,7 +53,7 @@ def test_get_listing():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.get"
             ) as mock_get:
@@ -71,7 +71,7 @@ def test_get_all_listings():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.get_all"
             ) as mock_get_all:
@@ -89,7 +89,7 @@ def test_delete_listing():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.delete"
             ) as mock_delete:
@@ -107,7 +107,7 @@ def test_toggle_visibility():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.toggle_visibility"
             ) as mock_toggle_visibility:
@@ -125,7 +125,7 @@ def test_update_listing_field_route():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.update_field_route"
             ) as mock_update_field_route:
@@ -151,7 +151,7 @@ def test_update_listing_field_route_not_found():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.update_field_route"
             ) as mock_update_field_route:
@@ -173,7 +173,7 @@ def test_update_listing_field_route_bad_request():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.update_field_route"
             ) as mock_update_field_route:
@@ -195,7 +195,7 @@ def test_update_listing_field_route_exception():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.update_field_route"
             ) as mock_update_field_route:

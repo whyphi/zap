@@ -16,7 +16,7 @@ def test_get_applicant():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
 
             with patch(
                 "chalicelib.services.ApplicantService.applicant_service.get"
@@ -37,7 +37,7 @@ def test_get_all_applicants():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ApplicantService.applicant_service.get_all"
             ) as mock_get_all:
@@ -57,7 +57,7 @@ def test_get_all_applicants_from_listing():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ApplicantService.applicant_service.get_all_from_listing"
             ) as mock_get_all_from_listing:
