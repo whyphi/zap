@@ -1,4 +1,4 @@
-from chalice import Blueprint
+from chalice.app import Blueprint
 from chalicelib.decorators import auth
 from chalicelib.services.EventsMemberService import events_member_service
 from chalicelib.models.roles import Roles

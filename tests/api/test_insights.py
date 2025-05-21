@@ -17,7 +17,7 @@ def test_get_insights_from_listing():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.InsightsService.insights_service.get_insights_from_listing",
             ) as mock_get_insights_from_listing:

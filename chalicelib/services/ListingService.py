@@ -1,4 +1,4 @@
-from chalice import NotFoundError, Response, BadRequestError
+from chalice.app import NotFoundError, Response
 from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.repositories.repository_factory import RepositoryFactory
@@ -163,20 +163,13 @@ class ListingService:
             return json.dumps({"statusCode": 500, "message": str(e)})
 
     def toggle_encryption(self, id: str):
-        try:
-            # Perform encryption toggle in the database
-            data = db.toggle_encryption(
-                table_name="zap-listings", key={"listingId": id}
-            )
+        # Perform encryption toggle in the database
+        data = db.toggle_encryption(table_name="zap-listings", key={"listingId": id})
 
-            # Check the result and return the appropriate response
-            if data:
-                return json.dumps({"statusCode": 200})
-            else:
-                return json.dumps({"statusCode": 400, "message": "Invalid listing ID"})
+        if data is None:
+            raise NotFoundError(f"Listing not found: {id}")
 
-        except Exception as e:
-            return json.dumps({"statusCode": 500, "message": str(e)})
+        return json.dumps({"statusCode": 200})
 
     def update_field_route(self, id, data):
         try:
