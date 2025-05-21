@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import BadRequestError, UnauthorizedError
+from chalice.app import BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
 import datetime

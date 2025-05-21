@@ -2,7 +2,7 @@ import boto3
 import jwt
 import logging
 
-from chalice import UnauthorizedError
+from chalice.app import UnauthorizedError
 from chalicelib.models.roles import Roles
 
 logger = logging.getLogger(__name__)
