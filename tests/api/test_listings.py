@@ -162,7 +162,11 @@ def test_update_listing_field_route_not_found():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                assert response.json_body is None
+                assert response.json_body == {
+                    "Message": "Not found",
+                    "Code": "NotFoundError",
+                }
+                assert response.status_code == 404
 
 
 def test_update_listing_field_route_bad_request():
@@ -180,9 +184,11 @@ def test_update_listing_field_route_bad_request():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                # body, status_code = response.json_body
-
-                assert response.json_body is None
+                assert response.json_body == {
+                    "Code": "BadRequestError",
+                    "Message": "Bad request",
+                }
+                assert response.status_code == 400
 
 
 def test_update_listing_field_route_exception():
@@ -200,4 +206,45 @@ def test_update_listing_field_route_exception():
                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
                 )
 
-                assert response.json_body is None
+                assert response.json_body == {
+                    "error": "Internal Server Error",
+                    "message": "Error",
+                }
+
+
+def test_toggle_encryption_succeeds():
+    with Client(app) as client:
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"roles": ["admin"]}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.toggle_encryption"
+            ) as mock_toggle_encryption:
+                mock_toggle_encryption.return_value = {"status": True}
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[0]['listingId']}/toggle/encryption",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
+
+                assert response.status_code == 200
+
+
+def test_toggle_encryption_invalid_id_raises_not_found():
+    with Client(app) as client:
+        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+            # Assuming the decoded token has the required role
+            mock_decode.return_value = {"roles": ["admin"]}
+            with patch(
+                "chalicelib.services.ListingService.listing_service.toggle_encryption"
+            ) as mock_toggle_encryption:
+                mock_toggle_encryption.side_effect = NotFoundError("empty id")
+                response = client.http.patch(
+                    f"/listings/{TEST_LISTINGS[0]['listingId']}/toggle/encryption",
+                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+                )
+
+                assert response.json_body == {
+                    "Message": "empty id",
+                    "Code": "NotFoundError",
+                }
+                assert response.status_code == 404
