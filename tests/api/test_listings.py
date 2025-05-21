@@ -216,7 +216,7 @@ def test_toggle_encryption_succeeds():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.toggle_encryption"
             ) as mock_toggle_encryption:
@@ -233,7 +233,7 @@ def test_toggle_encryption_invalid_id_raises_not_found():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.ListingService.listing_service.toggle_encryption"
             ) as mock_toggle_encryption:
