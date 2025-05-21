@@ -1,9 +1,8 @@
-from chalice import Response
-from chalice import NotFoundError, BadRequestError, ChaliceViewError
+from chalice.app import NotFoundError, BadRequestError, ChaliceViewError, Response
 import logging
+from typing import Callable, Any
 
-
-def handle_exceptions(func):
+def handle_exceptions(func: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)

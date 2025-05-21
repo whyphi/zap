@@ -3,7 +3,7 @@ import boto3
 import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
 
-from chalice import Chalice
+from chalice.app import Chalice
 
 
 # API imports
