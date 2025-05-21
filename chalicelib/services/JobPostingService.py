@@ -26,8 +26,8 @@ def call_on_exit(method_name):
 class JobPostingService:
     def __init__(self):
         self.driver = None
-        self.driver = None
         self.gs = GoogleSheetsModule()
+
 
     def _create_webdriver(self, *chrome_args: str) -> webdriver.Chrome:
         """
@@ -68,6 +68,7 @@ class JobPostingService:
         and processes each row of the table body to extract job details such as the company name,
         job role, application link, and posting date. The extraction stops once a job posting date
         is determined to be more than one week old.
+
 
         **Due to this function's reliance on specific Github repo README formatting, this function
         will need to be updated/abstracted to handle changes to the repos in the future.
