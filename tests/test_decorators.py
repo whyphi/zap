@@ -6,7 +6,13 @@ import pytest
 from chalicelib.decorators import add_env_suffix, auth
 from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.models.roles import Roles
-from chalice import UnauthorizedError, Response, BadRequestError, NotFoundError, ChaliceViewError
+from chalice import (
+    UnauthorizedError,
+    Response,
+    BadRequestError,
+    NotFoundError,
+    ChaliceViewError,
+)
 
 
 def test_add_env_suffix_dev():
@@ -89,6 +95,7 @@ def test_handle_exceptions_general_exception():
         "error": "Internal Server Error",
         "message": "General error",
     }
+
 
 @pytest.fixture
 def mock_blueprint():
