@@ -1,7 +1,7 @@
 from chalice.test import Client
 from unittest.mock import patch
 
-from chalice import NotFoundError, BadRequestError
+from chalice.app import NotFoundError, BadRequestError
 
 
 from app import app
