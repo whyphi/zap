@@ -93,3 +93,10 @@ class CaseConverter:
                 for key, value in data.items()
             }
         return data
+
+# Sample tests
+# data = [{"helloWorld": {"thisIsCool": 1}}, {"helloThereWorld": 2}]
+# output = CaseConverter.convert_keys(data=data, convert_func=CaseConverter.to_snake_case)
+# output2 = CaseConverter.convert_keys(data=output, convert_func=CaseConverter.to_camel_case)
+# print(output)
+# print(output2)
