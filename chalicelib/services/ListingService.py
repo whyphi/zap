@@ -11,7 +11,6 @@ from chalicelib.utils import convert_to_camel_case, convert_to_snake_case
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
-
 from pydantic import ValidationError
 
 

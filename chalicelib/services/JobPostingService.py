@@ -10,7 +10,7 @@ import re
 
 class JobPostingService:
     def __init__(self):
-        self.driver = self._create_webdriver()
+        self.driver = None
         self.gs = GoogleSheetsModule()
     
     def _create_webdriver(self, *chrome_args: str) -> webdriver.Chrome:
