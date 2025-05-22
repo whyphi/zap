@@ -102,6 +102,7 @@ class BroadcastService:
         tech_jobs = []
         for source in JOB_SOURCE_LIST["Tech"]:
             tech_jobs += self.ps.get_jobs(source["link"])
+            print(f"Fetched {len(tech_jobs)} jobs from {source['name']}")
         
         consulting_jobs = []
         for source in JOB_SOURCE_LIST["Consulting"]:

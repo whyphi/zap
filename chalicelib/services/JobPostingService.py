@@ -71,6 +71,8 @@ class JobPostingService:
         for row in rows:
             cols = row.find_elements(By.XPATH, "td")
             date = cols[-1].text
+            
+            # if date is more than one week ago, break the loop
             if (self.is_more_than_one_week_ago(date)):
                 break
             
@@ -231,6 +233,7 @@ class JobPostingService:
             bool: True if the date is more than one week ago; False otherwise.
         """
         try:
+            print(f"Tring standard date format: {dateStr}")
             current_year = datetime.today().year
             today = datetime.today()
             date_obj = datetime.strptime(f"{dateStr} {current_year}", "%b %d %Y")
@@ -243,8 +246,9 @@ class JobPostingService:
             # Hotfix: if dateStr is not in the format "Mon DD", but instead in the format 'DDd', i.e. "15d"
             # TODO: Keep an eye out for more edge cases and add them to the hotfix
             try:
+                print(f"Trying alternative date format: {dateStr}")
                 date_obj = dateStr[:-1]
-                if int(date_obj) <= 7:
+                if int(date_obj) >= 7:
                     return True
                 return False
             except (ValueError, IndexError) as e:
