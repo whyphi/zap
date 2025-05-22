@@ -133,13 +133,8 @@ class ListingService:
         return {"msg": True}
 
     def toggle_encryption(self, id: str):
-        # Perform encryption toggle in the database
-        data = db.toggle_encryption(table_name="zap-listings", key={"listingId": id})
-
-        if data is None:
-            raise NotFoundError(f"Listing not found: {id}")
-
-        return json.dumps({"statusCode": 200})
+        self.listings_repo.toggle_boolean_field(id, "is_encrypted")
+        return {"msg": True}
 
     def update_field_route(self, id, data):
         try:
