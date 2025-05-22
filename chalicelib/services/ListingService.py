@@ -125,25 +125,8 @@ class ListingService:
 
     # TODO: also delete corresponding rush-category
     def delete(self, id: str):
-        try:
-            # Perform delete operation in the database
-            deleted_listing = db.delete_item(
-                table_name="zap-listings", key={"listingId": id}
-            )
-
-            # Check the result and return the appropriate response
-            if deleted_listing:
-                return {"statusCode": 200}
-            else:
-                raise NotFoundError("Listing not found")
-
-        except NotFoundError:
-            # app.log.error(f"An error occurred: {str(e)}")
-            return {"statusCode": 404, "message": "Listing not found"}
-
-        except Exception:
-            # app.log.error(f"An error occurred: {str(e)}")
-            return {"statusCode": 500, "message": "Internal Server Error"}
+        self.listings_repo.delete(id_value=id)
+        return {"msg": True}
 
     def toggle_visibility(self, id: str):
         try:

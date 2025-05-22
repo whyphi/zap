@@ -23,7 +23,9 @@ class BaseRepository:
     def get_all(self, select_query: str = "*"):
         """Get all records from the table with optional field selection"""
         try:
-            response = self.client.table("self.table_name").select(select_query).execute()
+            response = (
+                self.client.table(self.table_name).select(select_query).execute()
+            )
             return response.data
         except APIError as e:
             logger.error(f"[BaseRepository.get_all] Supabase error: {e.message}")
@@ -84,27 +86,26 @@ class BaseRepository:
     #     """Update a single field in a record"""
     #     return self.update(self.id_field, id_value, {field: value})
 
-    # def delete(self, id_value: str):
-    #     """Delete a record by its ID field"""
-    #     try:
-    #         response = (
-    #             self.client.table(self.table_name)
-    #             .delete()
-    #             .eq(self.id_field, id_value)
-    #             .execute()
-    #         )
-    #         return bool(response.data)
-    #     except APIError as e:
-    #         print(
-    #             f"API Error deleting record {self.id_field}={id_value} from {self.table_name}: {str(e)}"
-    #         )
-    #         print(f"Error code: {e.code}, Message: {e.message}, Hint: {e.hint}")
-    #         return False
-    #     except Exception as e:
-    #         print(
-    #             f"Unexpected error deleting record {self.id_field}={id_value} from {self.table_name}: {str(e)}"
-    #         )
-    #         return False
+    def delete(self, id_value: str):
+        """Delete a record by its ID field"""
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .delete()
+                .eq(self.id_field, id_value)
+                .execute()
+            )
+
+            if not response.data:
+                error_message = (
+                    f"{self.table_name.capitalize()} with ID '{id_value}' not found."
+                )
+                raise NotFoundError(error_message)
+            return bool(response.data)
+
+        except APIError as e:
+            logger.error(f"[BaseRepository.delete] Supabase error: {e.message}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     # def toggle_boolean_field(self, id_value: str, field: str) -> Optional[Dict]:
     #     """Toggle a boolean field in a record"""
