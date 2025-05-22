@@ -129,20 +129,8 @@ class ListingService:
         return {"msg": True}
 
     def toggle_visibility(self, id: str):
-        try:
-            # Perform visibility toggle in the database
-            data = db.toggle_visibility(
-                table_name="zap-listings", key={"listingId": id}
-            )
-
-            # Check the result and return the appropriate response
-            if data:
-                return json.dumps({"statusCode": 200})
-            else:
-                return json.dumps({"statusCode": 400, "message": "Invalid listing ID"})
-
-        except Exception as e:
-            return json.dumps({"statusCode": 500, "message": str(e)})
+        self.listings_repo.toggle_boolean_field(id, "is_visible")
+        return {"msg": True}
 
     def toggle_encryption(self, id: str):
         # Perform encryption toggle in the database
