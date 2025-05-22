@@ -3,10 +3,10 @@ from typing import Dict, List, Optional, Any, Union
 from supabase import Client
 from postgrest.exceptions import APIError
 from chalicelib.modules.supabase_client import SupabaseClient
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import logging
 
 logger = logging.getLogger(__name__)
-GENERIC_CLIENT_ERROR = "Invalid input. Please check your request and try again."
 
 
 class BaseRepository:

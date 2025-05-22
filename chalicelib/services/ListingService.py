@@ -1,4 +1,4 @@
-from chalice.app import NotFoundError, Response
+from chalice.app import Response, NotFoundError, BadRequestError
 from chalicelib.models.application import Application
 from chalicelib.validators.listings import UpdateFieldRequest
 from chalicelib.repositories.repository_factory import RepositoryFactory
@@ -8,11 +8,16 @@ from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.services.EventsRushService import events_rush_service
 from chalicelib.utils import convert_to_camel_case, convert_to_snake_case
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
+import logging
 
+logger = logging.getLogger(__name__)
+
+# TODO: DON'T FORGET TO DECIDE WHAT TO DO WITH ListingService.create (temporarily create MongoDB event???)
 
 class ListingService:
     def __init__(self):
@@ -138,8 +143,12 @@ class ListingService:
 
     def update_field_route(self, id: str, data: dict):
         # Get field and value from object
-        field = data["field"]
-        value = data["value"]
+        field = data.get("field", None)
+        value = data.get("value", None)
+
+        if not (field and value):
+            logger.error(f"[ListingService.update_field_route] Invalid inputs: {data}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
         self.listings_repo.update_field(id_value=id, field=field, value=value)
         return {"msg": True}

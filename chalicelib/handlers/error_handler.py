@@ -2,6 +2,9 @@ from chalice.app import NotFoundError, BadRequestError, ChaliceViewError, Respon
 import logging
 from typing import Callable, Any
 
+# Generic client-side errors
+GENERIC_CLIENT_ERROR = "Invalid input. Please check your request and try again."
+
 
 def handle_exceptions(func: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args, **kwargs):
