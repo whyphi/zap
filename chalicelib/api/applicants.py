@@ -1,10 +1,17 @@
 from chalice.app import Blueprint
 from chalicelib.services.ApplicantService import applicant_service
+from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.decorators import auth
 from chalicelib.models.roles import Roles
 
 
 applicants_api = Blueprint(__name__)
+
+
+@applicants_api.route("/apply", methods=["POST"], cors=True)
+@handle_exceptions
+def apply_to_listing():
+    return applicant_service.apply(applicants_api.current_request.json_body)
 
 
 @applicants_api.route("/applicant/{id}", methods=["GET"], cors=True)
