@@ -2,6 +2,7 @@ import base64
 import random
 import hashlib
 import re
+from typing import Union, Any, Callable
 
 
 def decode_base64(base64_data):
@@ -57,32 +58,38 @@ def hash_value(value):
         return hashed_value[:random_length]
 
 
-def to_camel_case(snake_str):
-    components = snake_str.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+JSONType = Union[dict[str, "JSONType"], list["JSONType"], str, int, float, bool, None]
 
 
-def convert_to_camel_case(data):
-    if isinstance(data, list):
-        return [convert_to_camel_case(item) for item in data]
-    elif isinstance(data, dict):
-        return {
-            to_camel_case(key): convert_to_camel_case(value)
-            for key, value in data.items()
-        }
-    return data
+class CaseConverter:
+    @staticmethod
+    def to_snake_case(camel_str):
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", camel_str).lower()
 
+    @staticmethod
+    def to_camel_case(snake_str):
+        parts = snake_str.split("_")
+        return parts[0] + "".join(word.capitalize() for word in parts[1:])
 
-def to_snake_case(camel_str):
-    return re.sub(r"([A-Z])", r"_\1", camel_str).lower()
+    @classmethod
+    def convert_keys(
+        cls, data: JSONType, convert_func: Callable[[str], str]
+    ) -> JSONType:
+        """
+        Converts dictionary keys from snake_case to camelCase or vice versa (e.g., `CaseConverter.convert_keys(data, CaseConverter.to_snake_case)`).
 
+        Args:
+            data (JSONType): Data to be converted.
+            convert_func (func): Either `to_snake_case` or `to_camel_case`
 
-def convert_to_snake_case(data):
-    if isinstance(data, list):
-        return [convert_to_snake_case(item) for item in data]
-    elif isinstance(data, dict):
-        return {
-            to_snake_case(key): convert_to_camel_case(value)
-            for key, value in data.items()
-        }
-    return data
+        Returns:
+            JSONType: The data structure with keys converted using the provided function.
+        """
+        if isinstance(data, list):
+            return [cls.convert_keys(item, convert_func) for item in data]
+        elif isinstance(data, dict):
+            return {
+                convert_func(key): cls.convert_keys(value, convert_func)
+                for key, value in data.items()
+            }
+        return data

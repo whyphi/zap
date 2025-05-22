@@ -7,10 +7,15 @@ from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timedelta, timezone
 from chalicelib.utils import get_file_extension_from_base64
+from chalicelib.utils import CaseConverter, JSONType
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from chalicelib.db import db
 from chalicelib.s3 import s3
 import json
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ApplicantService:
@@ -64,80 +69,81 @@ class ApplicantService:
             for event in events
         }
 
-    def apply(self, data):
+    def apply(self, data: JSONType):
         """Handles the form submission application"""
 
-        try:
-            Application.model_validate(data)
+        data = CaseConverter.convert_keys(
+            data=data, convert_func=CaseConverter.to_snake_case
+        )
+        if not isinstance(data, dict):
+            logger.error(f"[ApplicantService.apply] Invalid inputs: {data}")
+            raise ValidationError(GENERIC_CLIENT_ERROR)
 
-            listing_data = db.get_item(
-                table_name="zap-listings", key={"listingId": data["listingId"]}
+        Application.model_validate(data)
+
+        listing_data = db.get_item(
+            table_name="zap-listings", key={"listingId": data["listingId"]}
+        )
+
+        if not listing_data["isVisible"]:
+            raise NotFoundError("Invalid listing.")
+
+        deadline = datetime.strptime(listing_data["deadline"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        curr_est_time = utc_now.astimezone(timezone(timedelta(hours=-5)))
+
+        if curr_est_time > deadline:
+            return Response(
+                body="Sorry. The deadline for this application has passed.",
+                headers={"Content-Type": "text/plain"},
+                status_code=410,
             )
 
-            if not listing_data["isVisible"]:
-                raise NotFoundError("Invalid listing.")
+        applicant_id = str(uuid.uuid4())
+        data["applicantId"] = applicant_id
+        data["dateApplied"] = curr_est_time.isoformat()
 
-            deadline = datetime.strptime(
-                listing_data["deadline"], "%Y-%m-%dT%H:%M:%S.%f%z"
-            )
-            utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
-            curr_est_time = utc_now.astimezone(timezone(timedelta(hours=-5)))
+        # Upload resume and retrieve, then set link to data
+        resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
+        resume_url = s3.upload_binary_data(resume_path, data["resume"])
 
-            if curr_est_time > deadline:
-                return Response(
-                    body="Sorry. The deadline for this application has passed.",
-                    headers={"Content-Type": "text/plain"},
-                    status_code=410,
-                )
+        # Upload photo and retrieve, then set link to data
+        image_extension = get_file_extension_from_base64(data["image"])
+        image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
+        image_url = s3.upload_binary_data(image_path, data["image"])
 
-            applicant_id = str(uuid.uuid4())
-            data["applicantId"] = applicant_id
-            data["dateApplied"] = curr_est_time.isoformat()
+        # Reset data properties as S3 url
+        data["resume"], data["image"] = resume_url, image_url
 
-            # Upload resume and retrieve, then set link to data
-            resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
-            resume_url = s3.upload_binary_data(resume_path, data["resume"])
+        # Upload data to DynamoDB
+        db.put_data(table_name="zap-applications", data=data)
 
-            # Upload photo and retrieve, then set link to data
-            image_extension = get_file_extension_from_base64(data["image"])
-            image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
-            image_url = s3.upload_binary_data(image_path, data["image"])
+        # Send confirmation email
+        email_content = f"""
+            Dear {data["firstName"]},<br><br>
 
-            # Reset data properties as S3 url
-            data["resume"], data["image"] = resume_url, image_url
+            Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
 
-            # Upload data to DynamoDB
-            db.put_data(table_name="zap-applications", data=data)
+            To find out more about us, visit our website: https://bupct.com/<br><br>
 
-            # Send confirmation email
-            email_content = f"""
-                Dear {data["firstName"]},<br><br>
+            Regards,<br>
+            Phi Chi Theta, Zeta Chapter<br><br>
 
-                Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
+            ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
+        """
 
-                To find out more about us, visit our website: https://bupct.com/<br><br>
+        # TODO: Add email exception (invalid email causes error)
 
-                Regards,<br>
-                Phi Chi Theta, Zeta Chapter<br><br>
+        ses_destination = SesDestination(tos=[data["email"]])
+        ses.send_email(
+            source="noreply@why-phi.com",
+            destination=ses_destination,
+            subject="Thank you for applying to PCT",
+            text=email_content,
+            html=email_content,
+        )
 
-                ** Please note: Do not reply to this email. This email is sent from an unattended mailbox. Replies will not be read.
-            """
-
-            # TODO: Add email exception (invalid email causes error)
-
-            ses_destination = SesDestination(tos=[data["email"]])
-            ses.send_email(
-                source="noreply@why-phi.com",
-                destination=ses_destination,
-                subject="Thank you for applying to PCT",
-                text=email_content,
-                html=email_content,
-            )
-
-            return {"msg": True, "resumeUrl": resume_url}
-
-        except ValidationError as e:
-            return {"msg": False, "error": str(e)}
+        return {"msg": True, "resumeUrl": resume_url}
 
 
 applicant_service = ApplicantService()
