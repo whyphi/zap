@@ -129,56 +129,20 @@ class ListingService:
         return {"msg": True}
 
     def toggle_visibility(self, id: str):
-        self.listings_repo.toggle_boolean_field(id, "is_visible")
+        self.listings_repo.toggle_boolean_field(id_value=id, field="is_visible")
         return {"msg": True}
 
     def toggle_encryption(self, id: str):
-        self.listings_repo.toggle_boolean_field(id, "is_encrypted")
+        self.listings_repo.toggle_boolean_field(id_value=id, field="is_encrypted")
         return {"msg": True}
 
-    def update_field_route(self, id, data):
-        try:
-            request_body = UpdateFieldRequest(**data)
+    def update_field_route(self, id: str, data: dict):
+        # Get field and value from object
+        field = data["field"]
+        value = data["value"]
 
-            # Get field and value from object
-            field = request_body.field
-            new_value = request_body.value
-
-            # Check if the listing exists
-            existing_listing = db.get_item(
-                table_name="zap-listings", key={"listingId": id}
-            )
-            if not existing_listing:
-                raise NotFoundError("Listing not found")
-
-            # Update the specified field in the database
-            updated_listing = db.update_listing_field(
-                table_name="zap-listings",
-                key={"listingId": id},
-                field=field,
-                new_value=new_value,
-            )
-
-            # Check the result and return the appropriate response
-            if updated_listing:
-                return json.dumps(
-                    {"statusCode": 200, "updated_listing": updated_listing}
-                )
-            else:
-                raise NotFoundError("Listing not found")
-
-        except ValidationError as e:
-            # https://aws.github.io/chalice/topics/views.html
-            # app.log.error(f"An error occurred: {str(e)}")
-            raise Exception(str(e))
-
-        except NotFoundError as e:
-            # app.log.error(f"An error occurred: {str(e)}")
-            raise NotFoundError(str(e))  # Let the caller handle this exception
-
-        except Exception as e:
-            # app.log.error(f"An error occurred: {str(e)}")
-            raise Exception(e)  # Re-raise the exception for global handling
+        self.listings_repo.update_field(id_value=id, field=field, value=value)
+        return {"msg": True}
 
 
 listing_service = ListingService()
