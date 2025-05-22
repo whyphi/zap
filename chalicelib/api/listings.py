@@ -8,8 +8,7 @@ from chalicelib.models.roles import Roles
 listings_api = Blueprint(__name__)
 
 
-# TODO: Change /submit to /apply
-@listings_api.route("/submit", methods=["POST"], cors=True)
+@listings_api.route("/apply", methods=["POST"], cors=True)
 @handle_exceptions
 def apply_to_listing():
     return listing_service.apply(listings_api.current_request.json_body)
