@@ -1,6 +1,6 @@
 from chalicelib.db import db
 from chalicelib.services.EventsRushService import events_rush_service
-from chalice import BadRequestError
+from chalice.app import BadRequestError
 import json
 from chalicelib.utils import hash_value
 

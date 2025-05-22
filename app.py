@@ -3,7 +3,7 @@ import boto3
 import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
 
-from chalice import Chalice
+from chalice.app import Chalice
 
 
 # API imports
@@ -20,6 +20,7 @@ from chalicelib.api.monitoring import monitoring_api
 # Event imports
 from chalicelib.events.test import test_events
 # from chalicelib.events.events import scheduled_events
+
 
 
 # Configure and initialize sentry

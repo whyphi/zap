@@ -1,13 +1,12 @@
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 
-
 class AccountabilityService:
     def __init__(self):
         # Currently hardcoded --> need to set as dynamic parameter either in DB or SSM
         self.spreadsheet_id = "1VEj06zGrxq-1Hrp8ArbYJkvPw58g5e4C3MhDeBjL6o4"
         self.gs = GoogleSheetsModule()
 
-    def get_total_accountability(self, page: int, page_size: int = 20) -> dict[list]:
+    def get_total_accountability(self, page: int, page_size: int = 20) -> list[dict]:
         START_ROW = 2 + page * page_size
         cells = self.gs.get_rows(
             spreadsheet_id=self.spreadsheet_id,
@@ -39,7 +38,7 @@ class AccountabilityService:
         ]
         return values
 
-    def get_accountability_from_leaderboard(self) -> dict[list]:
+    def get_accountability_from_leaderboard(self) -> list[dict]:
         cells = self.gs.get_all_cells(self.spreadsheet_id, "Leaderboard")
         values = cells["values"][1:]
         values = [

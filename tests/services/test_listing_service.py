@@ -274,3 +274,33 @@ def test_update_field_exception(service):
             )
 
         assert str(exc_info.value) == "Error"
+
+
+def test_toggle_encryption_succeeds(service):
+    listing_service, mock_db = service
+
+    mock_db.toggle_encryption.return_value = True
+    mock_listing_id = SAMPLE_LISTINGS[0]["listingId"]
+
+    result = json.loads(listing_service.toggle_encryption(mock_listing_id))
+
+    mock_db.toggle_encryption.assert_called_once_with(
+        table_name="zap-listings", key={"listingId": mock_listing_id}
+    )
+    assert result["statusCode"] == 200
+
+
+def test_toggle_encryption_invalid_listing_id_raises_not_found(service):
+    listing_service, mock_db = service
+
+    mock_db.toggle_encryption.return_value = None
+    mock_listing_id = "3"
+
+    with pytest.raises(NotFoundError) as exc_info:
+        listing_service.toggle_encryption(mock_listing_id)
+
+    mock_db.toggle_encryption.assert_called_once_with(
+        table_name="zap-listings", key={"listingId": mock_listing_id}
+    )
+
+    assert str(exc_info.value) == "Listing not found: 3"
