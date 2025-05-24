@@ -5,7 +5,6 @@ from chalicelib.services.EventsRushService import events_rush_service
 from chalicelib.utils import CaseConverter, JSONType
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import uuid
-from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,6 @@ class ListingService:
         id = str(uuid.uuid4())
         data["id"] = id
         data["is_visible"] = True
-        data["date_created"] = datetime.now(timezone.utc).isoformat()
         data["is_encrypted"] = False
 
         # TODO: check for dup name BEFORE going to rush-category creation

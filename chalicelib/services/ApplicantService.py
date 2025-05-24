@@ -6,8 +6,7 @@ from chalicelib.utils import hash_value
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.utils import CaseConverter, JSONType
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
@@ -91,8 +90,7 @@ class ApplicantService:
         Application.model_validate(data)
 
         # Exctract necessary fields
-        listing_id = data["lisiting_id"]
-        deadline = data["lisiting_id"]
+        listing_id = data["listing_id"]
         last_name = data["last_name"]
         first_name = data["first_name"]
         resume = data["resume"]
@@ -101,28 +99,38 @@ class ApplicantService:
         # Type validation (TODO: clean CaseConverter up... specifically the JSONType def... to avoid this)
         if not (
             isinstance(listing_id, str)
-            and isinstance(deadline, str)
             and isinstance(resume, str)
             and isinstance(image, str)
         ):
             raise ValidationError(GENERIC_CLIENT_ERROR)
 
         listing_data = self.listings_repo.get_by_id(listing_id)
+        deadline = listing_data["deadline"]
 
         if not listing_data["is_visible"]:
             raise NotFoundError("Invalid listing.")
 
-        datetime_deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S.%f%z")
-        curr_est_time = datetime.now(tz=ZoneInfo("America/New_York"))
+        deadline_utc = datetime.fromisoformat(deadline).astimezone(timezone.utc)
+        curr_time_utc = datetime.now(tz=timezone.utc)
 
-        if curr_est_time > datetime_deadline:
+        if curr_time_utc > deadline_utc:
             return Response(
                 body="Sorry. The deadline for this application has passed.",
                 headers={"Content-Type": "text/plain"},
                 status_code=410,
             )
 
-        data["date_applied"] = curr_est_time.isoformat()
+        # Date tests...
+        # datetime_deadline_est = deadline_utc.astimezone(ZoneInfo("America/New_York"))
+        # curr_time_utc = datetime.now(timezone.utc)
+        # curr_time_est = curr_time_utc.astimezone(ZoneInfo("America/New_York"))
+        # pretty_format = "%d/%m/%Y %I:%M %p"
+        # print(f"[UTC] Current Time:    {curr_time_utc.strftime(pretty_format)}")
+        # print(f"[UTC] Deadline:        {deadline_utc.strftime(pretty_format)}")
+        # print(f"[EST] Current Time:    {curr_time_est.strftime(pretty_format)}")
+        # print(f"[EST] Deadline:        {datetime_deadline_est.strftime(pretty_format)}")
+
+        raise Exception("made it here :)")
 
         # Upload resume and retrieve, then set link to data
         resume_path = f"resume/{listing_id}/{last_name}_{first_name}_{applicant_id}.pdf"
@@ -164,6 +172,7 @@ class ApplicantService:
             html=email_content,
         )
 
+        raise Exception("U did it yay :)")
         return {"msg": True, "resumeUrl": resume_url}
 
 
