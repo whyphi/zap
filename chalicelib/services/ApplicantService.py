@@ -3,9 +3,11 @@ from chalicelib.services.EventsRushService import events_rush_service
 from chalice.app import Response, BadRequestError, NotFoundError
 from pydantic import ValidationError
 from chalicelib.utils import hash_value
+from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.utils import CaseConverter, JSONType
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
@@ -20,7 +22,8 @@ logger = logging.getLogger(__name__)
 
 class ApplicantService:
     def __init__(self):
-        pass
+        self.listings_repo = RepositoryFactory.listings()
+        self.applications_repo = RepositoryFactory.applications()
 
     def get(self, id: str):
         data = db.get_item(table_name="zap-applications", key={"applicantId": id})
@@ -74,7 +77,6 @@ class ApplicantService:
         if not isinstance(data, dict):
             raise ValueError("Expected a dictionary")
 
-        data["gradYear"] = "2025"
         applicant_id = str(uuid.uuid4())
         data["id"] = applicant_id
 
@@ -88,49 +90,58 @@ class ApplicantService:
 
         Application.model_validate(data)
 
-        # TODO: implement remaining function
-        raise Exception
+        # Exctract necessary fields
+        listing_id = data["lisiting_id"]
+        deadline = data["lisiting_id"]
+        last_name = data["last_name"]
+        first_name = data["first_name"]
+        resume = data["resume"]
+        image = data["image"]
 
-        listing_data = db.get_item(
-            table_name="zap-listings", key={"listingId": data["listingId"]}
-        )
+        # Type validation (TODO: clean CaseConverter up... specifically the JSONType def... to avoid this)
+        if not (
+            isinstance(listing_id, str)
+            and isinstance(deadline, str)
+            and isinstance(resume, str)
+            and isinstance(image, str)
+        ):
+            raise ValidationError(GENERIC_CLIENT_ERROR)
 
-        if not listing_data["isVisible"]:
+        listing_data = self.listings_repo.get_by_id(listing_id)
+
+        if not listing_data["is_visible"]:
             raise NotFoundError("Invalid listing.")
 
-        deadline = datetime.strptime(listing_data["deadline"], "%Y-%m-%dT%H:%M:%S.%f%z")
-        utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
-        curr_est_time = utc_now.astimezone(timezone(timedelta(hours=-5)))
+        datetime_deadline = datetime.strptime(deadline, "%Y-%m-%dT%H:%M:%S.%f%z")
+        curr_est_time = datetime.now(tz=ZoneInfo("America/New_York"))
 
-        if curr_est_time > deadline:
+        if curr_est_time > datetime_deadline:
             return Response(
                 body="Sorry. The deadline for this application has passed.",
                 headers={"Content-Type": "text/plain"},
                 status_code=410,
             )
 
-        applicant_id = str(uuid.uuid4())
-        data["applicantId"] = applicant_id
-        data["dateApplied"] = curr_est_time.isoformat()
+        data["date_applied"] = curr_est_time.isoformat()
 
         # Upload resume and retrieve, then set link to data
-        resume_path = f"resume/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.pdf"
-        resume_url = s3.upload_binary_data(resume_path, data["resume"])
+        resume_path = f"resume/{listing_id}/{last_name}_{first_name}_{applicant_id}.pdf"
+        resume_url = s3.upload_binary_data(resume_path, resume)
 
         # Upload photo and retrieve, then set link to data
-        image_extension = get_file_extension_from_base64(data["image"])
-        image_path = f"image/{data['listingId']}/{data['lastName']}_{data['firstName']}_{applicant_id}.{image_extension}"
-        image_url = s3.upload_binary_data(image_path, data["image"])
+        image_extension = get_file_extension_from_base64(image)
+        image_path = f"image/{listing_id}/{last_name}_{first_name}_{applicant_id}.{image_extension}"
+        image_url = s3.upload_binary_data(image_path, image)
 
         # Reset data properties as S3 url
         data["resume"], data["image"] = resume_url, image_url
 
         # Upload data to DynamoDB
-        db.put_data(table_name="zap-applications", data=data)
+        self.applications_repo.create(data=data)
 
         # Send confirmation email
         email_content = f"""
-            Dear {data["firstName"]},<br><br>
+            Dear {first_name},<br><br>
 
             Thank you for applying to Phi Chi Theta, Zeta Chapter. Your application has been received and we will review it shortly.<br><br>
 
