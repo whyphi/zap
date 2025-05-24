@@ -71,15 +71,25 @@ class ApplicantService:
 
     def apply(self, data: JSONType):
         """Handles the form submission application"""
+        if not isinstance(data, dict):
+            raise ValueError("Expected a dictionary")
+
+        data["gradYear"] = "2025"
+        applicant_id = str(uuid.uuid4())
+        data["id"] = applicant_id
 
         data = CaseConverter.convert_keys(
             data=data, convert_func=CaseConverter.to_snake_case
         )
+
         if not isinstance(data, dict):
             logger.error(f"[ApplicantService.apply] Invalid inputs: {data}")
             raise ValidationError(GENERIC_CLIENT_ERROR)
 
         Application.model_validate(data)
+
+        # TODO: implement remaining function
+        raise Exception
 
         listing_data = db.get_item(
             table_name="zap-listings", key={"listingId": data["listingId"]}
