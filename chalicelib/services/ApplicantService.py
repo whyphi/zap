@@ -83,8 +83,8 @@ class ApplicantService:
             data=data, convert_func=CaseConverter.to_snake_case
         )
 
+        # Type validation (TODO: clean CaseConverter up... specifically the JSONType def... to avoid this)
         if not isinstance(data, dict):
-            logger.error(f"[ApplicantService.apply] Invalid inputs: {data}")
             raise ValidationError(GENERIC_CLIENT_ERROR)
 
         Application.model_validate(data)
@@ -104,6 +104,7 @@ class ApplicantService:
         ):
             raise ValidationError(GENERIC_CLIENT_ERROR)
 
+        # Retrieve deadline and validate current time
         listing_data = self.listings_repo.get_by_id(listing_id)
         deadline = listing_data["deadline"]
 
@@ -130,8 +131,6 @@ class ApplicantService:
         # print(f"[EST] Current Time:    {curr_time_est.strftime(pretty_format)}")
         # print(f"[EST] Deadline:        {datetime_deadline_est.strftime(pretty_format)}")
 
-        raise Exception("made it here :)")
-
         # Upload resume and retrieve, then set link to data
         resume_path = f"resume/{listing_id}/{last_name}_{first_name}_{applicant_id}.pdf"
         resume_url = s3.upload_binary_data(resume_path, resume)
@@ -144,7 +143,7 @@ class ApplicantService:
         # Reset data properties as S3 url
         data["resume"], data["image"] = resume_url, image_url
 
-        # Upload data to DynamoDB
+        # Upload data to Supabase
         self.applications_repo.create(data=data)
 
         # Send confirmation email
@@ -172,7 +171,6 @@ class ApplicantService:
             html=email_content,
         )
 
-        raise Exception("U did it yay :)")
         return {"msg": True, "resumeUrl": resume_url}
 
 
