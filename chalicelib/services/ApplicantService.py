@@ -25,12 +25,17 @@ class ApplicantService:
         self.applications_repo = RepositoryFactory.applications()
 
     def get(self, id: str):
-        data = db.get_item(table_name="zap-applications", key={"applicantId": id})
-        return data
+        data = self.applications_repo.get_by_id(id_value=id)
+        return CaseConverter.convert_keys(
+            data=data, convert_func=CaseConverter.to_camel_case
+        )
 
     def get_all(self):
-        data = db.get_all(table_name="zap-applications")
-        return data
+        data = self.applications_repo.get_all()
+        # TODO: fix type conversion... may need to decrease strictness in CaseConverter
+        return CaseConverter.convert_keys(
+            data=data, convert_func=CaseConverter.to_camel_case
+        )
 
     def get_all_from_listing(self, id: str):
         listing = db.get_item(table_name="zap-listings", key={"listingId": id})
