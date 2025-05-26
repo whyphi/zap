@@ -1,8 +1,6 @@
 import base64
 import random
 import hashlib
-import re
-from typing import Union, Any, Callable
 
 
 def decode_base64(base64_data):
@@ -56,67 +54,3 @@ def hash_value(value):
 
         # Return a truncated version of the hashed value
         return hashed_value[:random_length]
-
-
-JSONType = Union[dict[str, "JSONType"], list["JSONType"], str, int, float, bool, None]
-
-
-class CaseConverter:
-    @staticmethod
-    def is_camel_case(s: str) -> bool:
-        return bool(re.fullmatch(r"[a-z]+(?:[A-Z][a-z0-9]*)*", s))
-
-    @staticmethod
-    def to_snake_case(camel_str):
-        # Edge Case: input is not camel case
-        if not CaseConverter.is_camel_case(camel_str):
-            return camel_str
-        return re.sub(r"(?<!^)(?=[A-Z])", "_", camel_str).lower()
-
-    @staticmethod
-    def to_camel_case(snake_str):
-        parts = snake_str.split("_")
-        return parts[0] + "".join(word.capitalize() for word in parts[1:])
-
-    @classmethod
-    def convert_keys(
-        cls, data: JSONType, convert_func: Callable[[str], str]
-    ) -> JSONType:
-        """
-        Converts dictionary keys from snake_case to camelCase or vice versa (e.g., `CaseConverter.convert_keys(data, CaseConverter.to_snake_case)`).
-
-        Args:
-            data (JSONType): Data to be converted.
-            convert_func (func): Either `to_snake_case` or `to_camel_case`
-
-        Returns:
-            JSONType: The data structure with keys converted using the provided function.
-        """
-        if isinstance(data, list):
-            return [cls.convert_keys(item, convert_func) for item in data]
-        elif isinstance(data, dict):
-            return {
-                convert_func(key): cls.convert_keys(value, convert_func)
-                for key, value in data.items()
-            }
-        return data
-
-
-# # Sample tests
-# data = [
-#     {"helloWorld": {"thisIsCool": 1}},
-#     {"helloThereWorld": 2},
-#     {"Hello": 1},
-#     {"HELLO": 1},
-#     {"HelloWorld": 1},
-#     {"helloWORLD": 1},  # TODO: fix this edge case
-# ]
-# output = CaseConverter.convert_keys(data=data, convert_func=CaseConverter.to_snake_case)
-# output2 = CaseConverter.convert_keys(
-#     data=output, convert_func=CaseConverter.to_camel_case
-# )
-# print(data)
-# print("#######################")
-# print(output)
-# print("#######################")
-# print(output2)

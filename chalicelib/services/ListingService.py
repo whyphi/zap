@@ -1,8 +1,6 @@
 from chalice.app import BadRequestError
-from pydantic import ValidationError
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.services.EventsRushService import events_rush_service
-from chalicelib.utils import CaseConverter, JSONType
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import uuid
 import logging
@@ -17,14 +15,7 @@ class ListingService:
         self.listings_repo = RepositoryFactory.listings()
 
     # TODO: prevent duplicate names... (also for rush-category)
-    def create(self, data: JSONType):
-        data = CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_snake_case
-        )
-        if not isinstance(data, dict):
-            logger.error(f"[ApplicantService.apply] Invalid inputs: {data}")
-            raise ValidationError(GENERIC_CLIENT_ERROR)
-
+    def create(self, data: dict):
         id = str(uuid.uuid4())
         data["id"] = id
         data["is_visible"] = True
@@ -45,16 +36,11 @@ class ListingService:
 
     def get(self, id: str):
         data = self.listings_repo.get_by_id(id_value=id)
-        return CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_camel_case
-        )
+        return data
 
     def get_all(self):
         data = self.listings_repo.get_all()
-        # TODO: fix type conversion... may need to decrease strictness in CaseConverter
-        return CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_camel_case
-        )
+        return data
 
     # TODO: also delete corresponding rush-category
     def delete(self, id: str):
