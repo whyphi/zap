@@ -8,8 +8,6 @@ from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
 from chalicelib.utils import get_file_extension_from_base64
-from chalicelib.utils import CaseConverter, JSONType
-from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from chalicelib.db import db
 from chalicelib.s3 import s3
 import json
@@ -26,16 +24,11 @@ class ApplicantService:
 
     def get(self, id: str):
         data = self.applications_repo.get_by_id(id_value=id)
-        return CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_camel_case
-        )
+        return data
 
     def get_all(self):
         data = self.applications_repo.get_all()
-        # TODO: fix type conversion... may need to decrease strictness in CaseConverter
-        return CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_camel_case
-        )
+        return data
 
     def get_all_from_listing(self, id: str):
         listing = db.get_item(table_name="zap-listings", key={"listingId": id})
@@ -76,21 +69,10 @@ class ApplicantService:
             for event in events
         }
 
-    def apply(self, data: JSONType):
+    def apply(self, data: dict):
         """Handles the form submission application"""
-        if not isinstance(data, dict):
-            raise ValueError("Expected a dictionary")
-
         applicant_id = str(uuid.uuid4())
         data["id"] = applicant_id
-
-        data = CaseConverter.convert_keys(
-            data=data, convert_func=CaseConverter.to_snake_case
-        )
-
-        # Type validation (TODO: clean CaseConverter up... specifically the JSONType def... to avoid this)
-        if not isinstance(data, dict):
-            raise ValidationError(GENERIC_CLIENT_ERROR)
 
         Application.model_validate(data)
 
@@ -100,14 +82,6 @@ class ApplicantService:
         first_name = data["first_name"]
         resume = data["resume"]
         image = data["image"]
-
-        # Type validation (TODO: clean CaseConverter up... specifically the JSONType def... to avoid this)
-        if not (
-            isinstance(listing_id, str)
-            and isinstance(resume, str)
-            and isinstance(image, str)
-        ):
-            raise ValidationError(GENERIC_CLIENT_ERROR)
 
         # Retrieve deadline and validate current time
         listing_data = self.listings_repo.get_by_id(listing_id)
