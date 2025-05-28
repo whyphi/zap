@@ -240,7 +240,7 @@ class JobPostingService:
             # TODO: Keep an eye out for more edge cases and add them to the hotfix
             try:
                 date_obj = dateStr[:-1]
-                if int(date_obj) <= 7:
+                if int(date_obj) >= 7:
                     return True
                 return False
             except (ValueError, IndexError) as e:
