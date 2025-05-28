@@ -31,22 +31,24 @@ class ApplicantService:
         return data
 
     def get_all_from_listing(self, id: str):
-        listing = db.get_item(table_name="zap-listings", key={"listingId": id})
-        data = db.get_applicants(table_name="zap-applications", listing_id=id)
+        listing = self.listings_repo.get_by_id(id_value=id)
+        data = self.applications_repo.get_all_by_field(field="listing_id", value=id)
 
-        # automated rush event logic (NOTE: does not override existing rush event logic)
-        rush_category_id = listing.get("rushCategoryId", None)
-        if rush_category_id:
-            analytics = self._get_rush_analytics(rush_category_id)
-            attendees = analytics.get("attendees", {})
-            events = analytics.get("events", [])
+        # TODO: re-implement this
+        # # automated rush event logic (NOTE: does not override existing rush event logic)
+        # rush_category_id = listing.get("rushCategoryId", None)
+        # if rush_category_id:
+        #     analytics = self._get_rush_analytics(rush_category_id)
+        #     attendees = analytics.get("attendees", {})
+        #     events = analytics.get("events", [])
 
-            for applicant in data:
-                applicant["events"] = self._get_applicant_events(
-                    email=applicant["email"], attendees=attendees, events=events
-                )
+        #     for applicant in data:
+        #         applicant["events"] = self._get_applicant_events(
+        #             email=applicant["email"], attendees=attendees, events=events
+        #         )
 
-        if "isEncrypted" in listing and listing["isEncrypted"]:
+        is_encrypted = listing.get("is_encrypted", False)
+        if is_encrypted:
             data = hash_value(data)
 
         return data
@@ -99,16 +101,6 @@ class ApplicantService:
                 headers={"Content-Type": "text/plain"},
                 status_code=410,
             )
-
-        # Date tests...
-        # datetime_deadline_est = deadline_utc.astimezone(ZoneInfo("America/New_York"))
-        # curr_time_utc = datetime.now(timezone.utc)
-        # curr_time_est = curr_time_utc.astimezone(ZoneInfo("America/New_York"))
-        # pretty_format = "%d/%m/%Y %I:%M %p"
-        # print(f"[UTC] Current Time:    {curr_time_utc.strftime(pretty_format)}")
-        # print(f"[UTC] Deadline:        {deadline_utc.strftime(pretty_format)}")
-        # print(f"[EST] Current Time:    {curr_time_est.strftime(pretty_format)}")
-        # print(f"[EST] Deadline:        {datetime_deadline_est.strftime(pretty_format)}")
 
         # Upload resume and retrieve, then set link to data
         resume_path = f"resume/{listing_id}/{last_name}_{first_name}_{applicant_id}.pdf"
