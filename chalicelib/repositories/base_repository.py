@@ -49,6 +49,22 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_id] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
+    def get_all_by_field(
+        self, field: str, value: Any, select_query: str = "*"
+    ) -> List[Dict]:
+        """Get all records where a specific field matches a value"""
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .select(select_query)
+                .eq(field, value)
+                .execute()
+            )
+            return response.data
+        except APIError as e:
+            logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
+
     def create(self, data: Dict):
         """Create a new record"""
         try:

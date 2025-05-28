@@ -30,7 +30,7 @@ class Application(BaseModel):
     first_name: str
     last_name: str
     preferred_name: Optional[str]
-    gpa: float
+    gpa: Optional[float]
     has_gpa: bool
     grad_month: str
     grad_year: int
