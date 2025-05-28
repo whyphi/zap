@@ -1,7 +1,9 @@
 from chalice.app import Blueprint
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.modules.mongo import MongoModule
+from chalicelib.decorators import auth
 from chalicelib.services.BroadcastService import broadcast_service
+from chalicelib.models.roles import Roles
 import boto3
 
 broadcast_api = Blueprint(__name__)
@@ -18,6 +20,7 @@ def test_functions():
 
 # why is GET needed?
 @broadcast_api.route("/broadcast", methods=["GET", "POST"], cors=True)
+@auth(broadcast_api, roles=[Roles.ADMIN])
 def send_announcement():
     MongoServer = MongoModule()
     MongoServer.connect()
@@ -49,7 +52,7 @@ def test_email():
     
     for email in emails:
         broadcast_service.send_newsletter(
-            subject="Test Email",
+            subject="PCT Weekly Newsletter Beta Test",
             content=html["html"],
             recipients=[email],
         )
