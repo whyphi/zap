@@ -2,11 +2,16 @@
   "version": "2.0",
   "app_name": "zap",
   "stages": {
-    "dev": {
+    "local": {
+      "environment_variables": {
+        "ENV": "local"
+      }
+    },
+    "staging": {
       "autogen_policy": false,
       "iam_policy_file": "policy-dev.json",
       "environment_variables": {
-        "ENV": "dev"
+        "ENV": "staging"
       },
       "lambda_memory_size": 256,
       "api_gateway_stage": "api"
