@@ -116,16 +116,6 @@ def test_delete_listing_not_found(service):
         listing_service.delete(SAMPLE_LISTINGS[0]["id"])
 
 
-# def test_delete_listing_exception(service):
-#     listing_service, mock_db = service
-
-#     mock_db.delete_item.side_effect = Exception("Error")
-
-#     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-
-#     assert result["statusCode"] == 500
-
-
 # def test_toggle_visibility(service):
 #     listing_service, mock_db = service
 
