@@ -11,11 +11,11 @@ print(f"[supabase_client] Running in env: {ENV}")
 
 class SupabaseClient:
     def __init__(self):
-        if ENV in ["dev", "prod"]:
+        if ENV in ["staging", "prod"]:
             self.url = aws_ssm.get_parameter_value(f"/Zap/{ENV}/SUPABASE_URL")
             self.key = aws_ssm.get_parameter_value(f"/Zap/{ENV}/SUPABASE_KEY")
         else:
-            load_dotenv()
+            load_dotenv(".env.local")
             self.url = os.getenv("SUPABASE_URL")
             self.key = os.getenv("SUPABASE_KEY")
 
