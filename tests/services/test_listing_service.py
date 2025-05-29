@@ -107,14 +107,13 @@ def test_delete_listing(service):
     assert result == {"msg": True}
 
 
-# def test_delete_listing_not_found(service):
-#     listing_service, mock_db = service
+def test_delete_listing_not_found(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.delete_item.return_value = False
+    mock_listings_repo.delete.side_effect = NotFoundError("Listing not found.")
 
-#     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-
-#     assert result["statusCode"] == 404
+    with pytest.raises(NotFoundError):
+        listing_service.delete(SAMPLE_LISTINGS[0]["id"])
 
 
 # def test_delete_listing_exception(service):
