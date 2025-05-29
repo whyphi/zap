@@ -116,18 +116,17 @@ def test_delete_listing_not_found(service):
         listing_service.delete(SAMPLE_LISTINGS[0]["id"])
 
 
-# def test_toggle_visibility(service):
-#     listing_service, mock_db = service
+def test_toggle_visibility(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.toggle_visibility.return_value = True
-#     mock_listing_id = SAMPLE_LISTINGS[0]["listingId"]
+    mock_listing_id = SAMPLE_LISTINGS[0]["id"]
+    result = listing_service.toggle_visibility(mock_listing_id)
 
-#     result = json.loads(listing_service.toggle_visibility(mock_listing_id))
+    mock_listings_repo.toggle_boolean_field.assert_called_once_with(
+        id_value=SAMPLE_LISTINGS[0]["id"], field="is_visible"
+    )
 
-#     mock_db.toggle_visibility.assert_called_once_with(
-#         table_name="zap-listings", key={"listingId": mock_listing_id}
-#     )
-#     assert result["statusCode"] == 200
+    assert result == {"msg": True}
 
 
 # def test_toggle_visibility_invalid_listing_id(service):
