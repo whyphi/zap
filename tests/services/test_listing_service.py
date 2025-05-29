@@ -72,17 +72,17 @@ def test_create_listing(service):
         assert result == {"msg": True}
 
 
-# def test_get_listing(service):
-#     listing_service, mock_db = service
+def test_get_listing(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.get_item.return_value = SAMPLE_LISTINGS[0]
+    mock_listings_repo.get_by_id.return_value = SAMPLE_LISTINGS[0]
 
-#     result = listing_service.get(SAMPLE_LISTINGS[0]["listingId"])
-#     mock_db.get_item.assert_called_once_with(
-#         table_name="zap-listings", key={"listingId": SAMPLE_LISTINGS[0]["listingId"]}
-#     )
+    result = listing_service.get(SAMPLE_LISTINGS[0]["id"])
+    mock_listings_repo.get_by_id.assert_called_once_with(
+        id_value=SAMPLE_LISTINGS[0]["id"]
+    )
 
-#     assert result == SAMPLE_LISTINGS[0]
+    assert result == SAMPLE_LISTINGS[0]
 
 
 # def test_get_all_listings(service):
