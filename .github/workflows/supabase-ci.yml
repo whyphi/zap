@@ -1,6 +1,8 @@
 # Source: https://supabase.com/docs/guides/deployment/managing-environments?queryGroups=environment&environment=ci#configure-github-actions
 # Description: Runs on PRs to verify migrations, CLI usage, etc.
 
+# TODO: we might not need this workflow (not using Supabase to generate TS types)
+
 name: CI
 
 on:
@@ -21,7 +23,6 @@ jobs:
       - name: Start Supabase local development setup
         run: supabase db start
 
-        # TODO: we might not need this step (not using Supabase to generate TS types)
       - name: Verify generated types are checked in
         run: |
           supabase gen types typescript --local > types.gen.ts
