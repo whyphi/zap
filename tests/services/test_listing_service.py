@@ -96,13 +96,15 @@ def test_get_all_listings(service):
     assert result == SAMPLE_LISTINGS
 
 
-# def test_delete_listing(service):
-#     listing_service, mock_db = service
+def test_delete_listing(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.delete_item.return_value = True
+    mock_listings_repo.delete.return_value = True
 
-#     result = listing_service.delete(SAMPLE_LISTINGS[0]["listingId"])
-#     assert result["statusCode"] == 200
+    result = listing_service.delete(SAMPLE_LISTINGS[0]["id"])
+    mock_listings_repo.delete.assert_called_once_with(id_value=SAMPLE_LISTINGS[0]["id"])
+
+    assert result == {"msg": True}
 
 
 # def test_delete_listing_not_found(service):
