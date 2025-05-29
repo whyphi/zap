@@ -85,15 +85,15 @@ def test_get_listing(service):
     assert result == SAMPLE_LISTINGS[0]
 
 
-# def test_get_all_listings(service):
-#     listing_service, mock_db = service
+def test_get_all_listings(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.get_all.return_value = SAMPLE_LISTINGS
+    mock_listings_repo.get_all.return_value = SAMPLE_LISTINGS
 
-#     result = listing_service.get_all()
-#     mock_db.get_all.assert_called_once_with(table_name="zap-listings")
+    result = listing_service.get_all()
+    mock_listings_repo.get_all.assert_called_once()
 
-#     assert result == SAMPLE_LISTINGS
+    assert result == SAMPLE_LISTINGS
 
 
 # def test_delete_listing(service):
