@@ -147,15 +147,18 @@ def test_toggle_visibility_invalid_listing_id(service):
     )
 
 
-# def test_toggle_visibility_exception(service):
-#     listing_service, mock_db = service
+def test_toggle_visibility_exception(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.toggle_visibility.side_effect = Exception("Error")
+    mock_listings_repo.toggle_boolean_field.return_value = None
+    mock_listings_repo.toggle_boolean_field.side_effect = Exception("Error.")
 
-#     result = json.loads(
-#         listing_service.toggle_visibility(SAMPLE_LISTINGS[0]["listingId"])
-#     )
-#     assert result["statusCode"] == 500
+    with pytest.raises(Exception):
+        listing_service.toggle_visibility(id=SAMPLE_LISTINGS[0]["id"])
+
+    mock_listings_repo.toggle_boolean_field.assert_called_once_with(
+        id_value=SAMPLE_LISTINGS[0]["id"], field="is_visible"
+    )
 
 
 # def test_update_field_route(service):
