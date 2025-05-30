@@ -101,7 +101,7 @@ def test_delete_listing(service):
 
     mock_listings_repo.delete.return_value = True
 
-    result = listing_service.delete(SAMPLE_LISTINGS[0]["id"])
+    result = listing_service.delete(id=SAMPLE_LISTINGS[0]["id"])
     mock_listings_repo.delete.assert_called_once_with(id_value=SAMPLE_LISTINGS[0]["id"])
 
     assert result == {"msg": True}
@@ -120,7 +120,7 @@ def test_toggle_visibility(service):
     listing_service, mock_listings_repo = service
 
     mock_listing_id = SAMPLE_LISTINGS[0]["id"]
-    result = listing_service.toggle_visibility(mock_listing_id)
+    result = listing_service.toggle_visibility(id=mock_listing_id)
 
     mock_listings_repo.toggle_boolean_field.assert_called_once_with(
         id_value=SAMPLE_LISTINGS[0]["id"], field="is_visible"
@@ -129,21 +129,22 @@ def test_toggle_visibility(service):
     assert result == {"msg": True}
 
 
-# def test_toggle_visibility_invalid_listing_id(service):
-#     listing_service, mock_db = service
+def test_toggle_visibility_invalid_listing_id(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.toggle_visibility.return_value = None
-#     mock_listing_id = "3"
+    mock_listings_repo.toggle_boolean_field.return_value = None
+    mock_listings_repo.toggle_boolean_field.side_effect = NotFoundError(
+        "Listing not found."
+    )
 
-#     result = json.loads(listing_service.toggle_visibility(mock_listing_id))
+    mock_listing_id = "3"
 
-#     mock_db.toggle_visibility.assert_called_once_with(
-#         table_name="zap-listings", key={"listingId": mock_listing_id}
-#     )
+    with pytest.raises(NotFoundError):
+        listing_service.toggle_visibility(id=mock_listing_id)
 
-#     print(result)
-
-#     assert result["statusCode"] == 400
+    mock_listings_repo.toggle_boolean_field.assert_called_once_with(
+        id_value=mock_listing_id, field="is_visible"
+    )
 
 
 # def test_toggle_visibility_exception(service):
