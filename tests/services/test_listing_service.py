@@ -161,32 +161,22 @@ def test_toggle_visibility_exception(service):
     )
 
 
-# def test_update_field_route(service):
-#     listing_service, mock_db = service
+def test_update_field_route(service):
+    listing_service, mock_listings_repo = service
 
-#     # Mocking UpdateFieldRequest
-#     with patch(
-#         "chalicelib.validators.listings.UpdateFieldRequest"
-#     ) as MockUpdateFieldRequest:
-#         # Simulating the behavior of UpdateFieldRequest
-#         MockUpdateFieldRequest.return_value.field = "title"
-#         MockUpdateFieldRequest.return_value.value = "new test title"
+    mock_listings_repo.update_field.return_value = None
+    mock_listings_repo.update.return_value = None
 
-#         mock_db.get_item.return_value = SAMPLE_LISTINGS[0]
-#         mock_updated_listing = SAMPLE_LISTINGS[0]
-#         mock_updated_listing["title"] = "new test title"
+    result = listing_service.update_field_route(
+        SAMPLE_LISTINGS[0]["id"],
+        {"field": "title", "value": "new test title"},
+    )
 
-#         mock_db.update_listing_field.return_value = mock_updated_listing
+    mock_listings_repo.update_field.assert_called_once_with(
+        id_value=SAMPLE_LISTINGS[0]["id"], field="title", value="new test title"
+    )
 
-#         result = json.loads(
-#             listing_service.update_field_route(
-#                 SAMPLE_LISTINGS[0]["listingId"],
-#                 {"field": "title", "value": "new test title"},
-#             )
-#         )
-
-#         assert result["statusCode"] == 200
-#         assert result["updated_listing"] == mock_updated_listing
+    assert result == {"msg": True}
 
 
 # def test_update_field_listing_not_found(service):
