@@ -1,6 +1,43 @@
 from chalicelib.modules.ses import ses, SesDestination
 from chalicelib.services.JobPostingService import job_posting_service
+from chalicelib.utils import get_newsletter_css
 from typing import List, Dict
+
+# Job sources constant for better maintainability
+JOB_SOURCE_LIST = {
+    "Tech": [
+        {
+            "name": "SimplifyJobs", 
+            "link": "https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md", 
+            "display_link": "https://github.com/SimplifyJobs/Summer2025-Internships"
+         },
+        {
+            "name": "Cvrve", 
+            "link": "https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md", 
+            "display_link": "https://github.com/cvrve/Summer2025-Internships"
+         }
+    ],
+    "Finance": [
+        {
+            "name": "RecruitU", 
+            "link": "https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/", 
+            "display_link": "https://docs.google.com/spreadsheets/d/15za1luZR08YmmBIFOAk6-GJB3T22StEuiZgFFuJeKW0/"}
+    ],
+    "Consulting": [
+        {
+            "name": "Jobright-ai", 
+            "link": "https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md", 
+            "display_link": "https://github.com/jobright-ai/2025-Consultant-Internship"
+         }
+    ],
+    "Marketing": [
+        {
+            "name": "Jobright-ai", 
+            "link": "https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md", 
+            "display_link": "https://github.com/jobright-ai/2025-Marketing-Internship"
+         }
+    ]
+}
 
 class BroadcastService:
     def __init__(self):
@@ -10,23 +47,44 @@ class BroadcastService:
         """
         Generates an HTML section for a given list of jobs.
         """
-        html = f"<div class='jobs-section'><h2>{section_title} Opportunities</h2><ul class='job-list'>"
+        # Banner image URLs based on section title
+        banner_urls = {
+            "Finance": "https://whyphi-public.s3.us-east-1.amazonaws.com/finance_opportunities.jpg",
+            "Tech": "https://whyphi-public.s3.us-east-1.amazonaws.com/tech_opportunities.jpg",
+            "Consulting": "https://whyphi-public.s3.us-east-1.amazonaws.com/consulting_opportunities.jpg",
+            "Marketing": "https://whyphi-public.s3.us-east-1.amazonaws.com/marketing_opportunities.jpg"
+        }
+        
+        banner_url = banner_urls.get(section_title, "")
+        banner_html = f'<div class="section-banner"><img src="{banner_url}" alt="{section_title} Banner" /></div>' if banner_url else ""
+        
+        html = f"""
+        <div class='jobs-section'>
+            {banner_html}
+        """
+        
         for job in jobs:
             company = job.get("company", "N/A")
             role = job.get("role", "N/A")
             link = job.get("link", "#")
             deadline = job.get("date", "N/A")
             
-            job_line = (
-                f"{company} | {role} | "
-                f"<a href='{link}' target='_blank'>Link</a> | {deadline}"
-            )
+            # Use "Deadline" for Finance jobs and "Posted" for all other job types
+            date_label = "Deadline" if section_title == "Finance" else "Posted"
             
-            html += f"<li class='job-item'>{job_line}</li>"
-        html += "</ul></div>"
+            html += f"""
+            <div class='job-item'>
+                <div class='job-title'>{company} | {role}</div>
+                <div class='job-details'>
+                    <a href='{link}' target='_blank'>Apply</a> | {date_label}: {deadline}
+                </div>
+            </div>
+            """
+        
+        html += "</div>"
         return html
 
-    def generate_newsletter_content(self, custom_content: str = "") -> Dict:
+    def generate_newsletter_content(self, custom_content: str = "Thanks for signing up for the PCT Weekly Newsletter beta test! We would love to incorporate your feedback as much as possible so if you do, please fill out this form: https://forms.gle/nW8cJPzXvHnyfkzV9 or reach out to Matthew and Vincent at mhyan@bu.edu and vinli@bu.edu or through slack.\nBest of luck with finals this week!") -> Dict:
         """
         Generates a complete newsletter with four sections:
             - Finance: Data from Google Sheets
@@ -37,19 +95,21 @@ class BroadcastService:
         Returns:
             Dict: A dictionary with HTML content and the raw job data.
         """
-        # Finance jobs from Google Sheets
-        finance_jobs = self.ps.getFinanceJobs()
+        # Finance jobs from RecruitU Google Sheets
+        finance_jobs = self.ps.get_finance_jobs()
         
-        # Tech jobs: Merge data from both Simplify and Crve GitHub repos
-        tech_jobs_simplify = self.ps.getJobs("https://github.com/SimplifyJobs/Summer2025-Internships/blob/dev/README.md")
-        tech_jobs_cvre = self.ps.getJobs("https://github.com/cvrve/Summer2025-Internships/blob/dev/README.md")
-        tech_jobs = tech_jobs_simplify + tech_jobs_cvre
+        # Fetch jobs from sources defined in JOB_SOURCE_LIST
+        tech_jobs = []
+        for source in JOB_SOURCE_LIST["Tech"]:
+            tech_jobs += self.ps.get_jobs(source["link"])
         
-        # Consulting jobs from jobright-ai Consultant GitHub repo
-        consulting_jobs = self.ps.getJobs("https://github.com/jobright-ai/2025-Consultant-Internship/blob/master/README.md")
+        consulting_jobs = []
+        for source in JOB_SOURCE_LIST["Consulting"]:
+            consulting_jobs += self.ps.get_jobs(source["link"])
         
-        # Marketing jobs from jobright-ai Marketing GitHub repo
-        marketing_jobs = self.ps.getJobs("https://github.com/jobright-ai/2025-Marketing-Internship/blob/master/README.md")
+        marketing_jobs = []
+        for source in JOB_SOURCE_LIST["Marketing"]:
+            marketing_jobs += self.ps.get_jobs(source["link"])
         
         # Generate HTML for each section
         finance_section = self.generate_section_html("Finance", finance_jobs)
@@ -57,35 +117,74 @@ class BroadcastService:
         consulting_section = self.generate_section_html("Consulting", consulting_jobs)
         marketing_section = self.generate_section_html("Marketing", marketing_jobs)
         
-        # Common CSS for styling the newsletter sections
-        css = """
-        <style>
-            .jobs-section { margin: 20px 0; }
-            .job-list { list-style-type: none; padding-left: 0; }
-            .job-item { 
-                margin-bottom: 15px;
-                padding: 10px;
-                border-left: 3px solid #007bff;
-                background-color: #f8f9fa;
-            }
-            .job-header { margin-bottom: 5px; }
-            .company-name { color: #007bff; text-decoration: none; }
-            .deadline { color: #6c757d; margin-left: 10px; }
-            .job-role { margin: 5px 0; color: #212529; }
-        </style>
+        # Get CSS from utils function
+        css = get_newsletter_css()
+        
+        # Generate job sources HTML dynamically from JOB_SOURCE_LIST
+        job_sources_html = """
+        <div class="job-sources">
+            <p>All jobs listed have been posted within the last 7 days from these repositories:</p>
+        """
+        
+        for category, sources in JOB_SOURCE_LIST.items():
+            job_sources_html += f"<p>{category}: "
+            links = []
+            for i, source in enumerate(sources):
+                links.append(f'<a href="{source["display_link"]}" target="_blank">{source["name"]}</a>')
+            
+            job_sources_html += " and ".join(links) + "</p>"
+        
+        job_sources_html += """
+            <p>These repositories are updated daily, so please check them often. Best of luck with your job search!</p>
+        </div>
         """
         
         full_html = f"""
-        {css}
-        <div class="newsletter">
-            <div class="custom-content">
-                {custom_content}
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            {css}
+        </head>
+        <body>
+            <div class="newsletter-container">
+                <div class="newsletter-header">
+                </div>
+                
+                <div class="welcome-message">
+                    <h2>Welcome to PCT's Weekly Newsletter</h2>
+                    {custom_content}
+                </div>
+                
+                <div class="main-content">
+                    <div class="job-opportunities-banner">
+                        <img src="https://whyphi-public.s3.us-east-1.amazonaws.com/job_opportunities.jpg" alt="Job Opportunities" />
+                    </div>
+                    
+                    {job_sources_html}
+                    
+                    {tech_section}
+                    {finance_section}
+                    {marketing_section}
+                    {consulting_section}
+                    
+                    <div class="events-section">
+                        <h2 class="section-title">Events</h2>
+                        <!-- Events content can be added here -->
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <div class="social-links">
+                        <a href="#" target="_blank">🔗</a>
+                        <a href="#" target="_blank">📷</a>
+                        <a href="#" target="_blank">📱</a>
+                    </div>
+                </div>
             </div>
-            {finance_section}
-            {tech_section}
-            {consulting_section}
-            {marketing_section}
-        </div>
+        </body>
+        </html>
         """
         
         return {

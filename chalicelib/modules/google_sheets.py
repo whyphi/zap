@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 import boto3
 import json
 from thefuzz import fuzz
+import re
 
 
 class GoogleSheetsModule:
@@ -132,6 +133,99 @@ class GoogleSheetsModule:
         next_col = chr(ord("A") + len(events))
 
         return next_col
+
+    def get_sheet_with_grid_data(self, spreadsheet_id: str, sheet_name: str):
+        """
+        Retrieves full grid data including cell metadata with hyperlink information.
+        
+        Grid data is a detailed representation of sheet contents returned by the Google Sheets API
+        when includeGridData=True. It contains comprehensive information about each cell including
+        values, formatting, data validation rules, hyperlinks, notes, and other metadata. This
+        structure allows access to all cell information beyond just the displayed values.
+        
+        Args:
+            spreadsheet_id (str): The ID of the spreadsheet.
+            sheet_name (str): The name of the sheet to retrieve.
+            
+        Returns:
+            dict: The complete sheet data including grid data with hyperlinks.
+        """
+        # Get the sheet ID first
+        sheets = self.get_sheets(spreadsheet_id, include_properties=True)
+        sheet_id = next((sheet.get("sheetId") for sheet in sheets if sheet.get("title") == sheet_name), None)
+        
+        if sheet_id is None:
+            return None
+        
+        # Request the sheet with full grid data including hyperlinks
+        response = self.service.spreadsheets().get(
+            spreadsheetId=spreadsheet_id,
+            ranges=[sheet_name],
+            includeGridData=True
+        ).execute()
+        
+        if "sheets" in response and len(response["sheets"]) > 0:
+            return response["sheets"][0]
+        
+        return None
+    
+    def get_hyperlink_from_grid_data(self, sheet_data, row_index, col_index):
+        """
+        Extracts hyperlink from grid data for a specific cell.
+        
+        Args:
+            sheet_data (dict): Sheet data returned by get_sheet_with_grid_data.
+            row_index (int): The row index (1-based).
+            col_index (int): The column index (0-based).
+            
+        Returns:
+            str: The hyperlink URL or None if not found.
+        """
+        if sheet_data is None:
+            return None
+        if "data" not in sheet_data:
+            return None
+        if sheet_data["data"] is None:
+            return None
+            
+        grid_data = sheet_data["data"][0]
+        
+        # Convert to 0-based row index
+        row_index = row_index - 1
+        
+        # Check if the row exists
+        if "rowData" not in grid_data or row_index >= len(grid_data["rowData"]):
+            return None
+            
+        row_data = grid_data["rowData"][row_index]
+        
+        # Check if the cell exists in this row
+        if "values" not in row_data or col_index >= len(row_data["values"]):
+            return None
+            
+        cell = row_data["values"][col_index]
+        
+        # Check if the cell has a hyperlink
+        if "hyperlink" in cell.get("userEnteredValue", {}).get("formulaValue", ""):
+            # Extract URL from formula
+            formula = cell["userEnteredValue"]["formulaValue"]
+            match = re.match(r'=HYPERLINK\("(.*?)"', formula)
+            if match:
+                return match.group(1)
+        elif "hyperlink" in cell.get("hyperlink", {}):
+            return cell["hyperlink"]
+        elif "hyperlinkUrl" in cell.get("dataValidation", {}):
+            return cell["dataValidation"]["hyperlinkUrl"]
+        elif "hyperlinkDisplayType" in cell and "hyperlinkUrl" in cell:
+            return cell["hyperlinkUrl"]
+        
+        # For UI-inserted hyperlinks
+        if "userEnteredFormat" in cell and "textFormat" in cell["userEnteredFormat"]:
+            text_format = cell["userEnteredFormat"]["textFormat"]
+            if "link" in text_format and "uri" in text_format["link"]:
+                return text_format["link"]["uri"]
+        
+        return None
 
     def add_event(self, spreadsheet_id: str, sheet_tab: str, event_name: str, col: str):
         self.service.spreadsheets().values().append(
