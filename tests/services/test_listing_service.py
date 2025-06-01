@@ -179,25 +179,20 @@ def test_update_field_route(service):
     assert result == {"msg": True}
 
 
-# def test_update_field_listing_not_found(service):
-#     listing_service, mock_db = service
+def test_update_field_listing_not_found(service):
+    listing_service, mock_listings_repo = service
 
-#     with patch(
-#         "chalicelib.validators.listings.UpdateFieldRequest"
-#     ) as MockUpdateFieldRequest:
-#         # Simulating the behavior of UpdateFieldRequest
-#         MockUpdateFieldRequest.return_value.field = "title"
-#         MockUpdateFieldRequest.return_value.value = "new test title"
+    mock_listings_repo.update_field.side_effect = NotFoundError(
+        "Listing not found."
+    )
 
-#         mock_db.get_item.return_value = {}
+    with pytest.raises(NotFoundError) as exc_info:
+        listing_service.update_field_route(
+            "non_existent_id",
+            {"field": "title", "value": "new test title"},
+        )
 
-#         with pytest.raises(NotFoundError) as exc_info:
-#             listing_service.update_field_route(
-#                 "non_existent_id",
-#                 {"field": "title", "value": "new test title"},
-#             )
-
-#         assert str(exc_info.value) == "Listing not found"
+    assert str(exc_info.value) == "Listing not found."
 
 
 # def test_update_field_updated_listing_not_found(service):
