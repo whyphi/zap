@@ -297,8 +297,8 @@ class JobPostingService:
         if self.driver is not None:
             try:
                 self.driver.quit()
-            except Exception:
-                pass
+            except Exception as e:
+                raise RuntimeError(f"Failed to close WebDriver: {e}")
             self.driver = None
 
 job_posting_service = JobPostingService()
