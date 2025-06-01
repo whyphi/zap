@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import NotFoundError, BadRequestError, UnauthorizedError
+from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
 import datetime
@@ -83,6 +83,7 @@ class EventsMemberService:
         timeframe_doc = self.mongo_module.get_document_by_id(
             f"{self.collection_prefix}timeframe", timeframe_id
         )
+
         spreadsheet_id = timeframe_doc["spreadsheetId"]
 
         # Add event name to Google Sheets

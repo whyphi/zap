@@ -50,7 +50,7 @@ def test_get_member():
     # Create a Chalice test client
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "member"}
+            mock_decode.return_value = {"roles": ["member"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.get_by_id"
@@ -69,7 +69,7 @@ def test_get_member_non_existent():
     # Create a Chalice test client
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "member"}
+            mock_decode.return_value = {"roles": ["member"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.get_by_id"
@@ -87,7 +87,7 @@ def test_get_member_non_existent():
 def test_update_member():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "member"}
+            mock_decode.return_value = {"roles": ["member"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.update"
@@ -111,7 +111,7 @@ def test_get_all_members():
     # Create a Chalice test client
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "member"}
+            mock_decode.return_value = {"roles": ["member"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.get_all"
@@ -128,7 +128,7 @@ def test_get_all_members():
 
 def test_onboard_member():
     with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-        mock_decode.return_value = {"role": "member"}
+        mock_decode.return_value = {"roles": ["member"]}
 
         with patch(
             "chalicelib.services.MemberService.member_service.onboard"
@@ -156,7 +156,7 @@ def test_onboard_member():
 
 def test_onboard_member_fail_on_mongo():
     with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-        mock_decode.return_value = {"role": "member"}
+        mock_decode.return_value = {"roles": ["member"]}
 
         with patch(
             "chalicelib.services.MemberService.member_service.onboard"
@@ -182,7 +182,7 @@ def test_onboard_member_fail_on_mongo():
 def test_create_member():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.create"
@@ -207,7 +207,7 @@ def test_create_member():
 def test_delete_members():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
 
             with patch(
                 "chalicelib.services.MemberService.member_service.delete"
@@ -231,7 +231,7 @@ def test_delete_members():
 
 def test_update_member_roles():
     with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-        mock_decode.return_value = {"role": "admin"}
+        mock_decode.return_value = {"roles": ["admin"]}
 
         with patch(
             "chalicelib.services.MemberService.member_service.update_roles"
