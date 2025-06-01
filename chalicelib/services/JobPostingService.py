@@ -9,6 +9,19 @@ from typing import List, Dict
 import re
 import functools
 
+def call_on_exit(method_name):
+    """
+    Decorator to call a method (by name) on self when the decorated method exits (returns or raises).
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)
+            finally:
+                getattr(self, method_name)()
+        return wrapper
+    return decorator
 
 class JobPostingService:
     def __init__(self):
@@ -45,20 +58,6 @@ class JobPostingService:
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         return driver
-
-    def call_on_exit(self, method_name):
-        """
-        Decorator to call a method (by name) on self when the decorated method exits (returns or raises).
-        """
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(self, *args, **kwargs):
-                try:
-                    return func(self, *args, **kwargs)
-                finally:
-                    getattr(self, method_name)()
-            return wrapper
-        return decorator
 
     @call_on_exit("_close_driver")
     def get_jobs(self, urlStr) -> List:
