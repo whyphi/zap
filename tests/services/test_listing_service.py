@@ -193,30 +193,6 @@ def test_update_field_listing_not_found(service):
     assert str(exc_info.value) == "Listing not found."
 
 
-# def test_update_field_validation_error(service):
-#     listing_service, _ = service
-
-#     validation_error_mock = Mock()
-#     validation_error_mock.side_effect = ValidationError.from_exception_data(
-#         title="Invalid data", line_errors=[]
-#     )
-
-#     # Using pytest.raises to check if a ValidationError is raised
-#     with pytest.raises(Exception) as exc_info:
-#         listing_service.update_field_route(
-#             SAMPLE_LISTINGS[0]["listingId"],
-#             {"field": "non_existent_field", "value": "new test title"},
-#         )
-
-#     exc_msgs = str(exc_info.value).split("\n")
-#     exc_msgs = [msg.strip() for msg in exc_msgs]
-
-#     assert exc_msgs[0] == "1 validation error for UpdateFieldRequest"
-#     assert (
-#         exc_msgs[2]
-#         == "Value error, Invalid field: non_existent_field. Allowed fields: ['listingId', 'dateCreated', 'deadline', 'isVisible', 'isEncrypted', 'questions', 'title'] [type=value_error, input_value='non_existent_field', input_type=str]"
-#     )
-
 
 # def test_update_field_exception(service):
 #     listing_service, mock_db = service
