@@ -211,27 +211,28 @@ def test_toggle_encryption_succeeds(service):
     listing_service, mock_listings_repo = service
 
     mock_listings_repo.toggle_boolean_field.return_value = True
+    mock_listing_id = SAMPLE_LISTINGS[0]["id"]
 
-    result = listing_service.toggle_encryption(SAMPLE_LISTINGS[0]["id"])
+    result = listing_service.toggle_encryption(mock_listing_id)
 
     mock_listings_repo.toggle_boolean_field.assert_called_once_with(
-        id_value=SAMPLE_LISTINGS[0]["id"], field="is_encrypted"
+        id_value=mock_listing_id, field="is_encrypted"
     )
 
     assert result == {"msg": True}
 
 
-# def test_toggle_encryption_invalid_listing_id_raises_not_found(service):
-#     listing_service, mock_db = service
+def test_toggle_encryption_invalid_listing_id_raises_not_found(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.toggle_encryption.return_value = None
-#     mock_listing_id = "3"
+    mock_listings_repo.toggle_boolean_field.side_effect = NotFoundError("Listing not found: 3.")
+    mock_listing_id = "3"
 
-#     with pytest.raises(NotFoundError) as exc_info:
-#         listing_service.toggle_encryption(mock_listing_id)
+    with pytest.raises(NotFoundError) as exc_info:
+        listing_service.toggle_encryption(mock_listing_id)
 
-#     mock_db.toggle_encryption.assert_called_once_with(
-#         table_name="zap-listings", key={"id": mock_listing_id}
-#     )
+    mock_listings_repo.toggle_boolean_field.assert_called_once_with(
+        id_value=mock_listing_id, field="is_encrypted"
+    )
 
-#     assert str(exc_info.value) == "Listing not found: 3"
+    assert str(exc_info.value) == "Listing not found: 3."
