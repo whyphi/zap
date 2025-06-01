@@ -7,6 +7,7 @@ from chalicelib.modules.google_sheets import GoogleSheetsModule
 from datetime import datetime, timedelta
 from typing import List, Dict
 import re
+import functools
 
 
 class JobPostingService:
@@ -44,6 +45,21 @@ class JobPostingService:
         driver = webdriver.Chrome(service=service, options=options)
         return driver
 
+    def call_on_exit(self, method_name):
+        """
+        Decorator to call a method (by name) on self when the decorated method exits (returns or raises).
+        """
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(self, *args, **kwargs):
+                try:
+                    return func(self, *args, **kwargs)
+                finally:
+                    getattr(self, method_name)()
+            return wrapper
+        return decorator
+
+    @call_on_exit("_close_driver")
     def get_jobs(self, urlStr) -> List:
         """
         Fetches job postings from the given URL and returns a list of job details.
@@ -70,11 +86,6 @@ class JobPostingService:
         table = driver.find_element(By.TAG_NAME, "table")
         body = table.find_element(By.TAG_NAME, "tbody")
         rows = body.find_elements(By.TAG_NAME, "tr")
-
-        # Close driver (to prevent unecessary cpu usage)
-        # TODO: We need to execute this after the function either 1) returns, 2) excepts, or simple 3) ends.
-        # Otherwise, the following lines will error out
-        self._close_driver()
 
         prevRowCompany = ""
         jobs = []
