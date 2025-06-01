@@ -288,4 +288,17 @@ class JobPostingService:
                 print(f"Error parsing date in alternative format: {e}")
                 return False
     
+    def _get_driver(self):
+        if self.driver is None:
+            self.driver = self._create_webdriver()
+        return self.driver
+
+    def _close_driver(self):
+        if self.driver is not None:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+            self.driver = None
+
 job_posting_service = JobPostingService()
