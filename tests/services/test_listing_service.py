@@ -207,18 +207,18 @@ def test_update_field_exception(service):
     assert str(exc_info.value) == "Error."
 
 
-# def test_toggle_encryption_succeeds(service):
-#     listing_service, mock_db = service
+def test_toggle_encryption_succeeds(service):
+    listing_service, mock_listings_repo = service
 
-#     mock_db.toggle_encryption.return_value = True
-#     mock_listing_id = SAMPLE_LISTINGS[0]["listingId"]
+    mock_listings_repo.toggle_boolean_field.return_value = True
 
-#     result = json.loads(listing_service.toggle_encryption(mock_listing_id))
+    result = listing_service.toggle_encryption(SAMPLE_LISTINGS[0]["id"])
 
-#     mock_db.toggle_encryption.assert_called_once_with(
-#         table_name="zap-listings", key={"listingId": mock_listing_id}
-#     )
-#     assert result["statusCode"] == 200
+    mock_listings_repo.toggle_boolean_field.assert_called_once_with(
+        id_value=SAMPLE_LISTINGS[0]["id"], field="is_encrypted"
+    )
+
+    assert result == {"msg": True}
 
 
 # def test_toggle_encryption_invalid_listing_id_raises_not_found(service):
@@ -231,7 +231,7 @@ def test_update_field_exception(service):
 #         listing_service.toggle_encryption(mock_listing_id)
 
 #     mock_db.toggle_encryption.assert_called_once_with(
-#         table_name="zap-listings", key={"listingId": mock_listing_id}
+#         table_name="zap-listings", key={"id": mock_listing_id}
 #     )
 
 #     assert str(exc_info.value) == "Listing not found: 3"
