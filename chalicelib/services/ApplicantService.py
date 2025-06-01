@@ -1,14 +1,11 @@
-from chalicelib.db import db
 from chalicelib.services.EventsRushService import events_rush_service
 from chalice.app import Response, BadRequestError, NotFoundError
-from pydantic import ValidationError
 from chalicelib.utils import hash_value
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
 from chalicelib.utils import get_file_extension_from_base64
-from chalicelib.db import db
 from chalicelib.s3 import s3
 import json
 import uuid
