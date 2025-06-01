@@ -46,6 +46,7 @@ def send_announcement():
 
 
 @broadcast_api.route("/test-email", methods=["GET", "POST"], cors=True)
+@auth(broadcast_api, roles=[Roles.EBOARD])
 def test_email():
     # PLEASE REPLACE WITH YOUR OWN EMAIL FOR TESTING
     html = broadcast_service.generate_newsletter_content()
