@@ -193,25 +193,18 @@ def test_update_field_listing_not_found(service):
     assert str(exc_info.value) == "Listing not found."
 
 
+def test_update_field_exception(service):
+    listing_service, mock_listings_repo = service
 
-# def test_update_field_exception(service):
-#     listing_service, mock_db = service
+    mock_listings_repo.update_field.side_effect = Exception("Error.")
 
-#     with patch(
-#         "chalicelib.validators.listings.UpdateFieldRequest"
-#     ) as MockUpdateFieldRequest:
-#         MockUpdateFieldRequest.return_value.field = "title"
-#         MockUpdateFieldRequest.return_value.value = "new test title"
+    with pytest.raises(Exception) as exc_info:
+        listing_service.update_field_route(
+            "non_existent_id",
+            {"field": "title", "value": "new test title"},
+        )
 
-#         mock_db.get_item.side_effect = Exception("Error")
-
-#         with pytest.raises(Exception) as exc_info:
-#             listing_service.update_field_route(
-#                 SAMPLE_LISTINGS[0]["listingId"],
-#                 {"field": "title", "value": "new test title"},
-#             )
-
-#         assert str(exc_info.value) == "Error"
+    assert str(exc_info.value) == "Error."
 
 
 # def test_toggle_encryption_succeeds(service):
