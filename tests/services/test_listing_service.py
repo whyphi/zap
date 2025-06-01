@@ -2,8 +2,6 @@ import pytest
 from unittest.mock import patch, Mock
 from chalicelib.services.ListingService import ListingService
 from chalice.app import NotFoundError
-from pydantic import ValidationError
-import json
 
 
 SAMPLE_LISTINGS = [
