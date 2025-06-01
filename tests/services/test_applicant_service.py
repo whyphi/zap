@@ -4,6 +4,27 @@ from chalicelib.services.ApplicantService import ApplicantService
 from chalicelib.services.ListingService import ListingService
 
 
+SAMPLE_LISTINGS = (
+        {
+            "id": "1",
+            "title": "PCT Fall 2023 Rush Application",
+            "date_created": "2023-09-15T17:03:29.156Z",
+            "deadline": "2023-09-19T04:00:00.000Z",
+            "is_visible": True,
+            "is_encrypted": False,
+            "questions": [
+                {
+                    "question": "Tell us about yourself. What are you passionate about/what motivates you? (200 words max)",
+                    "context": "",
+                },
+            ],
+        },
+    )
+SAMPLE_APPLICANTS = [
+    {"id": "sample_id1", "name": "John Doe"},
+    {"id": "sample_id2", "name": "Bob"},
+]
+
 @pytest.fixture
 def service():
     with patch(
@@ -23,40 +44,32 @@ def service():
 def test_get_applicant(service):
     applicants_service, _, mock_applicants_repo, _ = service
 
-    sample_data = {"id": "sample_id", "name": "John Doe"}
-    mock_applicants_repo.get_by_id.return_value = sample_data
+    mock_applicants_repo.get_by_id.return_value = SAMPLE_APPLICANTS
 
     result = applicants_service.get("sample_id")
     mock_applicants_repo.get_by_id.assert_called_once_with(id_value="sample_id")
 
-    assert result == sample_data
+    assert result == SAMPLE_APPLICANTS
 
 
 def test_get_all_applicants(service):
     applicants_service, _, mock_applicants_repo, _ = service
 
-    sample_data = [
-        {"id": "sample_id1", "name": "John Doe"},
-        {"id": "sample_id2", "name": "Bob"},
-    ]
-    mock_applicants_repo.get_all.return_value = sample_data
+    mock_applicants_repo.get_all.return_value = SAMPLE_APPLICANTS
 
     result = applicants_service.get_all()
     mock_applicants_repo.get_all.assert_called_once_with()
 
-    assert result == sample_data
+    assert result == SAMPLE_APPLICANTS
     assert len(result) == 2
 
 
-# def test_get_all_applicants_from_listing(service):
-#     applicant_service, mock_db = service
+# def test_get_all_applicants_from_listing_unencrypted(service):
+#     applicants_service, _, mock_applicants_repo, _ = service
 
 #     listing_id = "1"
-#     sample_data = [
-#         {"applicantId": "sample_id1", "name": "John Doe"},
-#         {"applicantId": "sample_id2", "name": "Bob"},
-#     ]
-#     mock_db.get_applicants.return_value = sample_data
+    
+#     mock_db.get_applicants.return_value = SAMPLE_APPLICANTS
 #     mock_db.get_item.return_value = {}
 
 #     result = applicant_service.get_all_from_listing(listing_id)
@@ -64,5 +77,5 @@ def test_get_all_applicants(service):
 #         table_name="zap-applications", listing_id=listing_id
 #     )
 
-#     assert result == sample_data
+#     assert result == SAMPLE_APPLICANTS
 #     assert len(result) == 2
