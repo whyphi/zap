@@ -32,20 +32,20 @@ def test_get_applicant(service):
     assert result == sample_data
 
 
-# def test_get_all_applicants(service):
-#     applicant_service, mock_db = service
+def test_get_all_applicants(service):
+    applicants_service, _, mock_applicants_repo, _ = service
 
-#     sample_data = [
-#         {"applicantId": "sample_id1", "name": "John Doe"},
-#         {"applicantId": "sample_id2", "name": "Bob"},
-#     ]
-#     mock_db.get_all.return_value = sample_data
+    sample_data = [
+        {"id": "sample_id1", "name": "John Doe"},
+        {"id": "sample_id2", "name": "Bob"},
+    ]
+    mock_applicants_repo.get_all.return_value = sample_data
 
-#     result = applicant_service.get_all()
-#     mock_db.get_all.assert_called_once_with(table_name="zap-applications")
+    result = applicants_service.get_all()
+    mock_applicants_repo.get_all.assert_called_once_with()
 
-#     assert result == sample_data
-#     assert len(result) == 2
+    assert result == sample_data
+    assert len(result) == 2
 
 
 # def test_get_all_applicants_from_listing(service):

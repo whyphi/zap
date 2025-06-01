@@ -89,7 +89,7 @@ def test_get_all_listings(service):
     mock_listings_repo.get_all.return_value = SAMPLE_LISTINGS
 
     result = listing_service.get_all()
-    mock_listings_repo.get_all.assert_called_once()
+    mock_listings_repo.get_all.assert_called_once_with()
 
     assert result == SAMPLE_LISTINGS
 
