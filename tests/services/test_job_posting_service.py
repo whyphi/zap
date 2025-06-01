@@ -184,6 +184,9 @@ def test_get_jobs(job_service):
       - Processes rows until a row with a date older than one week is encountered.
       - Uses nested element lookups where available and falls back to previous row's company or plain text.
     """
+    # Patch _close_driver to do nothing for this test
+    job_service._close_driver = lambda: None
+
     test_url = "http://example.com/jobs"
     jobs = job_service.get_jobs(test_url)
 
