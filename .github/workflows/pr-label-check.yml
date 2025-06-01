@@ -1,4 +1,4 @@
-name: Require Label for PRs to dev/v*
+name: Require Label for PRs to dev
 
 on:
   pull_request:
@@ -40,4 +40,6 @@ jobs:
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"body":"🚨 This PR targets a `dev/v*` branch but has no labels. Please add an appropriate label like `feature`, `fix`, o*
+            -d '{"body":"🚨 This PR targets a `dev/v*` branch but has no labels. Please add an appropriate label like `feature`, `fix`, or `enhancement`."}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+
