@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch, Mock
+from chalice.app import Response, NotFoundError
 from chalicelib.services.ApplicantService import ApplicantService
 from datetime import datetime, timezone
 import uuid
@@ -149,3 +150,57 @@ def test_apply_success(
     uploaded_data = mock_applicants_repo.create.call_args[1]["data"]
     assert uploaded_data["resume"] == "https://s3/resume.pdf"
     assert uploaded_data["image"] == "https://s3/image.png"
+
+
+@patch("chalicelib.services.ApplicantService.Application.model_validate")
+def test_apply_listing_not_found(model_validate, service):
+    applicants_service, _, mock_listings_repo = service
+
+    # Mock invisible listing
+    mock_listings_repo.get_by_id.return_value = {
+        "is_visible": False,
+        "deadline": "2100-01-01T00:00:00.000Z",
+    }
+
+    with pytest.raises(NotFoundError, match="Invalid listing."):
+        applicants_service.apply(
+            {
+                "listing_id": "1",
+                "last_name": "Doe",
+                "first_name": "John",
+                "resume": "fake_resume",
+                "image": "fake_image",
+                "email": "john@example.com",
+            }
+        )
+
+
+@patch("chalicelib.services.ApplicantService.datetime")
+@patch("chalicelib.services.ApplicantService.Application.model_validate")
+def test_apply_deadline_passed(mock_validate, mock_datetime, service):
+    applicants_service, _, mock_listings_repo = service
+
+    # Listing is visible but deadline is in the past
+    mock_listings_repo.get_by_id.return_value = {
+        "is_visible": True,
+        "deadline": "2000-01-01T00:00:00.000+00:00",
+    }
+
+    # Force "now" to be far in the future
+    mock_datetime.now.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    mock_datetime.fromisoformat.side_effect = datetime.fromisoformat
+
+    response = applicants_service.apply(
+        {
+            "listing_id": "1",
+            "last_name": "Doe",
+            "first_name": "John",
+            "resume": "fake_resume",
+            "image": "fake_image",
+            "email": "john@example.com",
+        }
+    )
+
+    assert isinstance(response, Response)
+    assert response.status_code == 410
+    assert "deadline" in response.body.lower()
