@@ -8,7 +8,7 @@ jobs:
   check-label:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write  # Required to post comments
+      pull-requests: write # Required to post comments
 
     steps:
       - name: Determine if base branch is dev/v*
@@ -42,4 +42,5 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"body":"🚨 This PR targets a `dev/v*` branch but has no labels. Please add an appropriate label like `feature`, `fix`, or `enhancement`."}' \
             "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
-
+          echo "❌ No labels found — failing the workflow."
+          exit 1
