@@ -71,14 +71,15 @@ def test_base_repository_get_by_id(mock_supabase):
     assert result == {"id": "abc123"}
 
 
-# def test_base_repository_create(mock_supabase):
-#     repo = BaseRepository("test_table", "id")
-#     repo.client = mock_supabase
-#     mock_supabase.table().insert().execute.return_value.data = [{"id": "newid"}]
+def test_base_repository_create(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+    mock_supabase.table().insert().execute.return_value.data = [{"id": "newid"}]
 
-#     result = repo.create({"foo": "bar"})
-#     assert result == {"id": "newid"}
-#     mock_supabase.table().insert.assert_called_with({"foo": "bar"})
+    result = repo.create({"foo": "bar"})
+    mock_supabase.table().insert.assert_called_with({"foo": "bar"})
+
+    assert result == {"id": "newid"}
 
 
 # def test_base_repository_update(mock_supabase):
