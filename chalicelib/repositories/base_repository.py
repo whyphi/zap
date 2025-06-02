@@ -133,6 +133,7 @@ class BaseRepository:
             )
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
+    # TODO: maybe implement this (as needed)
     # def query(self):
     #     """Return a query builder for more complex queries"""
     #     return self.client.table(self.table_name)

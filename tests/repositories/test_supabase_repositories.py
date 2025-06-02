@@ -97,17 +97,23 @@ def test_base_repository_update(mock_supabase):
     assert result["updated"] is True
 
 
-# def test_base_repository_toggle_boolean_field(mock_supabase):
-#     repo = BaseRepository("test_table", "id")
-#     repo.client = mock_supabase
+def test_base_repository_toggle_boolean_field(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
 
-#     # Simulate get_by_id
-#     mock_supabase.table().select().eq().execute.return_value.data = [{"id": "1", "is_active": False}]
-#     # Simulate update_field
-#     mock_supabase.table().update().eq().execute.return_value.data = [{"id": "1", "is_active": True}]
+    # Simulate get_by_id
+    mock_supabase.table().select().eq().execute.return_value.data = [
+        {"id": "1", "is_active": False}
+    ]
+    # Simulate update_field
+    mock_supabase.table().update().eq().execute.return_value.data = [
+        {"id": "1", "is_active": True}
+    ]
 
-#     result = repo.toggle_boolean_field("1", "is_active")
-#     assert result["is_active"] is True
+    result = repo.toggle_boolean_field("1", "is_active")
+
+    assert result is not None
+    assert result["is_active"] is True
 
 
 # def test_base_repository_delete(mock_supabase):
