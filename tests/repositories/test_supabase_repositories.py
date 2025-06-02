@@ -46,24 +46,29 @@ def test_repository_factory_creates_listings_repo(mock_supabase):
 # Base repository tests
 # =====================================================
 
+
 def test_base_repository_get_all(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
-    mock_supabase.table().select().execute.return_value.data = [{"id": 1, "name": "Alice"}]
+    mock_supabase.table().select().execute.return_value.data = [
+        {"id": 1, "name": "Alice"}
+    ]
 
     result = repo.get_all()
-    assert result == [{"id": 1, "name": "Alice"}]
     mock_supabase.table.assert_called_with("test_table")
 
+    assert result == [{"id": 1, "name": "Alice"}]
 
-# def test_base_repository_get_by_id(mock_supabase):
-#     repo = BaseRepository("test_table", "id")
-#     repo.client = mock_supabase
-#     mock_supabase.table().select().eq().execute.return_value.data = [{"id": "abc123"}]
 
-#     result = repo.get_by_id("abc123")
-#     assert result == {"id": "abc123"}
-#     mock_supabase.table().select().eq.assert_called_with("id", "abc123")
+def test_base_repository_get_by_id(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+    mock_supabase.table().select().eq().execute.return_value.data = [{"id": "abc123"}]
+
+    result = repo.get_by_id("abc123")
+    mock_supabase.table().select().eq.assert_called_with("id", "abc123")
+
+    assert result == {"id": "abc123"}
 
 
 # def test_base_repository_create(mock_supabase):
