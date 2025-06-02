@@ -116,10 +116,13 @@ def test_base_repository_toggle_boolean_field(mock_supabase):
     assert result["is_active"] is True
 
 
-# def test_base_repository_delete(mock_supabase):
-#     repo = BaseRepository("test_table", "id")
-#     repo.client = mock_supabase
-#     mock_supabase.table().delete().eq().execute.return_value.data = [{"id": "1"}]
+def test_base_repository_delete(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+    mock_supabase.table().delete().eq().execute.return_value.data = [{"id": "1"}]
 
-#     result = repo.delete("1")
-#     assert result is True
+    result = repo.delete("1")
+    mock_supabase.table().delete.assert_called_with()
+    mock_supabase.table().delete().eq.assert_called_with("id", "1")
+
+    assert result is True
