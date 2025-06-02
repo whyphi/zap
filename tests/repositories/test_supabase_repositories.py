@@ -82,13 +82,19 @@ def test_base_repository_create(mock_supabase):
     assert result == {"id": "newid"}
 
 
-# def test_base_repository_update(mock_supabase):
-#     repo = BaseRepository("test_table", "id")
-#     repo.client = mock_supabase
-#     mock_supabase.table().update().eq().execute.return_value.data = [{"id": "123", "updated": True}]
+def test_base_repository_update(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+    mock_supabase.table().update().eq().execute.return_value.data = [
+        {"id": "123", "updated": True}
+    ]
 
-#     result = repo.update("123", {"updated": True})
-#     assert result["updated"] is True
+    result = repo.update("123", {"updated": True})
+    mock_supabase.table().update.assert_called_with({"updated": True})
+    mock_supabase.table().update().eq.assert_called_with("id", "123")
+
+    assert result is not None
+    assert result["updated"] is True
 
 
 # def test_base_repository_toggle_boolean_field(mock_supabase):
