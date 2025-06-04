@@ -64,7 +64,28 @@ def test_base_repository_create(mock_supabase):
     result = repo.create({"foo": "bar"})
     mock_supabase.table().insert.assert_called_with({"foo": "bar"})
 
-    assert result == {"id": "newid"}
+    assert result == [{"id": "newid"}]
+
+
+def test_base_repository_create_bulk(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+    mock_supabase.table().insert().execute.return_value.data = [
+        {"id": "newid1"},
+        {"id": "newid2"},
+        {"id": "newid3"},
+    ]
+
+    result = repo.create([{"foo": "bar1"}, {"foo": "bar2"}, {"foo": "bar3"}])
+    mock_supabase.table().insert.assert_called_with(
+        [{"foo": "bar1"}, {"foo": "bar2"}, {"foo": "bar3"}]
+    )
+
+    assert result == [
+        {"id": "newid1"},
+        {"id": "newid2"},
+        {"id": "newid3"},
+    ]
 
 
 def test_base_repository_update(mock_supabase):

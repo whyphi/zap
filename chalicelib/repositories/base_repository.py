@@ -65,11 +65,11 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-    def create(self, data: Dict):
+    def create(self, data: Union[Dict, List]):
         """Create a new record"""
         try:
             response = self.client.table(self.table_name).insert(data).execute()
-            return response.data[0]
+            return response.data
         except APIError as e:
             logger.error(f"[BaseRepository.create] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
