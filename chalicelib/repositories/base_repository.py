@@ -125,10 +125,8 @@ class BaseRepository:
     def toggle_boolean_field(self, id_value: str, field: str) -> Optional[Dict]:
         """Toggle a boolean field in a record"""
         try:
-            # First, get the current value
             record = self.get_by_id(id_value)
 
-            # Toggle the value
             current_value = record.get(field, False)
             return self.update_field(id_value, field, not current_value)
         except APIError as e:
