@@ -18,11 +18,6 @@ def mock_supabase(monkeypatch):
         yield mock_client
 
 
-# =====================================================
-# Supabase initialization tests
-# =====================================================
-
-
 def test_supabase_client_initialization(mock_supabase):
     client = SupabaseClient()
     assert client.url == "http://fake.supabase.co"
@@ -30,21 +25,11 @@ def test_supabase_client_initialization(mock_supabase):
     assert client.get_client() == mock_supabase
 
 
-# =====================================================
-# Repository factory tests
-# =====================================================
-
-
 def test_repository_factory_creates_listings_repo(mock_supabase):
     repo = RepositoryFactory.listings()
     assert isinstance(repo, BaseRepository)
     assert repo.table_name == "listings"
     assert repo.id_field == "id"
-
-
-# =====================================================
-# Base repository tests
-# =====================================================
 
 
 def test_base_repository_get_all(mock_supabase):
