@@ -6,7 +6,7 @@ import pytest
 from chalicelib.decorators import add_env_suffix, auth
 from chalicelib.handlers.error_handler import handle_exceptions
 from chalicelib.models.roles import Roles
-from chalice import (
+from chalice.app import (
     UnauthorizedError,
     Response,
     BadRequestError,

@@ -1,59 +1,206 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+from chalice.app import Response, NotFoundError
 from chalicelib.services.ApplicantService import ApplicantService
+from datetime import datetime, timezone
+import uuid
+
+SAMPLE_LISTING = {
+    "id": "1",
+    "title": "PCT Fall 2023 Rush Application",
+    "date_created": "2023-09-15T17:03:29.156Z",
+    "deadline": "2023-09-19T04:00:00.000Z",
+    "is_visible": True,
+    "is_encrypted": False,
+    "questions": [
+        {
+            "question": "Tell us about yourself. What are you passionate about/what motivates you? (200 words max)",
+            "context": "",
+        },
+    ],
+}
+
+
+SAMPLE_APPLICANTS = [
+    {"id": "sample_id1", "name": "John Doe"},
+    {"id": "sample_id2", "name": "Bob"},
+]
 
 
 @pytest.fixture
 def service():
-    with patch("chalicelib.services.ApplicantService.db") as mock_db:
-        yield ApplicantService(), mock_db
+    with patch(
+        "chalicelib.services.ApplicantService.RepositoryFactory"
+    ) as mock_factory:
+        mock_applicants_repo = Mock()
+        mock_listings_repo = Mock()
+        mock_factory.applications.return_value = mock_applicants_repo
+        mock_factory.listings.return_value = mock_listings_repo
+
+        # services: will use the patched RepositoryFactory
+        applicants_service = ApplicantService()
+        yield applicants_service, mock_applicants_repo, mock_listings_repo
 
 
 def test_get_applicant(service):
-    applicant_service, mock_db = service
+    applicants_service, mock_applicants_repo, _ = service
 
-    sample_data = {"applicantId": "sample_id", "name": "John Doe"}
-    mock_db.get_item.return_value = sample_data
+    mock_applicants_repo.get_by_id.return_value = SAMPLE_APPLICANTS
 
-    result = applicant_service.get("sample_id")
-    mock_db.get_item.assert_called_once_with(
-        table_name="zap-applications", key={"applicantId": "sample_id"}
-    )
+    result = applicants_service.get("sample_id")
+    mock_applicants_repo.get_by_id.assert_called_once_with(id_value="sample_id")
 
-    assert result == sample_data
+    assert result == SAMPLE_APPLICANTS
 
 
 def test_get_all_applicants(service):
-    applicant_service, mock_db = service
+    applicants_service, mock_applicants_repo, _ = service
 
-    sample_data = [
-        {"applicantId": "sample_id1", "name": "John Doe"},
-        {"applicantId": "sample_id2", "name": "Bob"},
-    ]
-    mock_db.get_all.return_value = sample_data
+    mock_applicants_repo.get_all.return_value = SAMPLE_APPLICANTS
 
-    result = applicant_service.get_all()
-    mock_db.get_all.assert_called_once_with(table_name="zap-applications")
+    result = applicants_service.get_all()
+    mock_applicants_repo.get_all.assert_called_once_with()
 
-    assert result == sample_data
+    assert result == SAMPLE_APPLICANTS
     assert len(result) == 2
 
 
-def test_get_all_applicants_from_listing(service):
-    applicant_service, mock_db = service
+def test_get_all_applicants_from_listing_unencrypted(service):
+    applicants_service, mock_applicants_repo, mock_listings_repo = service
 
-    listing_id = "1"
-    sample_data = [
-        {"applicantId": "sample_id1", "name": "John Doe"},
-        {"applicantId": "sample_id2", "name": "Bob"},
-    ]
-    mock_db.get_applicants.return_value = sample_data
-    mock_db.get_item.return_value = {}
+    mock_listings_repo.get_by_id.return_value = SAMPLE_LISTING
+    mock_applicants_repo.get_all_by_field.return_value = SAMPLE_APPLICANTS
 
-    result = applicant_service.get_all_from_listing(listing_id)
-    mock_db.get_applicants.assert_called_once_with(
-        table_name="zap-applications", listing_id=listing_id
+    result = applicants_service.get_all_from_listing(SAMPLE_LISTING["id"])
+
+    mock_listings_repo.get_by_id.assert_called_once_with(id_value=SAMPLE_LISTING["id"])
+    mock_applicants_repo.get_all_by_field.assert_called_once_with(
+        field="listing_id", value=SAMPLE_LISTING["id"]
     )
 
-    assert result == sample_data
+    assert result == SAMPLE_APPLICANTS
     assert len(result) == 2
+
+
+@patch(
+    "chalicelib.services.ApplicantService.uuid.uuid4",
+    return_value=uuid.UUID("12345678-1234-5678-1234-567812345678"),
+)
+@patch("chalicelib.services.ApplicantService.Application.model_validate")
+@patch(
+    "chalicelib.services.ApplicantService.get_file_extension_from_base64",
+    return_value="png",
+)
+@patch("chalicelib.services.ApplicantService.s3.upload_binary_data")
+@patch("chalicelib.services.ApplicantService.ses.send_email")
+@patch("chalicelib.services.ApplicantService.datetime")
+def test_apply_success(
+    mock_datetime,
+    mock_send_email,
+    mock_upload,
+    mock_get_ext,
+    mock_validate,
+    mock_uuid,
+    service,
+):
+    applicants_service, mock_applicants_repo, mock_listings_repo = service
+
+    # Setup fixed current time and deadline
+    mock_datetime.now.return_value = datetime(2023, 9, 10, tzinfo=timezone.utc)
+    mock_datetime.fromisoformat.return_value = datetime(
+        2023, 9, 19, tzinfo=timezone.utc
+    )
+
+    # Mock listing from repo
+    mock_listings_repo.get_by_id.return_value = {
+        "deadline": "2023-09-19T04:00:00.000Z",
+        "is_visible": True,
+    }
+
+    # Mock S3 upload return values
+    mock_upload.side_effect = [
+        "https://s3/resume.pdf",
+        "https://s3/image.png",
+    ]
+
+    # Sample application input
+    application_data = {
+        "listing_id": "1",
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "resume": b"resume-bytes",
+        "image": "base64-image-data",
+        "email": "jane@example.com",
+    }
+
+    result = applicants_service.apply(application_data.copy())
+
+    # Validate calls and result
+    mock_validate.assert_called_once()
+    assert mock_upload.call_count == 2
+    assert mock_send_email.called
+    mock_applicants_repo.create.assert_called_once()
+
+    assert result == {
+        "msg": True,
+        "resumeUrl": "https://s3/resume.pdf",
+    }
+
+    # Also check that `resume` and `image` were replaced with URLs
+    uploaded_data = mock_applicants_repo.create.call_args[1]["data"]
+    assert uploaded_data["resume"] == "https://s3/resume.pdf"
+    assert uploaded_data["image"] == "https://s3/image.png"
+
+
+@patch("chalicelib.services.ApplicantService.Application.model_validate")
+def test_apply_listing_not_found(model_validate, service):
+    applicants_service, _, mock_listings_repo = service
+
+    # Mock invisible listing
+    mock_listings_repo.get_by_id.return_value = {
+        "is_visible": False,
+        "deadline": "2100-01-01T00:00:00.000Z",
+    }
+
+    with pytest.raises(NotFoundError, match="Invalid listing."):
+        applicants_service.apply(
+            {
+                "listing_id": "1",
+                "last_name": "Doe",
+                "first_name": "John",
+                "resume": "fake_resume",
+                "image": "fake_image",
+                "email": "john@example.com",
+            }
+        )
+
+
+@patch("chalicelib.services.ApplicantService.datetime")
+@patch("chalicelib.services.ApplicantService.Application.model_validate")
+def test_apply_deadline_passed(mock_validate, mock_datetime, service):
+    applicants_service, _, mock_listings_repo = service
+
+    # Listing is visible but deadline is in the past
+    mock_listings_repo.get_by_id.return_value = {
+        "is_visible": True,
+        "deadline": "2000-01-01T00:00:00.000+00:00",
+    }
+
+    # Force "now" to be far in the future
+    mock_datetime.now.return_value = datetime(2025, 1, 1, tzinfo=timezone.utc)
+    mock_datetime.fromisoformat.side_effect = datetime.fromisoformat
+
+    response = applicants_service.apply(
+        {
+            "listing_id": "1",
+            "last_name": "Doe",
+            "first_name": "John",
+            "resume": "fake_resume",
+            "image": "fake_image",
+            "email": "john@example.com",
+        }
+    )
+
+    assert isinstance(response, Response)
+    assert response.status_code == 410
+    assert "deadline" in response.body.lower()
