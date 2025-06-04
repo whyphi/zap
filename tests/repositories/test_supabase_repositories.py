@@ -280,3 +280,29 @@ def test_base_repository_delete__returns_deleted_record_from_table(mock_supabase
     mock_supabase.table().delete().eq.assert_called_with("id", "1")
 
     assert result == [{"id": "1"}]
+
+
+def test_base_repository_delete_raises_not_found_error_on_empty_data(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().delete().eq().execute.return_value.data = []
+
+    with pytest.raises(NotFoundError) as exc_info:
+        repo.delete("123")
+
+    assert "Test_table with ID '123' not found." in str(exc_info.value)
+
+
+def test_base_repository_delete_raises_bad_request_error_on_api_error(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().delete().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.delete("abc123")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
