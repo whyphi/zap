@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from chalicelib.modules.supabase_client import SupabaseClient
 from chalicelib.repositories.base_repository import BaseRepository
 from chalicelib.repositories.repository_factory import RepositoryFactory
-from chalice.app import BadRequestError
+from chalice.app import BadRequestError, NotFoundError
 from postgrest.exceptions import APIError
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 
@@ -71,6 +71,32 @@ def test_base_repository_get_by_id_returns_record_with_id_from_table(mock_supaba
     mock_supabase.table().select().eq.assert_called_with("id", "abc123")
 
     assert result == {"id": "abc123"}
+
+
+def test_base_repository_get_by_id_raises_not_found_error_on_empty_data(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().select().eq().execute.return_value.data = []
+
+    with pytest.raises(NotFoundError) as exc_info:
+        repo.get_by_id("123")
+
+    assert "Test_table with ID '123' not found." in str(exc_info.value)
+
+
+def test_base_repository_get_by_id_raises_bad_request_error_on_api_error(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().select().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.get_by_id("abc123")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_create_returns_created_record_from_table(mock_supabase):
