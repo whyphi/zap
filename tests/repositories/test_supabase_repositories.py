@@ -3,6 +3,9 @@ from unittest.mock import patch, MagicMock
 from chalicelib.modules.supabase_client import SupabaseClient
 from chalicelib.repositories.base_repository import BaseRepository
 from chalicelib.repositories.repository_factory import RepositoryFactory
+from chalice.app import BadRequestError
+from postgrest.exceptions import APIError
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 
 
 @pytest.fixture
@@ -43,6 +46,20 @@ def test_base_repository_get_all_returns_all_records_from_table(mock_supabase):
     mock_supabase.table.assert_called_with("test_table")
 
     assert result == [{"id": 1, "name": "Alice"}]
+
+
+def test_base_repository_get_all_raises_bad_request_error_on_api_error(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().select().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.get_all()
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_get_by_id_returns_record_with_id_from_table(mock_supabase):
