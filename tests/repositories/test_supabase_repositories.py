@@ -114,7 +114,9 @@ def test_base_repository_get_all_by_field_returns_matching_records_from_table(
     assert result == [{"test_field": "test_value"}]
 
 
-def test_base_repository_get_all_by_field_raises_bad_request_error_on_api_error(mock_supabase):
+def test_base_repository_get_all_by_field_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
@@ -139,6 +141,22 @@ def test_base_repository_create_returns_created_record_from_table(mock_supabase)
     assert result == [{"id": "newid"}]
 
 
+def test_base_repository_create_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().insert().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.create({"id": "test_id"})
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
+
+
 def test_base_repository_create_bulk_returns_created_records_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
@@ -158,6 +176,22 @@ def test_base_repository_create_bulk_returns_created_records_from_table(mock_sup
         {"id": "newid2"},
         {"id": "newid3"},
     ]
+
+
+def test_base_repository_create_bulk_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().insert().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.create([{"foo": "bar1"}, {"foo": "bar2"}, {"foo": "bar3"}])
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_update_returns_updated_record_from_table(mock_supabase):
