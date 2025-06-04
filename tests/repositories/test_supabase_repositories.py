@@ -254,6 +254,22 @@ def test_base_repository_toggle_boolean_field_returns_updated_record_from_table(
     assert result == {"id": "1", "is_active": True}
 
 
+def test_base_repository_toggle_boolean_field_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().select().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.toggle_boolean_field("123", "test_field")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
+
+
 def test_base_repository_delete__returns_deleted_record_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
