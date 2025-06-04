@@ -97,7 +97,7 @@ class BaseRepository:
         """Update a single field in a record"""
         return self.update(id_value, {field: value})
 
-    def delete(self, id_value: str):
+    def delete(self, id_value: str) -> List:
         """Delete a record by its ID field"""
         try:
             response = (
@@ -112,7 +112,7 @@ class BaseRepository:
                     f"{self.table_name.capitalize()} with ID '{id_value}' not found."
                 )
                 raise NotFoundError(error_message)
-            return bool(response.data)
+            return response.data
 
         except APIError as e:
             logger.error(f"[BaseRepository.delete] Supabase error: {e.message}")

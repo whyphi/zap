@@ -32,7 +32,7 @@ def test_repository_factory_creates_listings_repo(mock_supabase):
     assert repo.id_field == "id"
 
 
-def test_base_repository_get_all(mock_supabase):
+def test_base_repository_get_all_returns_all_records_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().select().execute.return_value.data = [
@@ -45,7 +45,7 @@ def test_base_repository_get_all(mock_supabase):
     assert result == [{"id": 1, "name": "Alice"}]
 
 
-def test_base_repository_get_by_id(mock_supabase):
+def test_base_repository_get_by_id_returns_record_with_id_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().select().eq().execute.return_value.data = [{"id": "abc123"}]
@@ -56,7 +56,7 @@ def test_base_repository_get_by_id(mock_supabase):
     assert result == {"id": "abc123"}
 
 
-def test_base_repository_create(mock_supabase):
+def test_base_repository_create_returns_created_record_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().insert().execute.return_value.data = [{"id": "newid"}]
@@ -67,7 +67,7 @@ def test_base_repository_create(mock_supabase):
     assert result == [{"id": "newid"}]
 
 
-def test_base_repository_create_bulk(mock_supabase):
+def test_base_repository_create_bulk_returns_created_records_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().insert().execute.return_value.data = [
@@ -88,7 +88,7 @@ def test_base_repository_create_bulk(mock_supabase):
     ]
 
 
-def test_base_repository_update(mock_supabase):
+def test_base_repository_update_returns_updated_record_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().update().eq().execute.return_value.data = [
@@ -99,11 +99,12 @@ def test_base_repository_update(mock_supabase):
     mock_supabase.table().update.assert_called_with({"updated": True})
     mock_supabase.table().update().eq.assert_called_with("id", "123")
 
-    assert result is not None
-    assert result["updated"] is True
+    assert result == {"id": "123", "updated": True}
 
 
-def test_base_repository_toggle_boolean_field(mock_supabase):
+def test_base_repository_toggle_boolean_field_returns_updated_record_from_table(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
@@ -118,11 +119,10 @@ def test_base_repository_toggle_boolean_field(mock_supabase):
 
     result = repo.toggle_boolean_field("1", "is_active")
 
-    assert result is not None
-    assert result["is_active"] is True
+    assert result == {"id": "1", "is_active": True}
 
 
-def test_base_repository_delete(mock_supabase):
+def test_base_repository_delete__returns_deleted_record_from_table(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
     mock_supabase.table().delete().eq().execute.return_value.data = [{"id": "1"}]
@@ -131,4 +131,4 @@ def test_base_repository_delete(mock_supabase):
     mock_supabase.table().delete.assert_called_with()
     mock_supabase.table().delete().eq.assert_called_with("id", "1")
 
-    assert result is True
+    assert result == [{"id": "1"}]
