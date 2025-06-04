@@ -8,7 +8,6 @@ import logging
 import os
 
 logger = logging.getLogger(__name__)
-ENV = os.getenv("ENV")
 
 
 class BaseRepository:
@@ -18,6 +17,7 @@ class BaseRepository:
     """
 
     def __init__(self, table_name: str, id_field):
+        ENV = os.getenv("ENV")
         if ENV == "pytest-init":
             return
         self.client: Client = SupabaseClient().get_client()
