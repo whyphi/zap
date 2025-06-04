@@ -208,6 +208,32 @@ def test_base_repository_update_returns_updated_record_from_table(mock_supabase)
     assert result == {"id": "123", "updated": True}
 
 
+def test_base_repository_update_raises_not_found_error_on_empty_data(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().update().eq().execute.return_value.data = []
+
+    with pytest.raises(NotFoundError) as exc_info:
+        repo.update("123", {"id": "123"})
+
+    assert "Test_table with ID '123' not found." in str(exc_info.value)
+
+
+def test_base_repository_update_raises_bad_request_error_on_api_error(mock_supabase):
+    repo = BaseRepository("test_table", "id")
+    repo.client = mock_supabase
+
+    mock_supabase.table().update().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
+
+    with pytest.raises(BadRequestError) as exc_info:
+        repo.update("123", {"id": "123"})
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
+
+
 def test_base_repository_toggle_boolean_field_returns_updated_record_from_table(
     mock_supabase,
 ):
