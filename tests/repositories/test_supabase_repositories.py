@@ -15,7 +15,7 @@ def mock_supabase(monkeypatch):
     ) as mock_create_client:
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
-        monkeypatch.setenv("ENV", "local")
+        monkeypatch.setenv("ENV", "pytest-tests")
         monkeypatch.setenv("SUPABASE_URL", "http://fake.supabase.co")
         monkeypatch.setenv("SUPABASE_KEY", "fake-key")
         yield mock_client

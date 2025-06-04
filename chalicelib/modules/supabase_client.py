@@ -14,7 +14,7 @@ class SupabaseClient:
         if ENV in ["staging", "prod"]:
             self.url = aws_ssm.get_parameter_value(f"/Zap/{ENV}/SUPABASE_URL")
             self.key = aws_ssm.get_parameter_value(f"/Zap/{ENV}/SUPABASE_KEY")
-        elif ENV == "pytest":
+        elif ENV == "pytest-init":
             # Edge case: pytest lazy-initializes url and key
             return
         else:

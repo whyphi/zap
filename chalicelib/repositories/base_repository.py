@@ -5,8 +5,10 @@ from postgrest.exceptions import APIError
 from chalicelib.modules.supabase_client import SupabaseClient
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import logging
+import os
 
 logger = logging.getLogger(__name__)
+ENV = os.getenv("ENV")
 
 
 class BaseRepository:
@@ -16,6 +18,8 @@ class BaseRepository:
     """
 
     def __init__(self, table_name: str, id_field):
+        if ENV == "pytest-init":
+            return
         self.client: Client = SupabaseClient().get_client()
         self.table_name = table_name
         self.id_field = id_field
