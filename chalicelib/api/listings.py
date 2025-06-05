@@ -16,6 +16,12 @@ def create_listing():
     return listing_service.create(listings_api.current_request.json_body)
 
 
+@listings_api.route("/apply", methods=["POST"], cors=True)
+@handle_exceptions
+def apply_to_listing():
+    return listing_service.apply(listings_api.current_request.json_body)
+
+
 @listings_api.route("/listings/{id}", methods=["GET"], cors=True)
 @handle_exceptions
 def get_listing(id):
