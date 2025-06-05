@@ -8,12 +8,6 @@ from chalicelib.models.roles import Roles
 applicants_api = Blueprint(__name__)
 
 
-@applicants_api.route("/apply", methods=["POST"], cors=True)
-@handle_exceptions
-def apply_to_listing():
-    return applicant_service.apply(applicants_api.current_request.json_body)
-
-
 @applicants_api.route("/applicant/{id}", methods=["GET"], cors=True)
 @auth(applicants_api, roles=[Roles.ADMIN, Roles.MEMBER])
 def get_applicant(id):
