@@ -22,8 +22,6 @@ sentry-sdk = {extras = ["chalice"], version = "*"}
 pre-commit = "*"
 ruff = "*"
 mongomock = "*"
-selenium = "*"
-webdriver-manager = "*"
 supabase = "*"
 
 [dev-packages]
