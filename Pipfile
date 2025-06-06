@@ -15,6 +15,7 @@ google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 thefuzz = "*"
 sentry-sdk = {extras = ["chalice"], version = "*"}
+mongomock = "*"
 supabase = "*"
 
 [dev-packages]
@@ -24,7 +25,6 @@ coverage = "*"
 pytest = "*"
 pytest-cov = "*"
 ruff = "*"
-mongomock = "*"
 
 [requires]
 python_version = "3.9"
