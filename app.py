@@ -9,7 +9,6 @@ from chalice.app import Chalice
 # API imports
 from chalicelib.api.listings import listings_api
 from chalicelib.api.applicants import applicants_api
-from chalicelib.api.broadcast import broadcast_api
 from chalicelib.api.insights import insights_api
 from chalicelib.api.members import members_api
 from chalicelib.api.events_member import events_member_api
@@ -40,7 +39,6 @@ sentry_sdk.init(
 app = Chalice(app_name="zap")
 
 # Register APIs
-app.register_blueprint(broadcast_api)
 app.register_blueprint(listings_api)
 app.register_blueprint(applicants_api)
 app.register_blueprint(insights_api)
