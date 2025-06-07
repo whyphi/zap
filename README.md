@@ -3,6 +3,7 @@
 Zap is whyphi's temporary (maybe permanent) serverless API solution.
 
 Zap is created using:
+
 - AWS Chalice: Framework that abstracts Python code as serverless functions
 - AWS Lambda
 - AWS API Gateway
@@ -18,27 +19,30 @@ Ensure that you have [AWS CLI](https://aws.amazon.com/cli/) installed. Then, set
 aws configure
 ```
 
-
 ## Local Development
 
 Within Zap, Python dependences are managed using [`pipenv`](https://pipenv.pypa.io/en/latest/). Ensure you have `pipenv` installed within your machine.
 
 To turn on the virtual environment using `pipenv`:
+
 ```bash
 pipenv shell
 ```
 
 To install necessary dependencies within `pipenv`:
+
 ```bash
 pipenv shell
 ```
 
 To install any additional dependenceis within `pipenv`:
+
 ```bash
 pipenv install {dependency name}
 ```
 
 To enable local server for Chalice:
+
 ```bash
 chalice local
 ```
@@ -48,7 +52,7 @@ chalice local
 ### PR Strategy
 
 PRs should be made in the following order:
-    
+
     Personal PR -> `dev/*` -> `staging` -> `prod`
 
 ### CI/CD
