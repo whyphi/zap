@@ -42,4 +42,4 @@ class Application(BaseModel):
     minor: Optional[str]
     phone: str
     colleges: College
-    responses: List[Response]
+    responses: Optional[List[Response]]
