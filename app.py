@@ -3,17 +3,21 @@ import boto3
 import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
 
-from chalice import Chalice
+from chalice.app import Chalice
 
+
+# API imports
 from chalicelib.api.listings import listings_api
 from chalicelib.api.applicants import applicants_api
-from chalicelib.api.announcements import announcements_api
 from chalicelib.api.insights import insights_api
 from chalicelib.api.members import members_api
 from chalicelib.api.events_member import events_member_api
 from chalicelib.api.events_rush import events_rush_api
 from chalicelib.api.accountability import accountability_api
 from chalicelib.api.monitoring import monitoring_api
+
+# Event imports
+from chalicelib.events.test import test_events
 
 
 # Configure and initialize sentry
@@ -33,7 +37,8 @@ sentry_sdk.init(
 )
 
 app = Chalice(app_name="zap")
-app.register_blueprint(announcements_api)
+
+# Register APIs
 app.register_blueprint(listings_api)
 app.register_blueprint(applicants_api)
 app.register_blueprint(insights_api)
@@ -42,6 +47,9 @@ app.register_blueprint(events_member_api)
 app.register_blueprint(events_rush_api)
 app.register_blueprint(accountability_api)
 app.register_blueprint(monitoring_api)
+
+# Register events
+app.register_blueprint(test_events)
 
 
 @app.route("/")

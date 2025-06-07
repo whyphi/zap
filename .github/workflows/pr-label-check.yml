@@ -1,0 +1,46 @@
+name: Require Label for PRs to dev
+
+on:
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, synchronize, reopened]
+
+jobs:
+  check-label:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Required to post comments
+
+    steps:
+      - name: Determine if base branch is dev/v*
+        id: check_branch
+        run: |
+          base_branch="${{ github.event.pull_request.base.ref }}"
+          echo "Base branch is $base_branch"
+          if [[ "$base_branch" == dev/v* ]]; then
+            echo "needs_check=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_check=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for label presence
+        id: check_label
+        if: steps.check_branch.outputs.needs_check == 'true'
+        run: |
+          label_count=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq 'length')
+          echo "Label count: $label_count"
+          if [ "$label_count" -eq "0" ]; then
+            echo "no_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "no_label=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment if no label and base is dev/v*
+        if: steps.check_label.outputs.no_label == 'true'
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"body":"🚨 This PR targets a `dev/v*` branch but has no labels. Please add an appropriate label like `feature`, `fix`, or `enhancement`."}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
+          echo "❌ No labels found — failing the workflow."
+          exit 1

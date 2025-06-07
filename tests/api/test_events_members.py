@@ -15,7 +15,7 @@ def test_create_timeframe():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.create_timeframe"
             ) as mock_create_timeframe:
@@ -35,7 +35,7 @@ def test_get_all_timeframes():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.get_all_timeframes",
             ) as mock_get_all_timeframes:
@@ -56,7 +56,7 @@ def test_get_timeframe():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.get_timeframe",
             ) as mock_get_timeframe:
@@ -75,7 +75,7 @@ def test_delete_timeframe():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.delete_timeframe",
             ) as mock_delete:
@@ -93,7 +93,7 @@ def test_create_event():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.create_event"
             ) as mock_create_event:
@@ -113,7 +113,7 @@ def test_get_event():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.get_timeframe",
             ) as mock_get_timeframe:
@@ -134,7 +134,7 @@ def test_get_timeframe_sheets():
         # Mock applicant_service's get method
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.get_timeframe_sheets",
             ) as mock_get_timeframe_sheets:
@@ -153,7 +153,7 @@ def test_checkin():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.checkin"
             ) as mock_checkin:
@@ -171,7 +171,7 @@ def test_delete_event():
     with Client(app) as client:
         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
             # Assuming the decoded token has the required role
-            mock_decode.return_value = {"role": "admin"}
+            mock_decode.return_value = {"roles": ["admin"]}
             with patch(
                 "chalicelib.services.EventsMemberService.events_member_service.delete",
             ) as mock_delete:

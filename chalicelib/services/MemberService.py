@@ -1,5 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
-from chalice import ConflictError, NotFoundError, UnauthorizedError
+from chalice.app import ConflictError, NotFoundError, UnauthorizedError
 
 from bson import ObjectId
 from collections import defaultdict

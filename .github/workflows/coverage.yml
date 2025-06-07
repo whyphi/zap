@@ -17,12 +17,13 @@ jobs:
           cache: "pip" # caching pip dependencies
       - name: Install pipenv
         run: pip install pipenv
-      - run: pipenv requirements > requirements.txt
+      - run: pipenv requirements --dev > requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run unit test suite
         run: pytest --cov-report xml --cov=. tests/
         env:
+          ENV: pytest-init
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
