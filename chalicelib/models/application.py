@@ -1,5 +1,7 @@
-from typing import List, Union
+from typing import List, Optional
 from pydantic import BaseModel
+from uuid import UUID
+
 
 class College(BaseModel):
     CAS: bool
@@ -15,27 +17,29 @@ class College(BaseModel):
     Wheelock: bool
     Other: bool
 
+
 class Response(BaseModel):
     question: str
     response: str
 
+
 class Application(BaseModel):
-    listingId: str
-    gradYear: str
-    gradMonth: str
-    firstName: str
-    lastName: str
-    preferredName: str
-    major: str
-    minor: str
-    gpa: str
-    hasGpa: bool
+    id: UUID
+    listing_id: UUID
     email: str
-    phone: str
-    linkedin: str
-    website: str
-    resume: str
+    first_name: str
+    last_name: str
+    preferred_name: Optional[str]
+    gpa: Optional[float]
+    has_gpa: bool
+    grad_month: str
+    grad_year: int
     image: str
+    website: Optional[str]
+    linkedin: Optional[str]
+    resume: str
+    major: str
+    minor: Optional[str]
+    phone: str
     colleges: College
-    events: Union[None, dict]
-    responses: List[Response]
+    responses: Optional[List[Response]]

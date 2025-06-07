@@ -9,23 +9,22 @@ boto3 = "*"
 "pymongo[srv]" = "*"
 python-dotenv = "*"
 pydantic = "*"
-pytest = "*"
-coverage = "*"
-pytest-cov = "*"
-moto = {extras = ["dynamodb"], version = "==4.2.13"}
 pyjwt = "*"
 google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 thefuzz = "*"
 sentry-sdk = {extras = ["chalice"], version = "*"}
-pre-commit = "*"
-ruff = "*"
 mongomock = "*"
-selenium = "*"
-webdriver-manager = "*"
+supabase = "*"
 
 [dev-packages]
+pre-commit = "*"
+moto = {extras = ["dynamodb"], version = "==4.2.13"}
+coverage = "*"
+pytest = "*"
+pytest-cov = "*"
+ruff = "*"
 
 [requires]
 python_version = "3.9"

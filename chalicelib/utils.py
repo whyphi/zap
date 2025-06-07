@@ -44,6 +44,8 @@ def hash_value(value):
         return {key: hash_value(val) for key, val in value.items()}
     elif isinstance(value, list):
         return [hash_value(item) for item in value]
+    elif value is None:
+        return None
     else:
         # Convert the value to a string and apply SHA-256 hash
         hash_object = hashlib.sha256(str(value).encode("utf-8"))
