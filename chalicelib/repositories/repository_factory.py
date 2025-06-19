@@ -9,6 +9,8 @@ class RepositoryConfig:
 
     table_name: str
     id_field: str = "id"
+    # what about case with multiple id fields eg. user_roles table?
+    # change id_field to id_fields: set = ("id")
 
 
 class RepositoryFactory:
