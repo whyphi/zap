@@ -1,4 +1,4 @@
-from chalicelib.modules.mongo import mongo_module
+from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import ConflictError, NotFoundError, UnauthorizedError
 
 from bson import ObjectId
@@ -6,7 +6,7 @@ from collections import defaultdict
 import json
 import jwt
 import boto3
-
+import uuid
 
 class MemberService:
     class BSONEncoder(json.JSONEncoder):
@@ -16,7 +16,9 @@ class MemberService:
             return super().default(o)
 
     def __init__(self):
-        self.collection = "users"
+        self.users_repo = RepositoryFactory.users()
+        self.user_roles_repo = RepositoryFactory.user_roles()
+        self.roles_repo = RepositoryFactory.roles()
 
     def create(self, data):
         """
@@ -28,16 +30,17 @@ class MemberService:
         Returns:
             bool: True if the user was created, False otherwise.
         """
-        existing_user = mongo_module.find_one_document(
-            self.collection, {"email": data["email"]}
-        )
+        existing_user = self.users_repo.get_all_by_field(field="email", value=data["email"])
 
-        if existing_user:
+        if existing_user and len(existing_user) > 0:
             raise ConflictError("User already exists")
-
+        
         # Create the user in the database
-        data["isNewUser"] = True
-        mongo_module.insert_document(self.collection, data)
+        self.users_repo.create(data)
+    
+        # Create user-role relationship in the user_roles database
+        role_id = self.roles_repo.get_all_by_field(field="name", value="member")
+        self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
 
         return {
             "success": True,
@@ -66,7 +69,9 @@ class MemberService:
             raise NotFoundError("No IDs provided to delete")
 
         for id in data:
-            if not mongo_module.delete_document_by_id(self.collection, id):
+            if not self.user_roles_repo.delete(field="user_id", value=id):
+                raise NotFoundError(f"Document with ID {id} not found")
+            if not self.users_repo.delete(field="user_id", value=id):
                 raise NotFoundError(f"Document with ID {id} not found")
 
         return {
@@ -75,11 +80,11 @@ class MemberService:
         }
 
     def get_by_id(self, user_id: str):
-        data = mongo_module.get_document_by_id(self.collection, user_id)
+        data = self.users_repo.get_by_id(self.collection, user_id)
         return json.dumps(data, cls=self.BSONEncoder)
 
     def get_all(self):
-        data = mongo_module.get_data_from_collection(self.collection)
+        data = self.users_repo.get_all()
         return json.dumps(data, cls=self.BSONEncoder)
 
     def onboard(self, document_id=str, data=dict) -> bool:
@@ -109,22 +114,28 @@ class MemberService:
 
         # NOTE: Performing an update on the path '_id' would modify the immutable field '_id'
         data.pop("_id", None)
+        
+        return self.users_repo.update(user_id, data)
 
-        return mongo_module.update_document_by_id(self.collection, user_id, data)
+    def update_roles(self, user_id=str, roles=list) -> bool:
+        self.user_roles_repo.delete(id_value="user_id")
+        
+        for role in roles:
+            role_id = self.roles_repo.get_by_id(role)["role_id"]
+            if not role_id:
+                raise NotFoundError(f"Role with ID {role} not found")
+            
+        return self.user_roles_repo.create({"user_id": user_id, "role_ids": roles})
 
-    def update_roles(self, document_id=str, roles=list) -> bool:
-        return mongo_module.update_document(
-            self.collection,
-            document_id,
-            [{"$set": {"roles": roles}}],
-        )
-
+    # Function temporarily unusable
     def get_family_tree(self):
-        data = mongo_module.get_data_from_collection(self.collection)
+        data = self.users_repo.get_all()
 
         # Group by family
         family_groups = defaultdict(list)
 
+        # There's no 'big' field in supabase data, so every member will be skipped in current implementation
+        # TODO: should come up with a new way to store big/little relationships
         for member in data:
             if "big" not in member or member["big"] == "":
                 continue
@@ -132,6 +143,5 @@ class MemberService:
             family_groups[member["family"]].append(member)
 
         return family_groups
-
 
 member_service = MemberService()
