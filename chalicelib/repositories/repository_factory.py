@@ -27,6 +27,10 @@ class RepositoryFactory:
     EVENT_TAGS = RepositoryConfig(table_name="event_tags", id_field="events_member_id")
     TAGS = RepositoryConfig(table_name="tags")
 
+    RUSH_CATEGORIES = RepositoryConfig(table_name="rush_categories")
+    RUSH_EVENTS = RepositoryConfig(table_name="rush_events")
+    ACCOUNTABILITY = RepositoryConfig(table_name="accountability")
+
     @staticmethod
     def create(config: RepositoryConfig) -> BaseRepository:
         """Create a repository instance with the given configuration"""
@@ -71,6 +75,18 @@ class RepositoryFactory:
     @classmethod
     def tags(cls) -> BaseRepository:
         return cls.create(cls.TAGS)
+    
+    @classmethod
+    def rush_categories(cls):
+        return cls.create(cls.RUSH_CATEGORIES)
+    
+    @classmethod
+    def rush_events(cls):
+        return cls.create(cls.RUSH_EVENTS)
+    
+    @classmethod
+    def accountability(cls) -> BaseRepository:
+        return cls.create(cls.ACCOUNTABILITY)
 
 
 # Usage example:
