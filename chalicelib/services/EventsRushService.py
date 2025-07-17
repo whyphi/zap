@@ -1,4 +1,4 @@
-from chalicelib.modules.mongo import mongo_module
+from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
@@ -6,6 +6,8 @@ import datetime
 from chalicelib.s3 import s3
 from chalicelib.utils import get_prev_image_version
 from typing import Optional
+import datetime
+import uuid
 
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
@@ -18,25 +20,22 @@ class EventsRushService:
                 return str(o)
             return super().default(o)
 
-    def __init__(self, mongo_module=mongo_module):
-          self.mongo_module = mongo_module
-          self.collection_prefix = "events-"
+    def __init__(self):
+          self.rush_categories_repo = RepositoryFactory.rush_categories()
+          self.rush_events_repo = RepositoryFactory.rush_events()
 
     def get_rush_categories_and_events(self):
-        rush_categories = self.mongo_module.get_data_from_collection(
-            collection=f"{self.collection_prefix}rush"
-        )
-
-        return json.dumps(rush_categories, cls=self.BSONEncoder)
+        categories = self.rush_categories_repo.get_all()
+        return json.dumps(categories)
 
     def create_rush_category(self, data: dict):
         data["dateCreated"] = datetime.datetime.now()
         data["events"] = []
-        id = self.mongo_module.insert_document(f"{self.collection_prefix}rush", data)
-        return id
+        created = self.rush_categories_repo.create(data)
+        return created[0]["id"]
 
     def create_rush_event(self, data: dict):
-        event_id = ObjectId()
+        event_id = str(uuid.uuid4())
         data["dateCreated"] = datetime.datetime.now()
         data["lastModified"] = data["dateCreated"]
         data["_id"] = event_id
@@ -50,6 +49,9 @@ class EventsRushService:
         # add image_url to data object (this also replaces the original base64 image url)
         data["eventCoverImage"] = image_url
 
+        self.rush_events_repo.create(data) 
+        
+        """
         # Add event to its own collection
         self.mongo_module.insert_document(
             f"{self.collection_prefix}rush-event", data
@@ -63,26 +65,22 @@ class EventsRushService:
         )
 
         return
+        """
 
     def modify_rush_event(self, data: dict):
 
         try:
-            event_id = data["_id"]
-            event_oid = ObjectId(event_id)
+            event_id = data["id"]
 
             data["lastModified"] = datetime.datetime.now()
-            data["_id"] = event_oid
-            
+
             # get existing image and image versions
             eventCoverImage: str = data["eventCoverImage"]
             eventCoverImageVersion = data["eventCoverImageVersion"]
             prevEventCoverImageVersion = get_prev_image_version(version=eventCoverImageVersion)
             
             # Check if event exists in the rush-event collection
-            event = self.mongo_module.get_document_by_id(
-                f"{self.collection_prefix}rush-event", event_id
-            )
-
+            event = self.rush_events_repo.get_by_id(event_id)
             if not event:
                 raise Exception("Event does not exist.")
 
@@ -109,8 +107,11 @@ class EventsRushService:
 
             # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
             # that data overrides the matching keys
-            data = { **event, **data }
-
+            merged_data = { **event, **data }
+            
+            """
+            i remove these bc supabase dont support mongodb array filtering or ops (?)
+            
             # Define array update query and filters
             update_query = {
                 "$set": {
@@ -121,7 +122,7 @@ class EventsRushService:
             array_filters = [
                 {"eventElem._id": event_oid}
             ]
-
+            
             # Modify the event in its category (rush collection)
             update_category_result = self.mongo_module.update_document(
                 collection=f"{self.collection_prefix}rush",
@@ -147,7 +148,28 @@ class EventsRushService:
                 raise Exception("Error updating rush-event-category.")
                 
             return
+            """
+            #i fetched entire rush-categories record, located and replaced specific event inside
+            #events array in py and updated whole array (idk if this even makes sense)
 
+            # update in rush categories table w/ event list
+            rush_category = self.rush_categories_repo.get_by_id(event_category_id)
+            update_events = []
+            for i in rush_category["events"]:
+                if i["id"] == event_id or i.get("_id") == event_id:
+                    update_events.append(merged_data) #replace old w/ updated
+                else:
+                    update_events.append(i)
+            
+            # save event list back into rush_categories
+            self.rush_categories_repo.update(event_category_id, {"events": update_events})
+
+            # update rush events table
+            merged_data.pop("_id", None)
+            self.rush_events_repo.update(event_id, merged_data)
+
+            return 
+        
         except Exception as e:
             print("error is ", e)
             raise BadRequestError(e)
@@ -168,22 +190,21 @@ class EventsRushService:
         """
         default_rush_category_id = data["defaultRushCategoryId"]
         
-        collection = f"{self.collection_prefix}rush"
+        collection = self.rush_categories_repo.get_all()
 
         # Set all defaultRushCategory fields to false
-        self.mongo_module.update_many_documents(
-            collection,
-            {},
-            {"$set": {"defaultRushCategory": False}}
-        )
+        for i in collection:
+            if i.get("defaultRushCategory", False):
+                self.rush_categories_repo.update(
+                i["id"], {"defaultRushCategory": False}
+            )
 
         # if default_rush_category_id is "" --> reset defaultRushCategory
         if not default_rush_category_id:
             return
 
         # Update the specified document to set its defaultRushCategory to true
-        result = self.mongo_module.update_document_by_id(
-            collection,
+        result = self.rush_categories_repo.update(
             default_rush_category_id,
             {"defaultRushCategory": True}
         )
@@ -197,9 +218,9 @@ class EventsRushService:
         hide_attendees = data.get("hideAttendees", False) # TODO: only hideAttendees if specifically requested
         hide_code = data.get("hideCode", True)
         
-        event = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}rush-event", event_id
-        )
+        event = self.rush_events_repo.get_by_id(event_id)
+        if not event:
+            raise BadRequestError("Event does not exist.")
 
         if hide_attendees:
             event.pop("attendees", None)
@@ -212,9 +233,9 @@ class EventsRushService:
     def checkin_rush(self, event_id: str, user_data: dict):
         event_oid = ObjectId(event_id)
         
-        event = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}rush-event", event_id
-        )
+        event = self.rush_events_repo.get_by_id(event_id)
+        if not event:
+            raise BadRequestError("Event does not exist.")
 
         raw_user_code: str = user_data.get("code", "")
         user_code = raw_user_code.lower().strip()
@@ -242,11 +263,7 @@ class EventsRushService:
         event["numAttendees"] += 1
 
         # STEP 1: update events-rush-event collection
-        mongo_module.update_document(
-            f"{self.collection_prefix}rush-event",
-            event_id,
-            {"$set": event},
-        )
+        self.rush_events_repo.update(event_id, event)
         
         # Define array update query and filters
         update_query = {
@@ -260,8 +277,7 @@ class EventsRushService:
         ]
 
         # STEP 2: Modify the event in its category (rush collection)
-        self.mongo_module.update_document(
-            collection=f"{self.collection_prefix}rush",
+        self.rush_categories_repo.update(
             document_id=event["categoryId"],
             query=update_query,
             array_filters=array_filters
@@ -270,9 +286,8 @@ class EventsRushService:
         return
     
     def get_rush_events_default_category(self, data: dict):
-        rush_categories = self.mongo_module.get_data_from_collection(
-            collection=f"{self.collection_prefix}rush",
-            filter={"defaultRushCategory": True}
+        rush_categories = self.rush_categories_repo(
+            {"defaultRushCategory": True}
         )
         
         if len(rush_categories) == 0:
@@ -281,7 +296,7 @@ class EventsRushService:
         rush_category = rush_categories[0]
         
         # remove code from every rush event
-        for event in rush_category["events"]:
+        for event in rush_category.get("events", []):
             event.pop("code", None)
             
             # check if user attended event (boolean)
@@ -319,9 +334,7 @@ class EventsRushService:
             event_oid = ObjectId(event_id)
             
             # Check if event exists in the rush-event collection
-            event = self.mongo_module.get_document_by_id(
-                f"{self.collection_prefix}rush-event", event_oid
-            )
+            event = self.rush_events_repo.get_by_id(event_id)
             
             if not event:
                 raise Exception("Event does not exist.")
@@ -335,21 +348,18 @@ class EventsRushService:
             # remove previous eventCoverImage from s3 bucket
             s3.delete_binary_data(object_id=image_path)
             
-            # upload eventCoverImage to s3 bucket
-            s3.delete_binary_data(object_id=image_path)
-
             # Delete the event from its category
-            self.mongo_module.update_document(
-                collection=f"{self.collection_prefix}rush",
-                document_id=event_category_id,
-                query={"$pull": {"events": {"_id": event_oid}}},
+            update_category = self.rush_categories_repo.update(
+                event_category_id,
+                {"$pull": {"events": {"_id": event_oid}}},
             )
-
+            if not update_category:
+                raise Exception("Failed to update rush category.")
+            
             # Delete event data from the rush-event collection
-            self.mongo_module.delete_document_by_id(
-                collection=f"{self.collection_prefix}rush-event", 
-                document_id=event_oid
-            )
+            delete_event = self.rush_events_repo.delete_by_id(event_id)
+            if not delete_event:
+                raise Exception("Failed to update rush category.")
             
             return
 
@@ -357,9 +367,9 @@ class EventsRushService:
             raise BadRequestError(e)
 
     def get_rush_category_analytics(self, category_id: str):
-        category = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}rush", category_id
-        )
+        category = self.rush_categories_repo(category_id)
+        if not category:
+            raise BadRequestError("Rush category not found.")
         
         # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
         attendees = {}
@@ -367,7 +377,7 @@ class EventsRushService:
         # events: list of objects (event: { name, eventId })
         events = []
         
-        for event in category["events"]:
+        for event in category.get("events", []):
             new_event = { 
                 "eventId": event["_id"], 
                 "eventName": event["name"] 
@@ -377,7 +387,7 @@ class EventsRushService:
             events.append(new_event)
             
             # accumulate attendance
-            for attendee in event["attendees"]:
+            for attendee in event.get("attendees", []):
                 email = attendee["email"]
                 if email in attendees:
                     attendees[email]["eventsAttended"].append(new_event)
