@@ -9,6 +9,9 @@ from typing import Optional
 import datetime
 import uuid
 
+##### EDIT: make sure to handle exceptions that may arise from the database operations
+##### EDIT: procedure for handling exceptions is to catch and raise the exception, then handle the exception in the original API call using the @handlers.error_handler decorator
+
 class EventsRushService:
     class BSONEncoder(json.JSONEncoder):
         """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
@@ -21,8 +24,10 @@ class EventsRushService:
             return super().default(o)
 
     def __init__(self):
-          self.rush_categories_repo = RepositoryFactory.rush_categories()
-          self.rush_events_repo = RepositoryFactory.rush_events()
+        ##### EDIT: use the correct table names (reference https://dbdiagram.io/d/WhyPhi-6817d0c31ca52373f5689e84)
+        ##### EDIT: change all future invocations of incorrect table names
+        self.rush_categories_repo = RepositoryFactory.rush_categories()
+        self.rush_events_repo = RepositoryFactory.rush_events()
 
     def get_rush_categories_and_events(self):
         categories = self.rush_categories_repo.get_all()
@@ -49,7 +54,10 @@ class EventsRushService:
         # add image_url to data object (this also replaces the original base64 image url)
         data["eventCoverImage"] = image_url
 
-        self.rush_events_repo.create(data) 
+        self.rush_events_repo.create(data)
+        
+        ##### EDIT: the api route that calls this function requires this function to return something. Make sure to include a return statement.
+        ##### EDIT: prolly can just return whatever the .create() call returns / just call an empty return statement (returns a None value as far as I know)
         
         """
         # Add event to its own collection
