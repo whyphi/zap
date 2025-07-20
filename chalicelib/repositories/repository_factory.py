@@ -27,9 +27,10 @@ class RepositoryFactory:
     EVENT_TAGS = RepositoryConfig(table_name="event_tags", id_field="events_member_id")
     TAGS = RepositoryConfig(table_name="tags")
 
-    RUSH_CATEGORIES = RepositoryConfig(table_name="rush_categories")
-    RUSH_EVENTS = RepositoryConfig(table_name="rush_events")
-    ACCOUNTABILITY = RepositoryConfig(table_name="accountability")
+    EVENT_TIMEFRAMES_RUSH = RepositoryConfig(table_name="event_timeframes_rush")
+    EVENTS_RUSH = RepositoryConfig(table_name="events_rush")
+    EVENTS_RUSH_ATTENDEES = RepositoryConfig(table_name="events_rush_attendees")
+
 
     @staticmethod
     def create(config: RepositoryConfig) -> BaseRepository:
@@ -77,16 +78,16 @@ class RepositoryFactory:
         return cls.create(cls.TAGS)
     
     @classmethod
-    def rush_categories(cls):
-        return cls.create(cls.RUSH_CATEGORIES)
-    
+    def rush_categories(cls):  
+        return cls.create(cls.EVENT_TIMEFRAMES_RUSH)
+
     @classmethod
     def rush_events(cls):
-        return cls.create(cls.RUSH_EVENTS)
-    
+        return cls.create(cls.EVENTS_RUSH)
+
     @classmethod
-    def accountability(cls) -> BaseRepository:
-        return cls.create(cls.ACCOUNTABILITY)
+    def rush_attendees(cls):
+        return cls.create(cls.EVENTS_RUSH_ATTENDEES)
 
 
 # Usage example:
