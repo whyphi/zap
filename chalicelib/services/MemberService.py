@@ -1,12 +1,13 @@
 from chalicelib.repositories.repository_factory import RepositoryFactory
-from chalice.app import ConflictError, NotFoundError, UnauthorizedError
+from chalice.app import ConflictError, NotFoundError, UnauthorizedError, BadRequestError
 
 from bson import ObjectId
 from collections import defaultdict
 import json
 import jwt
 import boto3
-import uuid
+
+# IN PROGRESS
 
 class MemberService:
     class BSONEncoder(json.JSONEncoder):
@@ -30,17 +31,30 @@ class MemberService:
         Returns:
             bool: True if the user was created, False otherwise.
         """
-        existing_user = self.users_repo.get_all_by_field(field="email", value=data["email"])
+        try:
+            existing_user = self.users_repo.get_all_by_field(field="email", value=data["email"])
+        except Exception as e:
+            raise BadRequestError(f"Failed to check existing user: {str(e)}")
 
         if existing_user and len(existing_user) > 0:
             raise ConflictError("User already exists")
         
         # Create the user in the database
-        self.users_repo.create(data)
-    
-        # Create user-role relationship in the user_roles database
-        role_id = self.roles_repo.get_all_by_field(field="name", value="member")
-        self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
+        try:
+            self.users_repo.create(data)
+        except Exception as e:
+            raise BadRequestError(f"Failed to create user: {str(e)}")
+
+        # Create user-role relationship in the user_roles table
+        try:
+            role_id = self.roles_repo.get_all_by_field(field="name", value="member")
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve role: {str(e)}")    
+            
+        try:
+            self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
+        except Exception as e:
+            raise BadRequestError(f"Failed to create user role: {str(e)}")
 
         return {
             "success": True,
@@ -80,16 +94,26 @@ class MemberService:
         }
 
     def get_by_id(self, user_id: str):
-        data = self.users_repo.get_by_id(self.collection, user_id)
+        try:
+            data = self.users_repo.get_by_id(user_id)
+        except Exception as e:
+            raise NotFoundError(f"Failed to retrieve user: {str(e)}")
         return json.dumps(data, cls=self.BSONEncoder)
 
     def get_all(self):
-        data = self.users_repo.get_all()
+        try:
+            data = self.users_repo.get_all()
+        except Exception as e:
+            raise NotFoundError(f"Failed to retrieve users: {str(e)}")
         return json.dumps(data, cls=self.BSONEncoder)
 
     def onboard(self, document_id=str, data=dict) -> bool:
-        return mongo_module.update_document_by_id(self.collection, document_id, data)
-
+        try:
+            response = self.users_repo.update(document_id, data)
+        except Exception as e:
+            raise BadRequestError(f"Failed to onboard user: {str(e)}")
+        return response
+    
     def update(self, user_id: str, data: dict, headers: dict) -> bool:
         ssm_client = boto3.client("ssm")
         auth_header = headers.get("Authorization", None)
@@ -115,17 +139,35 @@ class MemberService:
         # NOTE: Performing an update on the path '_id' would modify the immutable field '_id'
         data.pop("_id", None)
         
-        return self.users_repo.update(user_id, data)
-
-    def update_roles(self, user_id=str, roles=list) -> bool:
-        self.user_roles_repo.delete(id_value="user_id")
+        try:
+            response = self.users_repo.update(user_id, data)
+        except Exception as e:
+            raise BadRequestError(f"Failed to update user: {str(e)}")
         
+        return response
+
+    def update_roles(self, user_id=str, roles=list) -> bool:    
+        # Delete existing roles for the user    
+        try:
+            self.user_roles_repo.delete(id_value="user_id")
+        except BadRequestError as e:
+            raise BadRequestError(f"Failed to delete existing roles: {str(e)}")        
+
         for role in roles:
-            role_id = self.roles_repo.get_by_id(role)["role_id"]
+            try:
+                role_id = self.roles_repo.get_all_by_field(role)["role_id"]
+            except Exception as e:
+                raise BadRequestError(f"Failed to retrieve role: {str(e)}")
+            
             if not role_id:
                 raise NotFoundError(f"Role with ID {role} not found")
-            
-        return self.user_roles_repo.create({"user_id": user_id, "role_ids": roles})
+
+        try:
+            response = self.user_roles_repo.create({"user_id": user_id, "role_ids": roles})
+        except Exception as e:
+            raise BadRequestError(f"Failed to update user roles: {str(e)}")
+
+        return response
 
     # Function temporarily unusable
     def get_family_tree(self):
