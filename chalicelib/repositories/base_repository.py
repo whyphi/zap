@@ -23,9 +23,9 @@ class BaseRepository:
         self.client: Client = SupabaseClient().get_client()
         self.table_name = table_name
         self.id_field = id_field
-        
-########## CREATE ##########
-        
+
+    ########## CREATE ##########
+
     def create(self, data: Union[Dict, List]):
         """Create a new record"""
         try:
@@ -34,8 +34,8 @@ class BaseRepository:
         except APIError as e:
             logger.error(f"[BaseRepository.create] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
-        
-########## READ ##########
+
+    ########## READ ##########
 
     def get_all(self, select_query: str = "*"):
         """Get all records from the table with optional field selection"""
@@ -65,7 +65,7 @@ class BaseRepository:
         except APIError as e:
             logger.error(f"[BaseRepository.get_by_id] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
-        
+
     def get_by_ids(self, id_fields: Dict[str, Any], select_query: str = "*") -> Dict:
         """Get a record by matching all provided id_fields"""
         try:
@@ -101,7 +101,30 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-########### UPDATE ###########
+    def get_nested(self, nested_table: str):
+        """
+        Performs a select with a nested foreign table using PostgREST syntax. For example,
+        we can get all events_rush associated with a timeframe by calling
+        `self.event_timeframes_rush.get_nested(nested_table=events_rush)`.
+
+        Args:
+            nested (str): The nested table name.
+
+        Returns:
+            List[Dict]: List of rows with nested related table data.
+        """
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .select(f"*, {nested_table}(*)")
+                .execute()
+            )
+            return response.data
+        except APIError as e:
+            logger.error(f"[BaseRepository.get_nested] Supabase error: {e.message}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
+
+    ########### UPDATE ###########
 
     def update(self, id_value: str, data: Dict) -> Optional[Dict]:
         """Update an existing record by its ID field"""
@@ -126,7 +149,7 @@ class BaseRepository:
         """Update a single field in a record"""
         return self.update(id_value, {field: value})
 
-########## DELETE ##########
+    ########## DELETE ##########
 
     def delete(self, id_value: str) -> List:
         """Delete a record by its ID field"""
@@ -149,7 +172,7 @@ class BaseRepository:
             logger.error(f"[BaseRepository.delete] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-########## MISC ##########
+    ########## MISC ##########
 
     def toggle_boolean_field(self, id_value: str, field: str) -> Optional[Dict]:
         """Toggle a boolean field in a record"""
@@ -165,6 +188,6 @@ class BaseRepository:
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     # TODO: maybe implement this (as needed)
-    # def query(self):
-    #     """Return a query builder for more complex queries"""
-    #     return self.client.table(self.table_name)
+    def query(self):
+        """Return a query builder for more complex queries"""
+        return self.client.table(self.table_name)

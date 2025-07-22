@@ -78,15 +78,15 @@ class RepositoryFactory:
         return cls.create(cls.TAGS)
     
     @classmethod
-    def rush_categories(cls):  
+    def event_timeframes_rush(cls):  
         return cls.create(cls.EVENT_TIMEFRAMES_RUSH)
 
     @classmethod
-    def rush_events(cls):
+    def events_rush(cls):
         return cls.create(cls.EVENTS_RUSH)
 
     @classmethod
-    def rush_attendees(cls):
+    def events_rush_attendees(cls):
         return cls.create(cls.EVENTS_RUSH_ATTENDEES)
 
 

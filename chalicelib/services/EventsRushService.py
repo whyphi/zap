@@ -12,28 +12,31 @@ import uuid
 ##### EDIT: make sure to handle exceptions that may arise from the database operations
 ##### EDIT: procedure for handling exceptions is to catch and raise the exception, then handle the exception in the original API call using the @handlers.error_handler decorator
 
-class EventsRushService:
-    class BSONEncoder(json.JSONEncoder):
-        """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
 
-        def default(self, o):
-            if isinstance(o, datetime.datetime):
-                return o.isoformat()
-            elif isinstance(o, ObjectId):
-                return str(o)
-            return super().default(o)
+class EventsRushService:
+    # class BSONEncoder(json.JSONEncoder):
+    #     """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
+
+    #     def default(self, o):
+    #         if isinstance(o, datetime.datetime):
+    #             return o.isoformat()
+    #         elif isinstance(o, ObjectId):
+    #             return str(o)
+    #         return super().default(o)
 
     def __init__(self):
-        ##### EDIT: use the correct table names (reference https://dbdiagram.io/d/WhyPhi-6817d0c31ca52373f5689e84)
-        ##### EDIT: change all future invocations of incorrect table names
-        self.rush_categories_repo = RepositoryFactory.rush_categories()  # event_timeframes_rush
-        self.rush_events_repo = RepositoryFactory.rush_events()          # events_rush
-        self.attendees_repo = RepositoryFactory.rush_attendees()         # events_rush_attendees
-    
+        self.event_timeframes_rush = (
+            RepositoryFactory.event_timeframes_rush()
+        )  # event_timeframes_rush
+        self.events_rush = RepositoryFactory.events_rush()
+        self.events_rush_attendees = RepositoryFactory.events_rush_attendees()
+
     def get_rush_categories_and_events(self):
         try:
-            categories = self.rush_categories_repo.get_all()
-            return json.dumps(categories)
+            timeframes_with_events = self.event_timeframes_rush.get_nested(
+                "events_rush"
+            )
+            return timeframes_with_events
         except Exception as e:
             raise BadRequestError(f"Failed to get rush categories and events: {e}")
 
@@ -41,7 +44,7 @@ class EventsRushService:
         try:
             data["dateCreated"] = datetime.datetime.now()
             data["events"] = []
-            created = self.rush_categories_repo.create(data)
+            created = self.event_timeframes_rush.create(data)
             return created
         except Exception as e:
             raise BadRequestError(f"Failed to get rush category: {e}")
@@ -56,20 +59,20 @@ class EventsRushService:
             data["numAttendees"] = 0
 
             # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
-            image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png" # MUST initialize version to v0
+            image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png"  # MUST initialize version to v0
             image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
 
             # add image_url to data object (this also replaces the original base64 image url)
             data["eventCoverImage"] = image_url
 
-            event = self.rush_events_repo.create(data)
+            event = self.events_rush.create(data)
             return event
         except Exception as e:
             raise BadRequestError(f"Failed to create rush event: {e}")
-        
+
         ##### EDIT: the api route that calls this function requires this function to return something. Make sure to include a return statement.
         ##### EDIT: prolly can just return whatever the .create() call returns / just call an empty return statement (returns a None value as far as I know)
-        
+
         """
         # Add event to its own collection
         self.mongo_module.insert_document(
@@ -95,19 +98,21 @@ class EventsRushService:
             # get existing image and image versions
             eventCoverImage: str = data["eventCoverImage"]
             eventCoverImageVersion = data["eventCoverImageVersion"]
-            prevEventCoverImageVersion = get_prev_image_version(version=eventCoverImageVersion)
-            
+            prevEventCoverImageVersion = get_prev_image_version(
+                version=eventCoverImageVersion
+            )
+
             # Check if event exists in the rush-event collection
-            event = self.rush_events_repo.get_by_id(event_id)
+            event = self.events_rush.get_by_id(event_id)
             if not event:
                 raise Exception("Event does not exist.")
 
             # update eventCoverImageVersion in db
             event["eventCoverImageVersion"] = eventCoverImageVersion
-            
+
             # get categoryId (for s3 path)
             event_category_id = event["categoryId"]
-            
+
             # obtain image paths using versioning
             image_path = f"image/rush/{event_category_id}/{event_id}/{eventCoverImageVersion}.png"
             prev_image_path = f"image/rush/{event_category_id}/{event_id}/{prevEventCoverImageVersion}.png"
@@ -116,17 +121,17 @@ class EventsRushService:
             if "https://whyphi-zap.s3.amazonaws.com" not in eventCoverImage:
                 # remove previous eventCoverImage from s3 bucket
                 s3.delete_binary_data(object_id=prev_image_path)
-                
+
                 # upload eventCoverImage to s3 bucket
                 image_url = s3.upload_binary_data(path=image_path, data=eventCoverImage)
 
                 # add image_url to data object (this also replaces the original base64 image url)
                 data["eventCoverImage"] = image_url
 
-            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so 
+            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so
             # that data overrides the matching keys
-            merged_data = { **event, **data }
-            
+            merged_data = {**event, **data}
+
             """
             i remove these bc supabase dont support mongodb array filtering or ops (?)
             
@@ -167,24 +172,26 @@ class EventsRushService:
                 
             return
             """
-            #i fetched entire rush-categories record, located and replaced specific event inside
-            #events array in py and updated whole array (idk if this even makes sense)
+            # i fetched entire rush-categories record, located and replaced specific event inside
+            # events array in py and updated whole array (idk if this even makes sense)
 
             # update in rush categories table w/ event list
-            rush_category = self.rush_categories_repo.get_by_id(event_category_id)
+            rush_category = self.event_timeframes_rush.get_by_id(event_category_id)
             update_events = []
             for i in rush_category["events"]:
                 if i["id"] == event_id or i.get("_id") == event_id:
-                    update_events.append(merged_data) #replace old w/ updated
+                    update_events.append(merged_data)  # replace old w/ updated
                 else:
                     update_events.append(i)
-            
+
             # save event list back into rush_categories
-            self.rush_categories_repo.update(event_category_id, {"events": update_events})
+            self.event_timeframes_rush.update(
+                event_category_id, {"events": update_events}
+            )
 
             # update rush events table
             merged_data.pop("_id", None)
-            self.rush_events_repo.update(event_id, merged_data)
+            self.events_rush.update(event_id, merged_data)
 
             return merged_data
         except Exception as e:
@@ -207,39 +214,41 @@ class EventsRushService:
         """
         try:
             default_rush_category_id = data.get("defaultRushCategoryId")
-        
-            collection = self.rush_categories_repo.get_all()
+
+            collection = self.event_timeframes_rush.get_all()
 
             # Set all defaultRushCategory fields to false
             for i in collection:
                 if i.get("defaultRushCategory", False):
-                    self.rush_categories_repo.update(
-                    i["id"], {"defaultRushCategory": False}
-                )
+                    self.event_timeframes_rush.update(
+                        i["id"], {"defaultRushCategory": False}
+                    )
 
             # if default_rush_category_id is "" --> reset defaultRushCategory
             if not default_rush_category_id:
                 return
 
             # Update the specified document to set its defaultRushCategory to true
-            result = self.rush_categories_repo.update(
-                default_rush_category_id,
-                {"defaultRushCategory": True}
+            result = self.event_timeframes_rush.update(
+                default_rush_category_id, {"defaultRushCategory": True}
             )
 
             if not result:
-                raise ValueError(f"Document with ID {default_rush_category_id} was not found or could not be updated.")
+                raise ValueError(
+                    f"Document with ID {default_rush_category_id} was not found or could not be updated."
+                )
 
         except Exception as e:
             raise BadRequestError(f"Failed to modify rush settings: {e}")
 
-
     def get_rush_event(self, event_id: str, data: dict):
         try:
-            hide_attendees = data.get("hideAttendees", False) # TODO: only hideAttendees if specifically requested
+            hide_attendees = data.get(
+                "hideAttendees", False
+            )  # TODO: only hideAttendees if specifically requested
             hide_code = data.get("hideCode", True)
-            
-            event = self.rush_events_repo.get_by_id(event_id)
+
+            event = self.events_rush.get_by_id(event_id)
             if not event:
                 raise BadRequestError("Event does not exist.")
 
@@ -255,7 +264,7 @@ class EventsRushService:
 
     def checkin_rush(self, event_id: str, user_data: dict):
         try:
-            event = self.rush_events_repo.get_by_id(event_id)
+            event = self.events_rush.get_by_id(event_id)
             if not event:
                 raise BadRequestError("Event does not exist.")
 
@@ -267,9 +276,11 @@ class EventsRushService:
                 event_code = raw_event_code.lower().strip()
 
             user_data.pop("code", None)
-            
+
             # Parse the timestamp string to a datetime object
-            deadline = datetime.datetime.strptime(event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            deadline = datetime.datetime.strptime(
+                event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ"
+            )
 
             if datetime.datetime.now() > deadline:
                 raise UnauthorizedError("Event deadline has passed.")
@@ -285,17 +296,17 @@ class EventsRushService:
             event["numAttendees"] += 1
 
             # STEP 1: update events-rush-event collection
-            self.rush_events_repo.update(event_id, event)
-            
+            self.events_rush.update(event_id, event)
+
             # update event inside rush-categories.events list manually
-            rush_category = self.rush_categories_repo.get_by_id(event["categoryId"])
+            rush_category = self.event_timeframes_rush.get_by_id(event["categoryId"])
             events = []
             for i in rush_category["events"]:
                 if i.get("id") == event_id or i.get("_id") == event_id:
                     events.append(event)
                 else:
                     events.append(i)
-            self.rush_categories_repo.update(event["categoryId"], {"events": events})
+            self.event_timeframes_rush.update(event["categoryId"], {"events": events})
 
         except Exception as e:
             raise BadRequestError(f"Check-in failed: {e}")
@@ -321,30 +332,36 @@ class EventsRushService:
 
             return
         """
+
     def get_rush_events_default_category(self, data: dict):
         try:
-            rush_categories = self.rush_categories_repo({"defaultRushCategory": True})
+            rush_categories = self.event_timeframes_rush({"defaultRushCategory": True})
             if not rush_categories:
                 return []
-        
+
             if len(rush_categories) == 0:
                 return []
-            
+
             rush_category = rush_categories[0]
-            
+
             # remove code from every rush event
             for event in rush_category.get("events", []):
                 event.pop("code", None)
-                
+
                 # check if user attended event (boolean)
-                checkedIn = any(attendee["email"] == data["email"] for attendee in event.get("attendees", []))
+                checkedIn = any(
+                    attendee["email"] == data["email"]
+                    for attendee in event.get("attendees", [])
+                )
                 event["checkedIn"] = checkedIn
-                
+
             # Sort events by the date field
             try:
                 rush_category["events"].sort(
-                    key=lambda e: datetime.datetime.strptime(e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                    reverse=True
+                    key=lambda e: datetime.datetime.strptime(
+                        e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                    ),
+                    reverse=True,
                 )
             except ValueError as ve:
                 # Handle the case where the date format might be different or invalid
@@ -370,8 +387,8 @@ class EventsRushService:
         """
         try:
             # Check if event exists in the rush-event collection
-            event = self.rush_events_repo.get_by_id(event_id)
-            
+            event = self.events_rush.get_by_id(event_id)
+
             if not event:
                 raise Exception("Event does not exist.")
 
@@ -380,10 +397,10 @@ class EventsRushService:
 
             # Get eventCoverImage path
             image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
-            
+
             # remove previous eventCoverImage from s3 bucket
             s3.delete_binary_data(object_id=image_path)
-            
+
             """
             # Delete the event from its category
             update_category = self.rush_categories_repo.update(
@@ -395,15 +412,19 @@ class EventsRushService:
             """
 
             # Remove event from rush-categories events list manually
-            rush_category = self.rush_categories_repo.get_by_id(event_category_id)
-            updated = [i for i in rush_category["events"] if i.get("_id") != event_id and i.get("id") != event_id]
-            self.rush_categories_repo.update(event_category_id, {"events": updated})
+            rush_category = self.event_timeframes_rush.get_by_id(event_category_id)
+            updated = [
+                i
+                for i in rush_category["events"]
+                if i.get("_id") != event_id and i.get("id") != event_id
+            ]
+            self.event_timeframes_rush.update(event_category_id, {"events": updated})
 
             # Delete event data from the rush-event table
-            delete_event = self.rush_events_repo.delete_by_id(event_id)
+            delete_event = self.events_rush.delete_by_id(event_id)
             if not delete_event:
                 raise Exception("Failed to delete rush category.")
-            
+
             return
 
         except Exception as e:
@@ -411,41 +432,42 @@ class EventsRushService:
 
     def get_rush_category_analytics(self, category_id: str):
         try:
-            category = self.rush_categories_repo.get_by_id(category_id)
+            category = self.event_timeframes_rush.get_by_id(category_id)
             if not category:
                 raise BadRequestError("Rush category not found.")
-            
+
             # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
             attendees = {}
-            
+
             # events: list of objects (event: { name, eventId })
             events = []
-            
+
             for event in category.get("events", []):
-                new_event = { 
-                    "eventId": event.get("_id") or event.get("id"), 
-                    "eventName": event.get("name") 
+                new_event = {
+                    "eventId": event.get("_id") or event.get("id"),
+                    "eventName": event.get("name"),
                 }
-                
+
                 # accumulate list of events
                 events.append(new_event)
-                
+
                 # accumulate attendance
                 for attendee in event.get("attendees", []):
                     email = attendee["email"]
                     if email in attendees:
                         attendees[email]["eventsAttended"].append(new_event)
                     else:
-                        attendees[email] = { **attendee, "eventsAttended": [new_event] }
-                        
-            result = { 
-                "categoryName": category["name"], 
+                        attendees[email] = {**attendee, "eventsAttended": [new_event]}
+
+            result = {
+                "categoryName": category["name"],
                 "attendees": attendees,
                 "events": events,
             }
-            
+
             return json.dumps(result, cls=self.BSONEncoder)
         except Exception as e:
             raise BadRequestError(f"Failed to get rush category analytics: {e}")
+
 
 events_rush_service = EventsRushService()
