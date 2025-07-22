@@ -101,11 +101,11 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-    def get_nested(self, nested_table: str):
+    def get_with_nested(self, nested_table: str):
         """
         Performs a select with a nested foreign table using PostgREST syntax. For example,
-        we can get all events_rush associated with a timeframe by calling
-        `self.event_timeframes_rush.get_nested(nested_table=events_rush)`.
+        we can get all `events_rush` associated with a timeframe by calling
+        `self.event_timeframes_rush_repo.get_nested(nested_table=events_rush)`.
 
         Args:
             nested (str): The nested table name.
