@@ -32,7 +32,7 @@ def test_repository_factory_creates_listings_repo(mock_supabase):
     repo = RepositoryFactory.listings()
     assert isinstance(repo, BaseRepository)
     assert repo.table_name == "listings"
-    assert repo.id_field == "id"
+    assert repo.id_fields == "id"
 
 
 def test_base_repository_get_all_returns_all_records_from_table(mock_supabase):

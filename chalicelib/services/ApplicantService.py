@@ -14,7 +14,7 @@ class ApplicantService:
         self.applications_repo = RepositoryFactory.applications()
 
     def get(self, id: str):
-        data = self.applications_repo.get_by_id(id_value=id)
+        data = self.applications_repo.get_by_id(id_values=id)
         return data
 
     def get_all(self):
@@ -22,7 +22,7 @@ class ApplicantService:
         return data
 
     def get_all_from_listing(self, id: str):
-        listing = self.listings_repo.get_by_id(id_value=id)
+        listing = self.listings_repo.get_by_id(id_values=id)
         data = self.applications_repo.get_all_by_field(field="listing_id", value=id)
 
         # TODO: re-implement this

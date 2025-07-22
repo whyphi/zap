@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 class ListingService:
     def __init__(self):
         self.listings_repo = RepositoryFactory.listings()
+        self.user_roles_repo = RepositoryFactory.user_roles()
         self.applications_repo = RepositoryFactory.applications()
 
     # TODO: prevent duplicate names... (also for rush-category)
@@ -42,7 +43,7 @@ class ListingService:
         return {"msg": True}
 
     def get(self, id: str):
-        data = self.listings_repo.get_by_id(id_value=id)
+        data = self.listings_repo.get_by_id(id_values={"id": id})
         return data
 
     def get_all(self):
