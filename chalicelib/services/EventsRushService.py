@@ -38,10 +38,12 @@ class EventsRushService:
         except Exception as e:
             raise BadRequestError(f"Failed to get rush categories and events: {e}")
 
-    def create_rush_category(self, data: dict):
+    def create_rush_timeframe(self, data: dict):
         try:
-            data["dateCreated"] = datetime.datetime.now()
-            data["events"] = []
+            id = str(uuid.uuid4())
+            data["id"] = id
+            # data["dateCreated"] = datetime.datetime.now()
+            # data["events"] = []
             created = self.event_timeframes_rush_repo.create(data)
             return created
         except Exception as e:

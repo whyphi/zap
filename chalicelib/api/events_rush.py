@@ -25,12 +25,12 @@ def get_rush_event(event_id):
     return events_rush_service.get_rush_event(event_id=event_id, data=data)
 
 
-@events_rush_api.route("/events/rush/category", methods=["POST"], cors=True)
+@events_rush_api.route("/events/rush/timeframe", methods=["POST"], cors=True)
 @auth(events_rush_api, roles=[Roles.ADMIN])
 @handle_exceptions
-def create_rush_category():
+def create_rush_timeframe():
     data = events_rush_api.current_request.json_body
-    return events_rush_service.create_rush_category(data)
+    return events_rush_service.create_rush_timeframe(data)
 
 
 @events_rush_api.route("/events/rush", methods=["POST"], cors=True)
