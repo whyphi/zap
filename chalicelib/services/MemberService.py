@@ -8,6 +8,7 @@ import boto3
 import uuid
 from typing import List
 
+
 class MemberService:
     def __init__(self):
         self.users_repo = RepositoryFactory.users()
@@ -32,11 +33,12 @@ class MemberService:
             
             # Create the user in the database
             self.users_repo.create(data)
-        
+
             # Create user-role relationship in the user_roles database
             role_id = self.roles_repo.get_all_by_field(field="name", value="member")
             if not role_id:
                 raise NotFoundError("Default role not found")
+                
             self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
 
             return {
@@ -90,12 +92,17 @@ class MemberService:
     def get_all(self):
         try:
             data = self.users_repo.get_all()
-            return json.dumps(data, cls=self.BSONEncoder)
         except Exception as e:
-            raise BadRequestError(f"Failed to retrieve users: {e}")
+            raise NotFoundError(f"Failed to retrieve users: {str(e)}")
+        return json.dumps(data, cls=self.BSONEncoder)
 
-    #def onboard(self, document_id=str, data=dict) -> bool:
-    #    return mongo_module.update_document_by_id(self.collection, document_id, data)
+    def onboard(self, document_id=str, data=dict) -> bool:
+        try:
+            response = self.users_repo.update(document_id, data)
+        except Exception as e:
+            raise BadRequestError(f"Failed to onboard user: {str(e)}")
+        return response
+    
 
     def update(self, user_id: str, data: dict, headers: dict) -> bool:
         try:
@@ -126,6 +133,7 @@ class MemberService:
             
             return self.users_repo.update(user_id, data)
         
+
         except Exception as e:
             raise BadRequestError(f"Failed to update user: {e}")
     

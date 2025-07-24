@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: DON'T FORGET TO DECIDE WHAT TO DO WITH ListingService.create (temporarily create MongoDB event???)
 
+# COMPLETED
 
 class ListingService:
     def __init__(self):

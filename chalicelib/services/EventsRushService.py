@@ -9,6 +9,8 @@ from typing import Optional
 import datetime
 import uuid
 
+# IN PROGRESS
+
 ##### EDIT: make sure to handle exceptions that may arise from the database operations
 ##### EDIT: procedure for handling exceptions is to catch and raise the exception, then handle the exception in the original API call using the @handlers.error_handler decorator
 
