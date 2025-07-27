@@ -93,18 +93,14 @@ class EventsRushService:
     def create_rush_event(self, data: dict):
         try:
             event_id = str(uuid.uuid4())
-            data["dateCreated"] = datetime.datetime.now()
-            data["lastModified"] = data["dateCreated"]
-            data["_id"] = event_id
-            data["attendees"] = []
-            data["numAttendees"] = 0
+            data["id"] = event_id
 
             # upload eventCoverImage to s3 bucket (convert everything to png files for now... can adjust later)
-            image_path = f"image/rush/{data['categoryId']}/{event_id}/{data['eventCoverImageVersion']}.png"  # MUST initialize version to v0
-            image_url = s3.upload_binary_data(image_path, data["eventCoverImage"])
+            image_path = f"image/rush/{data['timeframe_id']}/{event_id}/{data['event_cover_image_version']}.png"  # MUST initialize version to v0
+            image_url = s3.upload_binary_data(image_path, data["event_cover_image"])
 
             # add image_url to data object (this also replaces the original base64 image url)
-            data["eventCoverImage"] = image_url
+            data["event_cover_image"] = image_url
 
             event = self.events_rush_repo.create(data)
             return event
