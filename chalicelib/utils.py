@@ -1,6 +1,7 @@
 import base64
 import random
 import hashlib
+from urllib.parse import urlparse
 
 
 def decode_base64(base64_data):
@@ -56,6 +57,11 @@ def hash_value(value):
 
         # Return a truncated version of the hashed value
         return hashed_value[:random_length]
+
+
+def extract_key_from_url(url: str) -> str:
+    parsed = urlparse(url)
+    return parsed.path.lstrip("/")
 
 
 def get_newsletter_css():

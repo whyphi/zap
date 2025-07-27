@@ -2,7 +2,7 @@ from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import BadRequestError, UnauthorizedError
 import json
 from chalicelib.s3 import s3
-from chalicelib.utils import get_prev_image_version
+from chalicelib.utils import get_prev_image_version, extract_key_from_url
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
@@ -330,38 +330,13 @@ class EventsRushService:
             if not event:
                 raise Exception("Event does not exist.")
 
-            event_category_id = event["categoryId"]
-            event_cover_image_version = event["event_cover_image_version"]
-
             # Get eventCoverImage path
-            image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
+            # image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
+            image_path = extract_key_from_url(event["event_cover_image"])
 
-            # remove previous eventCoverImage from s3 bucket
-            s3.delete_binary_data(object_id=image_path)
+            s3.delete_binary_data(object_id=image_path, is_full_path=True)
 
-            """
-            # Delete the event from its category
-            update_category = self.rush_categories_repo.update(
-                event_category_id,
-                {"$pull": {"events": {"_id": event_oid}}},
-            )
-            if not update_category:
-                raise Exception("Failed to update rush category.")
-            """
-
-            # Remove event from rush-categories events list manually
-            rush_category = self.event_timeframes_rush_repo.get_by_id(event_category_id)
-            updated = [
-                i
-                for i in rush_category["events"]
-                if i.get("_id") != event_id and i.get("id") != event_id
-            ]
-            self.event_timeframes_rush_repo.update(
-                event_category_id, {"events": updated}
-            )
-
-            # Delete event data from the rush-event table
-            delete_event = self.events_rush_repo.delete_by_id(event_id)
+            delete_event = self.events_rush_repo.delete(id_value=event_id)
             if not delete_event:
                 raise Exception("Failed to delete rush category.")
 
