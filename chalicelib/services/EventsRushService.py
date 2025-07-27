@@ -56,18 +56,22 @@ class EventsRushService:
             # 2. Get rushees associated with event (if possible)
             rushees = []
             if not hide_attendees:
-                attendees = self.events_rush_attendees_repo.get_all_by_field(
-                    field="event_id", value=event_id
+                attendees_with_rushees = (
+                    self.events_rush_attendees_repo.get_with_custom_select(
+                        filters={"event_id": event_id},
+                        select_query="checkin_time, rushees(*)",
+                    )
                 )
-                rushee_ids = [a["rushee_id"] for a in attendees]
-                rushee_map = {a["rushee_id"] : a["checkin_time"] for a in attendees}
 
-                if rushee_ids:
-                    rushees = self.rushees_repo.get_many_by_ids(id_list=rushee_ids)
+                for attendee in attendees_with_rushees:
+                    # Returns single rushee table row
+                    rushee = attendee.get("rushees", None)
 
-                    for r in rushees:
-                        checkin_time = rushee_map[r["id"]]
-                        r["checkin_time"] = checkin_time
+                    if not rushee:
+                        raise BadRequestError("Rushee not found.")
+
+                    rushee["checkin_time"] = attendee["checkin_time"]
+                    rushees.append(rushee)
 
             event["attendees"] = rushees
             return event

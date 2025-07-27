@@ -27,8 +27,6 @@ def get_rush_event(event_id):
     hide_attendees = query_params.get("hideAttendees", "true").lower() == "true"
     hide_code = query_params.get("hideCode", "true").lower() == "true"
 
-    print("params", query_params)
-    print("params parsed", hide_code, hide_attendees)
     return events_rush_service.get_rush_event(
         event_id=event_id, hide_attendees=hide_attendees, hide_code=hide_code
     )

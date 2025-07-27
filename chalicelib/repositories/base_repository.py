@@ -101,21 +101,24 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-    def get_many_by_ids(
-        self, id_list: List[Any], select_query: str = "*"
+    def get_with_custom_select(
+        self, filters: Optional[Dict[str, Any]] = None, select_query: str = "*"
     ) -> List[Dict]:
-        """Get all records where id_field is in id_list"""
+        """
+        Generic method to get records with custom select and filters.
+        Example: `select_query="checkin_time, rushees(*)"
+        filters={"event_id": event_id}`
+        """
         try:
-            response = (
-                self.client.table(self.table_name)
-                .select(select_query)
-                .in_(self.id_field, list(id_list))
-                .execute()
-            )
+            query = self.client.table(self.table_name).select(select_query)
+            if filters:
+                for field, value in filters.items():
+                    query = query.eq(field, value)
+            response = query.execute()
             return response.data
         except APIError as e:
             logger.error(
-                f"[BaseRepository.get_many_by_ids] Supabase error: {e.message}"
+                f"[BaseRepository.get_with_custom_select] Supabase error: {e.message}"
             )
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
