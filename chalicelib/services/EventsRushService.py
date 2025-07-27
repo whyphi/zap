@@ -60,11 +60,16 @@ class EventsRushService:
                     field="event_id", value=event_id
                 )
                 rushee_ids = [a["rushee_id"] for a in attendees]
+                rushee_map = {a["rushee_id"] : a["checkin_time"] for a in attendees}
 
                 if rushee_ids:
                     rushees = self.rushees_repo.get_many_by_ids(id_list=rushee_ids)
 
-            event["rushees"] = rushees
+                    for r in rushees:
+                        checkin_time = rushee_map[r["id"]]
+                        r["checkin_time"] = checkin_time
+
+            event["attendees"] = rushees
             return event
         except Exception as e:
             raise BadRequestError(f"Failed to get rush event: {e}")
@@ -73,6 +78,7 @@ class EventsRushService:
         try:
             id = str(uuid.uuid4())
             data["id"] = id
+            # TODO: remove comments as needed
             # data["dateCreated"] = datetime.datetime.now()
             # data["events"] = []
             created = self.event_timeframes_rush_repo.create(data)
