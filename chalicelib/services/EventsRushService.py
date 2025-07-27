@@ -1,12 +1,10 @@
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import BadRequestError, UnauthorizedError
 import json
-from bson import ObjectId
-import datetime
 from chalicelib.s3 import s3
 from chalicelib.utils import get_prev_image_version
 from typing import Optional
-import datetime
+from datetime import datetime, timezone
 import uuid
 
 ##### EDIT: make sure to handle exceptions that may arise from the database operations
@@ -85,8 +83,8 @@ class EventsRushService:
             # TODO: remove comments as needed
             # data["dateCreated"] = datetime.datetime.now()
             # data["events"] = []
-            created = self.event_timeframes_rush_repo.create(data)
-            return created
+            response = self.event_timeframes_rush_repo.create(data)
+            return response
         except Exception as e:
             raise BadRequestError(f"Failed to get rush category: {e}")
 
@@ -107,36 +105,17 @@ class EventsRushService:
         except Exception as e:
             raise BadRequestError(f"Failed to create rush event: {e}")
 
-        ##### EDIT: the api route that calls this function requires this function to return something. Make sure to include a return statement.
-        ##### EDIT: prolly can just return whatever the .create() call returns / just call an empty return statement (returns a None value as far as I know)
-
-        """
-        # Add event to its own collection
-        self.mongo_module.insert_document(
-            f"{self.collection_prefix}rush-event", data
-        )
-
-        # Add event to rush category
-        self.mongo_module.update_document(
-            f"{self.collection_prefix}rush",
-            data["categoryId"],
-            {"$push": { "events": data }},
-        )
-
-        return
-        """
-
     def modify_rush_event(self, data: dict):
 
         try:
             event_id = data["id"]
-            data["lastModified"] = datetime.datetime.now()
+            data["last_modified"] = datetime.now(tz=timezone.utc).isoformat()
 
             # get existing image and image versions
-            eventCoverImage: str = data["eventCoverImage"]
-            eventCoverImageVersion = data["eventCoverImageVersion"]
-            prevEventCoverImageVersion = get_prev_image_version(
-                version=eventCoverImageVersion
+            event_cover_image: str = data["event_cover_image"]
+            event_cover_image_version = data["event_cover_image_version"]
+            prev_event_cover_image_version = get_prev_image_version(
+                version=event_cover_image_version
             )
 
             # Check if event exists in the rush-event collection
@@ -144,95 +123,32 @@ class EventsRushService:
             if not event:
                 raise Exception("Event does not exist.")
 
-            # update eventCoverImageVersion in db
-            event["eventCoverImageVersion"] = eventCoverImageVersion
-
-            # get categoryId (for s3 path)
-            event_category_id = event["categoryId"]
+            # get timeframe_id from event (for s3 path)
+            timeframe_id = event["timeframe_id"]
 
             # obtain image paths using versioning
-            image_path = f"image/rush/{event_category_id}/{event_id}/{eventCoverImageVersion}.png"
-            prev_image_path = f"image/rush/{event_category_id}/{event_id}/{prevEventCoverImageVersion}.png"
+            image_path = (
+                f"image/rush/{timeframe_id}/{event_id}/{event_cover_image_version}.png"
+            )
+            prev_image_path = f"image/rush/{timeframe_id}/{event_id}/{prev_event_cover_image_version}.png"
 
-            # only need to re-upload and delete old image if eventCoverImage does NOT contain https://whyphi-zap.s3.amazonaws.com
-            if "https://whyphi-zap.s3.amazonaws.com" not in eventCoverImage:
+            # only need to re-upload and delete old image if even_cover_image does NOT contain https://whyphi-zap.s3.amazonaws.com
+            if "https://whyphi-zap.s3.amazonaws.com" not in event_cover_image:
+
+                # upload eventCoverImage to s3 bucket
+                image_url = s3.upload_binary_data(
+                    path=image_path, data=event_cover_image
+                )
+
                 # remove previous eventCoverImage from s3 bucket
                 s3.delete_binary_data(object_id=prev_image_path)
 
-                # upload eventCoverImage to s3 bucket
-                image_url = s3.upload_binary_data(path=image_path, data=eventCoverImage)
-
                 # add image_url to data object (this also replaces the original base64 image url)
-                data["eventCoverImage"] = image_url
+                data["event_cover_image"] = image_url
 
-            # Merge data with event (from client + mongo) --> NOTE: event must be unpacked first so
-            # that data overrides the matching keys
-            merged_data = {**event, **data}
-
-            """
-            i remove these bc supabase dont support mongodb array filtering or ops (?)
-            
-            # Define array update query and filters
-            update_query = {
-                "$set": {
-                    "events.$[eventElem]": data
-                }
-            }
-
-            array_filters = [
-                {"eventElem._id": event_oid}
-            ]
-            
-            # Modify the event in its category (rush collection)
-            update_category_result = self.mongo_module.update_document(
-                collection=f"{self.collection_prefix}rush",
-                document_id=event_category_id,
-                query=update_query,
-                array_filters=array_filters
-            )
-            
-            if not update_category_result:
-                raise Exception("Error updating rush-event-category.")
-
-            # cannot include _id on original document (immutable)
-            data.pop("_id")
-            
-            # Modify actual event document (rush-event collection)
-            updated_event_result = self.mongo_module.update_document(
-                f"{self.collection_prefix}rush-event",
-                event_id,
-                {"$set": data},
-            )
-
-            if not updated_event_result:
-                raise Exception("Error updating rush-event-category.")
-                
-            return
-            """
-            # i fetched entire rush-categories record, located and replaced specific event inside
-            # events array in py and updated whole array (idk if this even makes sense)
-
-            # update in rush categories table w/ event list
-            rush_category = self.event_timeframes_rush_repo.get_by_id(event_category_id)
-            update_events = []
-            for i in rush_category["events"]:
-                if i["id"] == event_id or i.get("_id") == event_id:
-                    update_events.append(merged_data)  # replace old w/ updated
-                else:
-                    update_events.append(i)
-
-            # save event list back into rush_categories
-            self.event_timeframes_rush_repo.update(
-                event_category_id, {"events": update_events}
-            )
-
-            # update rush events table
-            merged_data.pop("_id", None)
-            self.events_rush_repo.update(event_id, merged_data)
-
-            return merged_data
+            response = self.events_rush_repo.update(id_value=event_id, data=data)
+            return response
         except Exception as e:
-            print("error is ", e)
             raise BadRequestError(str(e))
 
     def modify_rush_settings(self, data: dict):
@@ -415,7 +331,7 @@ class EventsRushService:
                 raise Exception("Event does not exist.")
 
             event_category_id = event["categoryId"]
-            event_cover_image_version = event["eventCoverImageVersion"]
+            event_cover_image_version = event["event_cover_image_version"]
 
             # Get eventCoverImage path
             image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
