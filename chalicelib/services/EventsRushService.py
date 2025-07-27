@@ -28,15 +28,46 @@ class EventsRushService:
         self.event_timeframes_rush_repo = RepositoryFactory.event_timeframes_rush()
         self.events_rush_repo = RepositoryFactory.events_rush()
         self.events_rush_attendees_repo = RepositoryFactory.events_rush_attendees()
+        self.rushees_repo = RepositoryFactory.rushees()
 
     def get_rush_categories_and_events(self):
         try:
-            timeframes_with_events = self.event_timeframes_rush_repo.get_with_nested(
-                "events_rush"
+            timeframes_with_events = self.event_timeframes_rush_repo.get_all(
+                select_query="*, events_rush(*)"
             )
             return timeframes_with_events
         except Exception as e:
             raise BadRequestError(f"Failed to get rush categories and events: {e}")
+
+    def get_rush_event(
+        self, event_id: str, hide_attendees: bool = False, hide_code: bool = True
+    ):
+        try:
+
+            # 1. Get event
+            event = self.events_rush_repo.get_by_id(id_value=event_id)
+
+            if not event:
+                raise BadRequestError("Event does not exist.")
+
+            if hide_code:
+                event.pop("code", None)
+
+            # 2. Get rushees associated with event (if possible)
+            rushees = []
+            if not hide_attendees:
+                attendees = self.events_rush_attendees_repo.get_all_by_field(
+                    field="event_id", value=event_id
+                )
+                rushee_ids = [a["rushee_id"] for a in attendees]
+
+                if rushee_ids:
+                    rushees = self.rushees_repo.get_many_by_ids(id_list=rushee_ids)
+
+            event["rushees"] = rushees
+            return event
+        except Exception as e:
+            raise BadRequestError(f"Failed to get rush event: {e}")
 
     def create_rush_timeframe(self, data: dict):
         try:
@@ -240,27 +271,6 @@ class EventsRushService:
 
         except Exception as e:
             raise BadRequestError(f"Failed to modify rush settings: {e}")
-
-    def get_rush_event(self, event_id: str, data: dict):
-        try:
-            hide_attendees = data.get(
-                "hideAttendees", False
-            )  # TODO: only hideAttendees if specifically requested
-            hide_code = data.get("hideCode", True)
-
-            event = self.events_rush_repo.get_by_id(event_id)
-            if not event:
-                raise BadRequestError("Event does not exist.")
-
-            if hide_attendees:
-                event.pop("attendees", None)
-
-            if hide_code:
-                event.pop("code", None)
-
-            return json.dumps(event, cls=self.BSONEncoder)
-        except Exception as e:
-            raise BadRequestError(f"Failed to get rush event: {e}")
 
     def checkin_rush(self, event_id: str, user_data: dict):
         try:

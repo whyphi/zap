@@ -18,11 +18,20 @@ def get_rush_events():
     return events_rush_service.get_rush_categories_and_events()
 
 
-@events_rush_api.route("/events/rush/{event_id}", methods=["POST"], cors=True)
+@events_rush_api.route("/events/rush/{event_id}", methods=["GET"], cors=True)
 @handle_exceptions
 def get_rush_event(event_id):
-    data = events_rush_api.current_request.json_body
-    return events_rush_service.get_rush_event(event_id=event_id, data=data)
+    query_params = events_rush_api.current_request.query_params or {}
+
+    # By default, hide both attendees AND code
+    hide_attendees = query_params.get("hideAttendees", "true").lower() == "true"
+    hide_code = query_params.get("hideCode", "true").lower() == "true"
+
+    print("params", query_params)
+    print("params parsed", hide_code, hide_attendees)
+    return events_rush_service.get_rush_event(
+        event_id=event_id, hide_attendees=hide_attendees, hide_code=hide_code
+    )
 
 
 @events_rush_api.route("/events/rush/timeframe", methods=["POST"], cors=True)

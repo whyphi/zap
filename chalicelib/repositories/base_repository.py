@@ -101,27 +101,22 @@ class BaseRepository:
             logger.error(f"[BaseRepository.get_by_field] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-    def get_with_nested(self, nested_table: str):
-        """
-        Performs a select with a nested foreign table using PostgREST syntax. For example,
-        we can get all `events_rush` associated with a timeframe by calling
-        `self.event_timeframes_rush_repo.get_nested(nested_table=events_rush)`.
-
-        Args:
-            nested (str): The nested table name.
-
-        Returns:
-            List[Dict]: List of rows with nested related table data.
-        """
+    def get_many_by_ids(
+        self, id_list: List[Any], select_query: str = "*"
+    ) -> List[Dict]:
+        """Get all records where id_field is in id_list"""
         try:
             response = (
                 self.client.table(self.table_name)
-                .select(f"*, {nested_table}(*)")
+                .select(select_query)
+                .in_(self.id_field, list(id_list))
                 .execute()
             )
             return response.data
         except APIError as e:
-            logger.error(f"[BaseRepository.get_nested] Supabase error: {e.message}")
+            logger.error(
+                f"[BaseRepository.get_many_by_ids] Supabase error: {e.message}"
+            )
             raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     ########### UPDATE ###########
