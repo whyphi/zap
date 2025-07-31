@@ -147,6 +147,25 @@ class BaseRepository:
         """Update a single field in a record"""
         return self.update(id_value, {field: value})
 
+    def update_all(self, data: Dict[str, Any]) -> int:
+        """
+        Update all records in the table with the provided data dict.
+        Returns the number of records updated.
+        """
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .update(data)
+                .filter(
+                    self.id_field, "not.is", "null"
+                )  # Apply update to every row in table
+                .execute()
+            )
+            return response.data
+        except APIError as e:
+            logger.error(f"[BaseRepository.update_all] Supabase error: {e.message}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
+
     ########## DELETE ##########
 
     def delete(self, id_value: str) -> List:

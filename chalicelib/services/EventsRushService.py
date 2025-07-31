@@ -7,9 +7,6 @@ from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
-##### EDIT: make sure to handle exceptions that may arise from the database operations
-##### EDIT: procedure for handling exceptions is to catch and raise the exception, then handle the exception in the original API call using the @handlers.error_handler decorator
-
 
 class EventsRushService:
     # class BSONEncoder(json.JSONEncoder):
@@ -166,30 +163,32 @@ class EventsRushService:
             If default_rush_category_id is not in the rush collection
         """
         try:
-            default_rush_category_id = data.get("defaultRushCategoryId")
+            default_rush_category_id = data.get("default_rush_timeframe_id")
 
-            collection = self.event_timeframes_rush_repo.get_all()
 
-            # Set all defaultRushCategory fields to false
-            for i in collection:
-                if i.get("defaultRushCategory", False):
-                    self.event_timeframes_rush_repo.update(
-                        i["id"], {"defaultRushCategory": False}
-                    )
-
-            # if default_rush_category_id is "" --> reset defaultRushCategory
+            print(data, default_rush_category_id)
             if not default_rush_category_id:
-                return
+                raise BadRequestError("Missing default rush category.")
+
+            # collection = self.event_timeframes_rush_repo.get_all()
+
+            # # Set all defaultRushCategory fields to false
+            # for i in collection:
+            #     if i.get("defaultRushCategory", False):
+            #         self.event_timeframes_rush_repo.update(
+            #             i["id"], {"defaultRushCategory": False}
+            #         )
+
+            response = self.event_timeframes_rush_repo.update_all(
+                data={"default_rush_timeframe": False}
+            )
 
             # Update the specified document to set its defaultRushCategory to true
             result = self.event_timeframes_rush_repo.update(
-                default_rush_category_id, {"defaultRushCategory": True}
+                id_value=default_rush_category_id, data={"default_rush_timeframe": True}
             )
 
-            if not result:
-                raise ValueError(
-                    f"Document with ID {default_rush_category_id} was not found or could not be updated."
-                )
+            return result
 
         except Exception as e:
             raise BadRequestError(f"Failed to modify rush settings: {e}")
