@@ -165,25 +165,13 @@ class EventsRushService:
         try:
             default_rush_category_id = data.get("default_rush_timeframe_id")
 
-
-            print(data, default_rush_category_id)
             if not default_rush_category_id:
                 raise BadRequestError("Missing default rush category.")
-
-            # collection = self.event_timeframes_rush_repo.get_all()
-
-            # # Set all defaultRushCategory fields to false
-            # for i in collection:
-            #     if i.get("defaultRushCategory", False):
-            #         self.event_timeframes_rush_repo.update(
-            #             i["id"], {"defaultRushCategory": False}
-            #         )
 
             response = self.event_timeframes_rush_repo.update_all(
                 data={"default_rush_timeframe": False}
             )
 
-            # Update the specified document to set its defaultRushCategory to true
             result = self.event_timeframes_rush_repo.update(
                 id_value=default_rush_category_id, data={"default_rush_timeframe": True}
             )
