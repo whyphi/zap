@@ -260,7 +260,7 @@ class EventsRushService:
             BadRequestError: Invalid default timeframe configuration.
 
         Returns:
-            list[dict]: List of event objects
+            dict: Event timeframe and events
         """
         # Gets all rush events for a given rush timeframe
         # RUSH ONLY METHOD
@@ -275,10 +275,10 @@ class EventsRushService:
                 "Multiple default rush timeframes found. There should only be one."
             )
 
-        timeframe_id = default_timeframes[0]["id"]
+        default_timeframe = default_timeframes[0]
 
         rush_events = self.events_rush_repo.get_with_custom_select(
-            filters={"timeframe_id": timeframe_id},
+            filters={"timeframe_id": default_timeframe["id"]},
             select_query="*, rushees(*)",
         )
 
@@ -290,7 +290,9 @@ class EventsRushService:
         # Sort events newest to oldest
         rush_events.sort(key=lambda e: e.get("date", ""), reverse=True)
 
-        return rush_events
+        default_timeframe["events"] = rush_events
+
+        return default_timeframe
 
     def delete_rush_event(self, event_id: str):
         """
