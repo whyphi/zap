@@ -71,11 +71,12 @@ def checkin_rush(event_id):
     return events_rush_service.checkin_rush(event_id, data)
 
 
-@events_rush_api.route("/events/rush/default", methods=["POST"], cors=True)
+@events_rush_api.route("/events/rush/timeframe/default", methods=["POST"], cors=True)
 @handle_exceptions
-def get_rush_events_default_category():
+def get_rush_events_default_timeframe():
     data = events_rush_api.current_request.json_body
-    return events_rush_service.get_rush_events_default_category(data)
+    rushee_id = data["rushee_id"]
+    return events_rush_service.get_rush_events_default_timeframe(rushee_id=rushee_id)
 
 
 @events_rush_api.route("/events/rush/{event_id}", methods=["DELETE"], cors=True)

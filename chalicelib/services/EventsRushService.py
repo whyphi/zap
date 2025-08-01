@@ -7,17 +7,10 @@ from typing import Optional
 from datetime import datetime, timezone
 import uuid
 
+# TODO: remove try/except unless needed...
+
 
 class EventsRushService:
-    # class BSONEncoder(json.JSONEncoder):
-    #     """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
-
-    #     def default(self, o):
-    #         if isinstance(o, datetime.datetime):
-    #             return o.isoformat()
-    #         elif isinstance(o, ObjectId):
-    #             return str(o)
-    #         return super().default(o)
 
     def __init__(self):
         self.event_timeframes_rush_repo = RepositoryFactory.event_timeframes_rush()
@@ -256,45 +249,48 @@ class EventsRushService:
             return
         """
 
-    def get_rush_events_default_category(self, data: dict):
-        try:
-            rush_categories = self.event_timeframes_rush_repo(
-                {"defaultRushCategory": True}
+    def get_rush_events_default_timeframe(self, rushee_id: str):
+        """Gets all events for current timeframe and status for
+        whether rushee has checked in.
+
+        Args:
+            rushee_id (str): UUID of requesting rushee
+
+        Raises:
+            BadRequestError: Invalid default timeframe configuration.
+
+        Returns:
+            list[dict]: List of event objects
+        """
+        # Gets all rush events for a given rush timeframe
+        # RUSH ONLY METHOD
+
+        default_timeframes = self.event_timeframes_rush_repo.get_all_by_field(
+            field="default_rush_timeframe", value=True
+        )
+        if not default_timeframes:
+            raise BadRequestError("No default rush timeframe found.")
+        if len(default_timeframes) > 1:
+            raise BadRequestError(
+                "Multiple default rush timeframes found. There should only be one."
             )
-            if not rush_categories:
-                return []
 
-            if len(rush_categories) == 0:
-                return []
+        timeframe_id = default_timeframes[0]["id"]
 
-            rush_category = rush_categories[0]
+        rush_events = self.events_rush_repo.get_with_custom_select(
+            filters={"timeframe_id": timeframe_id},
+            select_query="*, rushees(*)",
+        )
 
-            # remove code from every rush event
-            for event in rush_category.get("events", []):
-                event.pop("code", None)
+        for re in rush_events:
+            rushees = re.get("rushees", [])
+            re["checked_in"] = any(r.get("id") == rushee_id for r in rushees)
+            re.pop("rushees", None)
 
-                # check if user attended event (boolean)
-                checkedIn = any(
-                    attendee["email"] == data["email"]
-                    for attendee in event.get("attendees", [])
-                )
-                event["checkedIn"] = checkedIn
+        # Sort events newest to oldest
+        rush_events.sort(key=lambda e: e.get("date", ""), reverse=True)
 
-            # Sort events by the date field
-            try:
-                rush_category["events"].sort(
-                    key=lambda e: datetime.datetime.strptime(
-                        e["date"], "%Y-%m-%dT%H:%M:%S.%fZ"
-                    ),
-                    reverse=True,
-                )
-            except ValueError as ve:
-                # Handle the case where the date format might be different or invalid
-                print(f"Date format error: {ve}")
-
-            return json.dumps(rush_category, cls=self.BSONEncoder)
-        except Exception as e:
-            raise BadRequestError(f"Failed to get rush event: {e}")
+        return rush_events
 
     def delete_rush_event(self, event_id: str):
         """
