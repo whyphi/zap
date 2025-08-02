@@ -195,24 +195,22 @@ class EventsRushService:
 
         rushee_id = user_data["rusheeId"]
 
-        # 3. Validate time, code, and checkin status
+        # 3. Validate time + code
         deadline = datetime.fromisoformat(event["deadline"])
         now = datetime.now(tz=timezone.utc)
 
-        # # TODO: timezones not matching up?
-        # est = pytz_timezone("US/Eastern")
-        # print(f"now (EST): {now.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}")
-        # print(
-        #     f"deadline (EST): {deadline.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}"
-        # )
-        # print(f"deadline (??): {deadline.strftime('%Y-%m-%d %H:%M:%S')}")
-
         if now > deadline:
+            est = pytz_timezone("US/Eastern")
+            print(f"now (EST): {now.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}")
+            print(
+                f"deadline (EST): {deadline.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}"
+            )
             raise UnauthorizedError("Event deadline has passed.")
 
         if user_code != event_code:
             raise UnauthorizedError("Invalid code.")
 
+        # 4. Attempt checkin
         try:
             self.events_rush_attendees_repo.create(
                 data={"event_id": event_id, "rushee_id": rushee_id}
@@ -221,8 +219,6 @@ class EventsRushService:
             if e.code == "23505":
                 raise BadRequestError("User has already checked in.")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
-
-        # TODO: raise proper exception if already checked in...
 
         return {"msg": True}
 
