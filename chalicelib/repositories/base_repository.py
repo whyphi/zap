@@ -33,7 +33,7 @@ class BaseRepository:
             return response.data
         except APIError as e:
             logger.error(f"[BaseRepository.create] Supabase error: {e.message}")
-            raise BadRequestError(GENERIC_CLIENT_ERROR)
+            raise e
 
     ########## READ ##########
 

@@ -6,6 +6,9 @@ from chalicelib.utils import get_prev_image_version, extract_key_from_url
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
+from postgrest.exceptions import APIError
+from pytz import timezone as pytz_timezone
 
 # TODO: remove try/except unless needed...
 
@@ -25,7 +28,7 @@ class EventsRushService:
             )
             return timeframes_with_events
         except Exception as e:
-            raise BadRequestError(f"Failed to get rush categories and events: {e}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     def get_rush_event(
         self, event_id: str, hide_attendees: bool = False, hide_code: bool = True
@@ -64,7 +67,7 @@ class EventsRushService:
             event["attendees"] = rushees
             return event
         except Exception as e:
-            raise BadRequestError(f"Failed to get rush event: {e}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     def create_rush_timeframe(self, data: dict):
         try:
@@ -76,7 +79,7 @@ class EventsRushService:
             response = self.event_timeframes_rush_repo.create(data)
             return response
         except Exception as e:
-            raise BadRequestError(f"Failed to get rush category: {e}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
     def create_rush_event(self, data: dict):
         try:
@@ -175,79 +178,53 @@ class EventsRushService:
             raise BadRequestError(f"Failed to modify rush settings: {e}")
 
     def checkin_rush(self, event_id: str, user_data: dict):
+        # 1. Ensure if event exists
+        event = self.events_rush_repo.get_by_id(event_id)
+        if not event:
+            raise BadRequestError("Event does not exist.")
+
+        # 2. Extract code and id
+        raw_user_code: str = user_data.get("code", "")
+        user_code = raw_user_code.lower().strip()
+
+        raw_event_code: Optional[str] = event.get("code", None)
+        if not raw_event_code:
+            raise UnauthorizedError("Invalid code.")
+
+        event_code = raw_event_code.lower().strip()
+
+        rushee_id = user_data["rusheeId"]
+
+        # 3. Validate time, code, and checkin status
+        deadline = datetime.fromisoformat(event["deadline"])
+        now = datetime.now(tz=timezone.utc)
+
+        # # TODO: timezones not matching up?
+        # est = pytz_timezone("US/Eastern")
+        # print(f"now (EST): {now.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}")
+        # print(
+        #     f"deadline (EST): {deadline.astimezone(est).strftime('%Y-%m-%d %H:%M:%S')}"
+        # )
+        # print(f"deadline (??): {deadline.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        if now > deadline:
+            raise UnauthorizedError("Event deadline has passed.")
+
+        if user_code != event_code:
+            raise UnauthorizedError("Invalid code.")
+
         try:
-            event = self.events_rush_repo.get_by_id(event_id)
-            if not event:
-                raise BadRequestError("Event does not exist.")
-
-            raw_user_code: str = user_data.get("code", "")
-            user_code = raw_user_code.lower().strip()
-
-            raw_event_code: Optional[str] = event.get("code", None)
-            if raw_event_code:
-                event_code = raw_event_code.lower().strip()
-
-            user_data.pop("code", None)
-
-            # Parse the timestamp string to a datetime object
-            deadline = datetime.datetime.strptime(
-                event["deadline"], "%Y-%m-%dT%H:%M:%S.%fZ"
+            self.events_rush_attendees_repo.create(
+                data={"event_id": event_id, "rushee_id": rushee_id}
             )
-
-            if datetime.datetime.now() > deadline:
-                raise UnauthorizedError("Event deadline has passed.")
-
-            if user_code != event_code:
-                raise UnauthorizedError("Invalid code.")
-
-            if any(d["email"] == user_data["email"] for d in event["attendees"]):
+        except APIError as e:
+            if e.code == "23505":
                 raise BadRequestError("User has already checked in.")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
-            user_data["checkinTime"] = datetime.datetime.now()
-            event["attendees"].append(user_data)
-            event["numAttendees"] += 1
+        # TODO: raise proper exception if already checked in...
 
-            # STEP 1: update events-rush-event collection
-            self.events_rush_repo.update(event_id, event)
-
-            # update event inside rush-categories.events list manually
-            rush_category = self.event_timeframes_rush_repo.get_by_id(
-                event["categoryId"]
-            )
-            events = []
-            for i in rush_category["events"]:
-                if i.get("id") == event_id or i.get("_id") == event_id:
-                    events.append(event)
-                else:
-                    events.append(i)
-            self.event_timeframes_rush_repo.update(
-                event["categoryId"], {"events": events}
-            )
-
-        except Exception as e:
-            raise BadRequestError(f"Check-in failed: {e}")
-
-        """
-            # Define array update query and filters
-            update_query = {
-                "$set": {
-                    "events.$[eventElem]": event
-                }
-            }
-
-            array_filters = [
-                {"eventElem._id": event_oid}
-            ]
-
-            # STEP 2: Modify the event in its category (rush collection)
-            self.rush_categories_repo.update(
-                document_id=event["categoryId"],
-                query=update_query,
-                array_filters=array_filters
-            )
-
-            return
-        """
+        return {"msg": True}
 
     def get_rush_events_default_timeframe(self, rushee_id: str):
         """Gets all events for current timeframe and status for
