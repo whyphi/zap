@@ -127,7 +127,7 @@ class EventsRushService:
             prev_image_path = f"image/rush/{timeframe_id}/{event_id}/{prev_event_cover_image_version}.png"
 
             # only need to re-upload and delete old image if even_cover_image does NOT contain https://whyphi-zap.s3.amazonaws.com
-            if "https://whyphi-zs3.amazonaws.com" not in event_cover_image:
+            if "https://whyphi-zap.s3.amazonaws.com" not in event_cover_image:
 
                 # upload eventCoverImage to s3 bucket
                 image_url = s3.upload_binary_data(
