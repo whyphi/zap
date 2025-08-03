@@ -74,9 +74,6 @@ class EventsRushService:
         try:
             id = str(uuid.uuid4())
             data["id"] = id
-            # TODO: remove comments as needed
-            # data["dateCreated"] = datetime.datetime.now()
-            # data["events"] = []
             response = self.event_timeframes_rush_repo.create(data)
             return response
         except Exception as e:
