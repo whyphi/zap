@@ -17,9 +17,11 @@ jobs:
           cache: "pip" # caching pip dependencies
       - name: Install pipenv
         run: pip install pipenv
-      - run: pipenv requirements --dev > requirements.txt
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pipenv install --dev
+      # - run: pipenv requirements --dev > requirements.txt
+      # - name: Install dependencies
+      #   run: pip install -r requirements.txt
       - name: Run unit test suite
         run: pytest --cov-report xml --cov=. tests/
         env:
