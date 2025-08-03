@@ -1,6 +1,6 @@
 import boto3
 import os
-from chalicelib.utils import decode_base64
+from chalicelib.utils.utils import decode_base64
 
 
 class S3Client:

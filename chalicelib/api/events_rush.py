@@ -87,9 +87,9 @@ def delete_rush_event(event_id):
 
 
 @events_rush_api.route(
-    "/events/rush/category/{category_id}/analytics", methods=["GET"], cors=True
+    "/events/rush/timeframe/{timeframe_id}/analytics", methods=["GET"], cors=True
 )
 @auth(events_rush_api, roles=[Roles.ADMIN])
 @handle_exceptions
-def get_rush_category_analytics(category_id):
-    return events_rush_service.get_rush_category_analytics(category_id=category_id)
+def get_rush_timeframe_analytics(timeframe_id):
+    return events_rush_service.get_rush_timeframe_analytics(timeframe_id=timeframe_id)

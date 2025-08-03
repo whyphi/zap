@@ -2,7 +2,8 @@ from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import BadRequestError, UnauthorizedError
 import json
 from chalicelib.s3 import s3
-from chalicelib.utils import get_prev_image_version, extract_key_from_url
+from chalicelib.utils.utils import get_prev_image_version, extract_key_from_url
+from chalicelib.utils.rush_events import is_rush_threshold_met
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
@@ -10,7 +11,7 @@ from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from postgrest.exceptions import APIError
 from pytz import timezone as pytz_timezone
 
-# TODO: remove try/except unless needed...
+# TODO: refactor base_repo to pass errors to service classes
 
 
 class EventsRushService:
@@ -126,7 +127,7 @@ class EventsRushService:
             prev_image_path = f"image/rush/{timeframe_id}/{event_id}/{prev_event_cover_image_version}.png"
 
             # only need to re-upload and delete old image if even_cover_image does NOT contain https://whyphi-zap.s3.amazonaws.com
-            if "https://whyphi-zap.s3.amazonaws.com" not in event_cover_image:
+            if "https://whyphi-zs3.amazonaws.com" not in event_cover_image:
 
                 # upload eventCoverImage to s3 bucket
                 image_url = s3.upload_binary_data(
@@ -303,44 +304,57 @@ class EventsRushService:
         except Exception as e:
             raise BadRequestError(e)
 
-    def get_rush_category_analytics(self, category_id: str):
+    def get_rush_timeframe_analytics(self, timeframe_id: str):
         try:
-            category = self.event_timeframes_rush_repo.get_by_id(category_id)
-            if not category:
-                raise BadRequestError("Rush category not found.")
-
-            # attendees : dict of all users (user: { name, email, eventsAttended: list of objects })
-            attendees = {}
-
-            # events: list of objects (event: { name, eventId })
-            events = []
-
-            for event in category.get("events", []):
-                new_event = {
-                    "eventId": event.get("_id") or event.get("id"),
-                    "eventName": event.get("name"),
-                }
-
-                # accumulate list of events
-                events.append(new_event)
-
-                # accumulate attendance
-                for attendee in event.get("attendees", []):
-                    email = attendee["email"]
-                    if email in attendees:
-                        attendees[email]["eventsAttended"].append(new_event)
-                    else:
-                        attendees[email] = {**attendee, "eventsAttended": [new_event]}
-
-            result = {
-                "categoryName": category["name"],
-                "attendees": attendees,
-                "events": events,
-            }
-
-            return json.dumps(result, cls=self.BSONEncoder)
+            timeframe = self.event_timeframes_rush_repo.get_by_id(id_value=timeframe_id)
+            rush_events = self.events_rush_repo.get_with_custom_select(
+                filters={"timeframe_id": timeframe_id}, select_query="*, rushees(*)"
+            )
         except Exception as e:
-            raise BadRequestError(f"Failed to get rush category analytics: {e}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
+
+        rush_events.sort(key=lambda e: e.get("date", ""))
+
+        rushee_dict = {}
+        rush_events_dict = {}
+
+        # Extract all rushees and events
+        for event in rush_events:
+            # Get rushees
+            event_id = event["id"]
+            for rushee in event.get("rushees", []):
+                rushee_id = rushee["id"]
+                if rushee_id not in rushee_dict:
+                    rushee_dict[rushee_id] = rushee.copy()
+
+            # Get map of events (for quick lookups)
+            event_copy = event.copy()
+            event_copy.pop("rushees", None)
+            rush_events_dict[event_id] = event_copy
+
+        # Track rushee event attendance
+        for rushee_id, rushee in rushee_dict.items():
+            events_attended = []
+            for event in rush_events:
+                event_id = event["id"]
+                event_rushees = event.get("rushees", [])
+
+                attended = False
+                if any(r.get("id") == rushee_id for r in event_rushees):
+                    attended = True
+
+                events_attended.append({"id": event_id, "attended": attended})
+
+            rushee["events_attended"] = events_attended
+            rushee["threshold"] = is_rush_threshold_met(
+                events_attended=events_attended, events=rush_events_dict
+            )
+
+        return {
+            "timeframe": timeframe,
+            "rushees": rushee_dict,
+            "events": rush_events_dict,
+        }
 
 
 events_rush_service = EventsRushService()

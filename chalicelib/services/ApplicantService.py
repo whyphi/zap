@@ -1,6 +1,6 @@
 from chalicelib.services.EventsRushService import events_rush_service
 from chalice.app import BadRequestError
-from chalicelib.utils import hash_value
+from chalicelib.utils.utils import hash_value
 from chalicelib.repositories.repository_factory import RepositoryFactory
 import json
 import logging
@@ -46,7 +46,7 @@ class ApplicantService:
 
     def _get_rush_analytics(self, rush_category_id: str) -> dict:
         """Helper method for `get_all_from_listing`"""
-        analytics = events_rush_service.get_rush_category_analytics(rush_category_id)
+        analytics = events_rush_service.get_rush_timeframe_analytics(rush_category_id)
         try:
             return json.loads(analytics)
         except json.JSONDecodeError as e:
