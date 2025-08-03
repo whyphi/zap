@@ -349,6 +349,9 @@ class EventsRushService:
             rushee["threshold"] = is_rush_threshold_met(
                 events_attended=events_attended, events=rush_events_dict
             )
+            rushee["num_events_attended"] = sum(
+                [e["attended"] for e in events_attended]
+            )
 
         return {
             "timeframe": timeframe,
