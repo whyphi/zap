@@ -330,6 +330,8 @@ class EventsRushService:
             # Get map of events (for quick lookups)
             event_copy = event.copy()
             event_copy.pop("rushees", None)
+            event_copy["num_attendees"] = len(event["rushees"])
+
             rush_events_dict[event_id] = event_copy
 
         # Track rushee event attendance
