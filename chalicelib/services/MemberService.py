@@ -1,22 +1,18 @@
-from chalicelib.modules.mongo import mongo_module
-from chalice.app import ConflictError, NotFoundError, UnauthorizedError
-
+from chalicelib.repositories.repository_factory import RepositoryFactory
+from chalice.app import ConflictError, NotFoundError, UnauthorizedError, BadRequestError
 from bson import ObjectId
 from collections import defaultdict
 import json
 import jwt
 import boto3
-
+import uuid
+from typing import List
 
 class MemberService:
-    class BSONEncoder(json.JSONEncoder):
-        def default(self, o):
-            if isinstance(o, ObjectId):
-                return str(o)
-            return super().default(o)
-
     def __init__(self):
-        self.collection = "users"
+        self.users_repo = RepositoryFactory.users()
+        self.user_roles_repo = RepositoryFactory.user_roles()
+        self.roles_repo = RepositoryFactory.roles()
 
     def create(self, data):
         """
@@ -28,21 +24,27 @@ class MemberService:
         Returns:
             bool: True if the user was created, False otherwise.
         """
-        existing_user = mongo_module.find_one_document(
-            self.collection, {"email": data["email"]}
-        )
+        try:
+            existing_user = self.users_repo.get_all_by_field(field="email", value=data["email"])
 
-        if existing_user:
-            raise ConflictError("User already exists")
+            if existing_user and len(existing_user) > 0:
+                raise ConflictError("User already exists")
+            
+            # Create the user in the database
+            self.users_repo.create(data)
+        
+            # Create user-role relationship in the user_roles database
+            role_id = self.roles_repo.get_all_by_field(field="name", value="member")
+            if not role_id:
+                raise NotFoundError("Default role not found")
+            self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
 
-        # Create the user in the database
-        data["isNewUser"] = True
-        mongo_module.insert_document(self.collection, data)
-
-        return {
-            "success": True,
-            "message": "User created successfully",
-        }
+            return {
+                "success": True,
+                "message": "User created successfully",
+            }
+        except Exception as e:
+            raise BadRequestError(f"Failed to create user: {e}")
 
     def delete(self, data: list[str]) -> dict:
         """
@@ -62,76 +64,105 @@ class MemberService:
             NotFoundError: If no IDs are provided or if a document with one of the
                 provided IDs is not found in the database.
         """
-        if not data:
-            raise NotFoundError("No IDs provided to delete")
+        try:
+            if not data:
+                raise NotFoundError("No IDs provided to delete")
 
-        for id in data:
-            if not mongo_module.delete_document_by_id(self.collection, id):
-                raise NotFoundError(f"Document with ID {id} not found")
+            for user_id in data:
+                self.user_roles_repo.delete(user_id)
+                self.users_repo.delete(user_id)
 
-        return {
-            "success": True,
-            "message": "Documents deleted successfully",
-        }
+            return {
+                "success": True,
+                "message": "Documents deleted successfully",
+            }
+        except Exception as e:
+            raise BadRequestError(f"Delete failed")
+
 
     def get_by_id(self, user_id: str):
-        data = mongo_module.get_document_by_id(self.collection, user_id)
-        return json.dumps(data, cls=self.BSONEncoder)
+        try:
+            data = self.users_repo.get_by_id(user_id)
+            return json.dumps(data, cls=self.BSONEncoder)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve user")
 
     def get_all(self):
-        data = mongo_module.get_data_from_collection(self.collection)
-        return json.dumps(data, cls=self.BSONEncoder)
+        try:
+            data = self.users_repo.get_all()
+            return json.dumps(data, cls=self.BSONEncoder)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve users: {e}")
 
-    def onboard(self, document_id=str, data=dict) -> bool:
-        return mongo_module.update_document_by_id(self.collection, document_id, data)
+    #def onboard(self, document_id=str, data=dict) -> bool:
+    #    return mongo_module.update_document_by_id(self.collection, document_id, data)
 
     def update(self, user_id: str, data: dict, headers: dict) -> bool:
-        ssm_client = boto3.client("ssm")
-        auth_header = headers.get("Authorization", None)
+        try:
+            ssm_client = boto3.client("ssm")
+            auth_header = headers.get("Authorization", None)
 
-        if not auth_header:
-            raise UnauthorizedError("Authorization header is missing.")
+            if not auth_header:
+                raise UnauthorizedError("Authorization header is missing.")
 
-        _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
+            _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
 
-        if not token:
-            raise UnauthorizedError("Token is missing.")
+            if not token:
+                raise UnauthorizedError("Token is missing.")
 
-        auth_secret = ssm_client.get_parameter(
-            Name="/Zap/AUTH_SECRET", WithDecryption=True
-        )["Parameter"]["Value"]
-        decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
+            auth_secret = ssm_client.get_parameter(
+                Name="/Zap/AUTH_SECRET", WithDecryption=True
+            )["Parameter"]["Value"]
+            decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
 
-        if user_id != decoded["_id"]:
-            raise UnauthorizedError(
-                "User {user_id} is not authorized to update this user."
-            )
+            if user_id != decoded["_id"]:
+                raise UnauthorizedError(
+                    f"User {user_id} is not authorized to update this user."
+                )
 
-        # NOTE: Performing an update on the path '_id' would modify the immutable field '_id'
-        data.pop("_id", None)
-
-        return mongo_module.update_document_by_id(self.collection, user_id, data)
-
-    def update_roles(self, document_id=str, roles=list) -> bool:
-        return mongo_module.update_document(
-            self.collection,
-            document_id,
-            [{"$set": {"roles": roles}}],
-        )
-
+            # NOTE: Performing an update on the path '_id' would modify the immutable field '_id'
+            data.pop("_id", None)
+            data.pop("id", None)
+            
+            return self.users_repo.update(user_id, data)
+        
+        except Exception as e:
+            raise BadRequestError(f"Failed to update user: {e}")
+    
+    def update_roles(self, user_id=str, roles=list) -> bool:
+        try:
+            self.user_roles_repo.delete(user_id)
+        
+            for role in roles:
+                role_id = self.roles_repo.get_by_id(role)
+                if not role_id:
+                    raise NotFoundError(f"Role with ID {role} not found")
+                
+            self.user_roles_repo.create({"user_id": user_id, "role_id": role})
+            return True
+        except Exception as e:
+            raise BadRequestError(f"Failed to update roles: {e}")
+    
+    # Function temporarily unusable
     def get_family_tree(self):
-        data = mongo_module.get_data_from_collection(self.collection)
+        try:
+            data = self.users_repo.get_all()
 
-        # Group by family
-        family_groups = defaultdict(list)
+            # Group by family
+            family_groups = defaultdict(list)
 
-        for member in data:
-            if "big" not in member or member["big"] == "":
-                continue
-            member["_id"] = str(member["_id"])
-            family_groups[member["family"]].append(member)
-
-        return family_groups
-
+            # There's no 'big' field in supabase data, so every member will be skipped in current implementation
+            # TODO: should come up with a new way to store big/little relationships
+            
+            # NOTE: idk how to do this but this below assumes big-id field exists in each user record
+            for member in data:
+                if not member.get("big_id"): #skip members w/o a big
+                    continue
+                family = member.get("family", "Unknown") #uses unknown if no fam field
+                family_groups[family].append(member) #gorups by family
+            return json.dumps(family_groups, cls=self.BSONEncoder) #returns dict of family
+        
+        except Exception as e:
+            raise BadRequestError(f"Failed to generate family tree")
 
 member_service = MemberService()

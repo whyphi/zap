@@ -1,6 +1,6 @@
 import boto3
 import os
-from chalicelib.utils import decode_base64
+from chalicelib.utils.utils import decode_base64
 
 
 class S3Client:
@@ -39,18 +39,20 @@ class S3Client:
 
         return object_url
 
-    def delete_binary_data(self, object_id: str) -> str:
+    def delete_binary_data(self, object_id: str, is_full_path: bool = False) -> str:
         """Deletes object from s3 and returns response
         Args:
-            object_id (str): The key (path) of the object to delete from the S3 bucket.
-            e.g. dev/image/rush/66988908fd70b2c44bf2305d/199bb28f-b54c-48a3-9b94-1c95eab61f7d/infosession2.png
+            object_id (str): The key (path) of the object to delete from the S3 bucket. e.g. dev/image/rush/66988908fd70b2c44bf2305d/199bb28f-b54c-48a3-9b94-1c95eab61f7d/infosession2.png
+            is_full_path (bool): Flag set to true if object_id includes dev/prod in the url
 
         Returns:
             str: A message indicating the result of the deletion operation.
 
         Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
-        if self.is_prod:
+        if is_full_path:
+            path = object_id
+        elif self.is_prod:
             path = f"prod/{object_id}"
         else:
             path = f"dev/{object_id}"

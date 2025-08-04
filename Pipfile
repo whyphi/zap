@@ -4,8 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-chalice = "*"
-boto3 = "*"
 "pymongo[srv]" = "*"
 python-dotenv = "*"
 pydantic = "*"
@@ -14,9 +12,11 @@ google-api-python-client = "*"
 google-auth-httplib2 = "*"
 google-auth-oauthlib = "*"
 thefuzz = "*"
-sentry-sdk = {extras = ["chalice"], version = "*"}
 mongomock = "*"
 supabase = "*"
+chalice = "*"
+boto3 = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 pre-commit = "*"

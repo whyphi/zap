@@ -1,4 +1,5 @@
 from chalicelib.modules.mongo import mongo_module
+from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
 import json
 from bson import ObjectId
@@ -21,51 +22,65 @@ class EventsMemberService:
     def __init__(self, mongo_module=mongo_module):
         self.mongo_module = mongo_module
         self.collection_prefix = "events-"
+        
+        self.events_member_repo = RepositoryFactory.events_member()
+        self.event_timeframes_member_repo = RepositoryFactory.event_timeframes_member()
+        self.events_member_attendees_repo = RepositoryFactory.events_member_attendees()
+        self.event_tag_repo = RepositoryFactory.event_tags()
+        self.tag_repo = RepositoryFactory.tags()
 
     def create_timeframe(self, timeframe_data: dict):
-        timeframe_data["dateCreated"] = datetime.datetime.now()
-        self.mongo_module.insert_document(
-            collection=f"{self.collection_prefix}timeframe", data=timeframe_data
-        )
-        return {"msg": True}
+        try:
+            timeframe_data["dateCreated"] = datetime.datetime.now()
+            timeframe_data.pop("events", None)
+            return self.event_timeframes_member_repo.create(timeframe_data)
+        except Exception as e:
+            raise BadRequestError(f"Failed to create timeframe: {str(e)}")
 
     def get_timeframe(self, timeframe_id: str):
-        timeframe = self.mongo_module.get_document_by_id(
-            collection=f"{self.collection_prefix}timeframe", document_id=timeframe_id
-        )
-
-        return json.dumps(timeframe, cls=self.BSONEncoder)
+        try:
+            timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+            return json.dumps(timeframe, cls=self.BSONEncoder)
+        except Exception as e:
+            raise NotFoundError(f"Failed to retrieve timeframe: {str(e)}")
 
     def get_all_timeframes(self):
         """Retrieve all timeframes from the database."""
-        timeframes = self.mongo_module.get_data_from_collection(
-            f"{self.collection_prefix}timeframe"
-        )
-
-        return json.dumps(timeframes, cls=self.BSONEncoder)
+        try:
+            timeframes = self.event_timeframes_member_repo.get_all()
+            return json.dumps(timeframes, cls=self.BSONEncoder)
+        except Exception as e:
+            raise NotFoundError(f"Failed to retrieve timeframes: {str(e)}")
 
     def delete_timeframe(self, timeframe_id: str):
-        # Check if timeframe exists and if it doesn't return errors
-        timeframe = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}timeframe", timeframe_id
-        )
-
-        if timeframe is None:
+        try:
+            timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
+        
+        if not timeframe:
             raise NotFoundError(f"Timeframe with ID {timeframe_id} does not exist.")
-
-        # If timeframe exists, get the eventIds (children)
-        event_ids = [str(event["_id"]) for event in timeframe["events"]]
-
-        # Delete all the events in the timeframe
-        for event_id in event_ids:
-            self.mongo_module.delete_document_by_id(
-                f"{self.collection_prefix}event", event_id
-            )
-
-        # If timeframe exists, delete the timeframe document
-        self.mongo_module.delete_document_by_id(
-            f"{self.collection_prefix}timeframe", timeframe_id
-        )
+        
+        # Delete all events associated with this timeframe
+        try:
+            timeframe_events = self.events_member_repo.get_all_by_field("timeframeId", timeframe_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve events for timeframe {timeframe_id}: {str(e)}")
+        for timeframe_event in timeframe_events:
+            
+            try:
+                event_tags = self.event_tag_repo.get_all_by_field("events_member_id", timeframe_event["id"])
+            except Exception as e:
+                raise BadRequestError(f"Failed to retrieve tags for event {timeframe_event['id']}: {str(e)}")
+            for event_tag in event_tags:
+                self.event_tag_repo.delete(event_tag["events_member_id"])
+                
+            try:
+                event_attendees = self.events_member_attendees_repo.get_all_by_field("event_id", timeframe_event["id"])
+            except Exception as e:
+                raise BadRequestError(f"Failed to retrieve attendees for event {timeframe_event['id']}: {str(e)}")
+            for event_attendee in event_attendees:
+                self.events_member_attendees_repo.delete(event_attendee["id"])
 
         return {"statusCode": 200}
 
