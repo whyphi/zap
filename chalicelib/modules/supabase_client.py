@@ -13,9 +13,16 @@ class SupabaseClient:
 
     @staticmethod
     def get_params() -> Tuple[str, str]:
+        """
+        Retrieves Supabase URL and key based on the current environment.
+
+        Returns:
+            Tuple[str, str]: Supabase URL and key.
+        Raises:
+            Exception: If parameters cannot be found or fetched.
+        """
         ENV = os.getenv("ENV", "local")
-        # TODO: remove eventually (for debugging)
-        logger.info(f"[SupabaseClient] Running in env: {ENV}")
+        logger.info(f"[SupabaseClient.get_params] Running in env: {ENV}")
 
         if ENV in ["staging", "prod"]:
             try:
@@ -36,16 +43,37 @@ class SupabaseClient:
 
         if not (url and key):
             raise Exception(
-                f"[SupabaseClient.__init__] Could not find Supabase url or key. ENV: {ENV}"
+                f"[SupabaseClient.get_params] Could not find Supabase url or key. ENV: {ENV}"
             )
 
         return url, key
 
     @classmethod
     def get_client(cls) -> Client:
+        """
+        Returns a cached Supabase client instance, creating it if necessary.
 
+        Returns:
+            Client: Supabase client instance.
+        """
         if cls._client is None:
             url, key = cls.get_params()
             cls._client = create_client(url, key)
-
         return cls._client
+
+    @classmethod
+    def set_client(cls, client: Client):
+        """
+        Injects a mock or pre-initialized Supabase client instance (for testing).
+
+        Args:
+            client (Client): Supabase client instance to set.
+        """
+        cls._client = client
+
+    @classmethod
+    def reset_client(cls):
+        """
+        Clears the cached Supabase client instance (for teardown or reinitialization).
+        """
+        cls._client = None
