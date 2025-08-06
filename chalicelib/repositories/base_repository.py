@@ -148,6 +148,20 @@ class BaseRepository:
         except APIError as e:
             logger.error(f"[BaseRepository.delete] Supabase error: {e.message}")
             raise BadRequestError(GENERIC_CLIENT_ERROR)
+        
+    def delete_by_field(self, field: str, value: Any) -> List:
+        """Delete records where a specific field matches a value"""
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .delete()
+                .eq(field, value)
+                .execute()
+            )
+            return response.data
+        except APIError as e:
+            logger.error(f"[BaseRepository.delete_by_field] Supabase error: {e.message}")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
 ########## MISC ##########
 

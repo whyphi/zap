@@ -10,6 +10,12 @@ from typing import List
 
 
 class MemberService:
+    class BSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, ObjectId):
+                return str(o)
+            return super().default(o)
+    
     def __init__(self):
         self.users_repo = RepositoryFactory.users()
         self.user_roles_repo = RepositoryFactory.user_roles()
@@ -32,14 +38,23 @@ class MemberService:
                 raise ConflictError("User already exists")
             
             # Create the user in the database
+            roles = data.pop("roles", None)  # Remove roles if present
+            data["id"] = str(uuid.uuid4())  # Generate a new UUID for the user ID
+            data["is_eboard"] = data.get("is_eboard", False)  # Default to False if not provided
+            data["is_new_user"] = data.get("is_new_user", True)  # Default to True if not provided
             self.users_repo.create(data)
 
             # Create user-role relationship in the user_roles database
             role_id = self.roles_repo.get_all_by_field(field="name", value="member")
             if not role_id:
-                raise NotFoundError("Default role not found")
-                
-            self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["_id"]})
+                raise NotFoundError("Default role not found") 
+            self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["id"]})
+
+            for role in roles or []:
+                role_id = self.roles_repo.get_all_by_field(field="name", value=role)
+                if not role_id:
+                    raise NotFoundError(f"Role {role} is not role")
+                self.user_roles_repo.create({"user_id": data["id"], "role_id": role_id[0]["id"]})
 
             return {
                 "success": True,
@@ -71,7 +86,6 @@ class MemberService:
                 raise NotFoundError("No IDs provided to delete")
 
             for user_id in data:
-                self.user_roles_repo.delete(user_id)
                 self.users_repo.delete(user_id)
 
             return {
@@ -79,7 +93,7 @@ class MemberService:
                 "message": "Documents deleted successfully",
             }
         except Exception as e:
-            raise BadRequestError(f"Delete failed")
+            raise BadRequestError(f"Failed to delete users: {str(e)}")
 
 
     def get_by_id(self, user_id: str):
@@ -92,16 +106,31 @@ class MemberService:
     def get_all(self):
         try:
             data = self.users_repo.get_all()
+            return json.dumps(data, cls=self.BSONEncoder)
         except Exception as e:
             raise NotFoundError(f"Failed to retrieve users: {str(e)}")
-        return json.dumps(data, cls=self.BSONEncoder)
 
-    def onboard(self, document_id=str, data=dict) -> bool:
+    def onboard(self, id=str, data=dict) -> bool:
         try:
-            response = self.users_repo.update(document_id, data)
+            print(f"Onboarding user: {id} with data: {data}")
+
+            print(f"data.get('isEboard'): {data.get('isEboard')}")
+
+            data["is_new_user"] = False
+            if "graduationYear" in data:
+                data["grad_year"] = int(data["graduationYear"])
+                data.pop("graduationYear", None)
+            if "isEboard" in data:
+                data["is_eboard"] = data["isEboard"]
+                data.pop("isEboard", None)
+            if "isNewUser" in data:
+                data.pop("isNewUser", None)
+                
+            print(f"Processed data for onboarding: {data}")
+            response = self.users_repo.update(id, data)
+            return response
         except Exception as e:
             raise BadRequestError(f"Failed to onboard user: {str(e)}")
-        return response
     
 
     def update(self, user_id: str, data: dict, headers: dict) -> bool:
@@ -139,14 +168,15 @@ class MemberService:
     
     def update_roles(self, user_id=str, roles=list) -> bool:
         try:
-            self.user_roles_repo.delete(user_id)
-        
+            existing_roles = self.users_repo.get_by_id(user_id)  # Check if user exists
+            if existing_roles:
+                self.user_roles_repo.delete_by_field("user_id", user_id)
+
             for role in roles:
-                role_id = self.roles_repo.get_by_id(role)
+                role_id = self.roles_repo.get_all_by_field("name", role)[0].get("id")
                 if not role_id:
                     raise NotFoundError(f"Role with ID {role} not found")
-                
-            self.user_roles_repo.create({"user_id": user_id, "role_id": role})
+                self.user_roles_repo.create({"user_id": user_id, "role_id": role_id})
             return True
         except Exception as e:
             raise BadRequestError(f"Failed to update roles: {e}")
