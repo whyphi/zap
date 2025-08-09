@@ -2,7 +2,7 @@ from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import BadRequestError, UnauthorizedError
 import json
 from chalicelib.s3 import s3
-from chalicelib.utils.utils import get_prev_image_version, extract_key_from_url
+from chalicelib.utils.utils import get_prev_image_version, extract_relative_path_from_url
 from chalicelib.utils.rush_events import is_rush_threshold_met
 from typing import Optional
 from datetime import datetime, timezone
@@ -294,9 +294,9 @@ class EventsRushService:
 
             # Get eventCoverImage path
             # image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
-            image_path = extract_key_from_url(event["event_cover_image"])
+            image_path = extract_relative_path_from_url(event["event_cover_image"])
 
-            s3.delete_binary_data(relative_path=image_path, is_full_path=True)
+            s3.delete_binary_data(relative_path=image_path)
 
             delete_event = self.events_rush_repo.delete(id_value=event_id)
             if not delete_event:

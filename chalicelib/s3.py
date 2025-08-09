@@ -18,7 +18,7 @@ class S3Client:
                 aws_secret_access_key="test",
                 region_name="us-east-1",
             )
-            self.s3_endpoint = "http://localhost:4566/whyphi-zap/"
+            self.s3_endpoint = f"http://localhost:4566/{self.bucket_name}/"
         else:
             self.s3 = boto3.client("s3")
             self.s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
@@ -28,8 +28,8 @@ class S3Client:
         if self.env == "prod":
             return "prod"
         elif self.env == "staging":
-            return "dev"  # Keep existing staging -> dev mapping
-        else:  # local
+            return "dev" 
+        else:
             return "local"
 
     def upload_binary_data(self, relative_path: str, data: str) -> str:
@@ -56,22 +56,17 @@ class S3Client:
         object_url = self.s3_endpoint + full_path
         return object_url
 
-    def delete_binary_data(self, relative_path: str, is_full_path: bool = False) -> str:
+    def delete_binary_data(self, relative_path: str) -> str:
         """Deletes object from s3 and returns response
         Args:
-            object_id (str): The key (path) of the object to delete from the S3 bucket. e.g. dev/image/rush/<timeframe>/<event>/infosession2.png
-            is_full_path (bool): Flag set to true if relative_path includes dev/prod in the url
+            relative_path (str): The key (path) of the object to delete from the S3 bucket. e.g. image/rush/<timeframe>/<event>/infosession2.png
 
         Returns:
             str: A message indicating the result of the deletion operation.
 
         Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
-        print("########## path", relative_path)
-        if is_full_path:
-            path = relative_path[11:]
-        else:
-            path = f"{self._get_path_prefix()}/{relative_path}"
+        path = f"{self._get_path_prefix()}/{relative_path}"
 
         # delete binary data given bucket_name and key
         response = self.s3.delete_object(Bucket=self.bucket_name, Key=path)
