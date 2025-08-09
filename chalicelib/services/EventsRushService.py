@@ -123,16 +123,22 @@ class EventsRushService:
             )
             prev_image_path = f"image/rush/{timeframe_id}/{event_id}/{prev_event_cover_image_version}.png"
 
-            # only need to re-upload and delete old image if even_cover_image does NOT contain https://whyphi-zap.s3.amazonaws.com
-            if "https://whyphi-zap.s3.amazonaws.com" not in event_cover_image:
+            # only need to re-upload and delete old image if event_cover_image is NOT a URL (S3 or LocalStack)
+            is_s3_url = event_cover_image.startswith(
+                "https://whyphi-zap.s3.amazonaws.com"
+            )
+            is_localstack_url = event_cover_image.startswith(
+                "http://localhost:4566/whyphi-zap"
+            )
+            if not (is_s3_url or is_localstack_url):
 
                 # upload eventCoverImage to s3 bucket
                 image_url = s3.upload_binary_data(
-                    path=image_path, data=event_cover_image
+                    relative_path=image_path, data=event_cover_image
                 )
 
                 # remove previous eventCoverImage from s3 bucket
-                s3.delete_binary_data(object_id=prev_image_path)
+                s3.delete_binary_data(relative_path=prev_image_path)
 
                 # add image_url to data object (this also replaces the original base64 image url)
                 data["event_cover_image"] = image_url
@@ -290,7 +296,7 @@ class EventsRushService:
             # image_path = f"image/rush/{event_category_id}/{event_id}/{event_cover_image_version}.png"
             image_path = extract_key_from_url(event["event_cover_image"])
 
-            s3.delete_binary_data(object_id=image_path, is_full_path=True)
+            s3.delete_binary_data(relative_path=image_path, is_full_path=True)
 
             delete_event = self.events_rush_repo.delete(id_value=event_id)
             if not delete_event:
