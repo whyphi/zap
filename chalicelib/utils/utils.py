@@ -59,9 +59,23 @@ def hash_value(value):
         return hashed_value[:random_length]
 
 
-def extract_key_from_url(url: str) -> str:
+def extract_relative_path_from_url(url: str) -> str:
+    """
+    Extracts the S3 key from a full URL, removing bucket name and env prefixes.
+    Works for both AWS S3 and LocalStack URLs.
+    """
     parsed = urlparse(url)
-    return parsed.path.lstrip("/")
+    path_parts = parsed.path.lstrip("/").split("/")
+
+    # Remove bucket name if present
+    if path_parts[0] == "whyphi-zap":
+        path_parts.pop(0)
+
+    # Remove environment prefix if present
+    if path_parts and path_parts[0] in {"local", "prod", "dev"}:
+        path_parts.pop(0)
+
+    return "/".join(path_parts)
 
 
 def get_newsletter_css():
