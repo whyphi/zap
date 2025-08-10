@@ -28,12 +28,20 @@ class S3Client:
         if self.env == "prod":
             return "prod"
         elif self.env == "staging":
-            return "dev" 
+            return "dev"
         else:
             return "local"
 
     def upload_binary_data(self, relative_path: str, data: str) -> str:
-        """Uploads object to S3 Bucket and returns path"""
+        """Uploads object to S3 Bucket and returns path
+        Args:
+            relative_path (str): The partial key (path) of the object to delete from the S3 bucket. e.g. image/rush/<timeframe>/<event>/infosession2.png
+
+        Returns:
+            str: Url of S3 resource.
+
+        Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/put_object.html
+        """
         full_path = f"{self._get_path_prefix()}/{relative_path}"
 
         # Split parts of base64 data
@@ -62,7 +70,7 @@ class S3Client:
             relative_path (str): The key (path) of the object to delete from the S3 bucket. e.g. image/rush/<timeframe>/<event>/infosession2.png
 
         Returns:
-            str: A message indicating the result of the deletion operation.
+            dict: An object indicating the result of the deletion operation.
 
         Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
