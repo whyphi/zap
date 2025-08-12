@@ -1,6 +1,7 @@
-from typing import Dict, Any
+from typing import Optional
 from dataclasses import dataclass
 from chalicelib.repositories.base_repository import BaseRepository
+from supabase import Client
 
 
 @dataclass
@@ -35,65 +36,69 @@ class RepositoryFactory:
     EVENTS_RUSH_ATTENDEES = RepositoryConfig(table_name="events_rush_attendees")
 
     @staticmethod
-    def create(config: RepositoryConfig) -> BaseRepository:
+    def create(
+        config: RepositoryConfig, client: Optional[Client] = None
+    ) -> BaseRepository:
         """Create a repository instance with the given configuration"""
-        return BaseRepository(table_name=config.table_name, id_field=config.id_field)
+        return BaseRepository(
+            table_name=config.table_name, id_field=config.id_field, client=client
+        )
 
     @classmethod
-    def listings(cls) -> BaseRepository:
-        return cls.create(cls.LISTINGS)
+    def listings(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.LISTINGS, client)
 
     @classmethod
-    def applications(cls) -> BaseRepository:
-        return cls.create(cls.APPLICATIONS)
+    def applications(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.APPLICATIONS, client=client)
 
     @classmethod
-    def users(cls) -> BaseRepository:
-        return cls.create(cls.USERS)
+    def users(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.USERS, client=client)
 
     @classmethod
-    def user_roles(cls) -> BaseRepository:
-        return cls.create(cls.USER_ROLES)
+    def user_roles(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.USER_ROLES, client=client)
 
     @classmethod
-    def roles(cls) -> BaseRepository:
-        return cls.create(cls.ROLES)
+    def roles(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.ROLES, client=client)
 
     @classmethod
-    def events_member(cls) -> BaseRepository:
-        return cls.create(cls.EVENTS_MEMBER)
+    def events_member(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.EVENTS_MEMBER, client=client)
 
     @classmethod
-    def event_timeframes_member(cls) -> BaseRepository:
-        return cls.create(cls.EVENT_TIMEFRAMES_MEMBER)
+    def event_timeframes_member(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.EVENT_TIMEFRAMES_MEMBER, client=client)
 
     @classmethod
-    def events_member_attendees(cls) -> BaseRepository:
-        return cls.create(cls.EVENTS_MEMBER_ATTENDEES)
+    def events_member_attendees(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.EVENTS_MEMBER_ATTENDEES, client=client)
 
     @classmethod
-    def event_tags(cls) -> BaseRepository:
-        return cls.create(cls.EVENT_TAGS)
+    def event_tags(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.EVENT_TAGS, client=client)
 
     @classmethod
-    def tags(cls) -> BaseRepository:
-        return cls.create(cls.TAGS)
+    def tags(cls, client: Optional[Client] = None) -> BaseRepository:
+        return cls.create(cls.TAGS, client=client)
 
     @classmethod
-    def event_timeframes_rush(cls):
-        return cls.create(cls.EVENT_TIMEFRAMES_RUSH)
+    def event_timeframes_rush(cls, client: Optional[Client] = None):
+        return cls.create(cls.EVENT_TIMEFRAMES_RUSH, client=client)
 
     @classmethod
-    def events_rush(cls):
-        return cls.create(cls.EVENTS_RUSH)
+    def events_rush(cls, client: Optional[Client] = None):
+        return cls.create(cls.EVENTS_RUSH, client=client)
 
     @classmethod
-    def events_rush_attendees(cls):
-        return cls.create(cls.EVENTS_RUSH_ATTENDEES)
+    def events_rush_attendees(cls, client: Optional[Client] = None):
+        return cls.create(cls.EVENTS_RUSH_ATTENDEES, client=client)
 
     @classmethod
-    def rushees(cls):
-        return cls.create(cls.RUSHEES)
+    def rushees(cls, client: Optional[Client] = None):
+        return cls.create(cls.RUSHEES, client=client)
 
 
 # Usage example:

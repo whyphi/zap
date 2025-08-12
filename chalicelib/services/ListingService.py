@@ -1,5 +1,6 @@
 from chalice.app import BadRequestError
 from chalicelib.repositories.repository_factory import RepositoryFactory
+from chalicelib.repositories.base_repository import BaseRepository
 from chalicelib.services.EventsRushService import events_rush_service
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from chalice.app import Response, BadRequestError, NotFoundError
@@ -10,6 +11,7 @@ from chalicelib.utils.utils import get_file_extension_from_base64
 from chalicelib.s3 import s3
 import uuid
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +19,19 @@ logger = logging.getLogger(__name__)
 
 
 class ListingService:
-    def __init__(self):
-        self.listings_repo = RepositoryFactory.listings()
-        self.applications_repo = RepositoryFactory.applications()
+    def __init__(
+        self,
+        listings_repo: Optional[BaseRepository] = None,
+        applications_repo: Optional[BaseRepository] = None,
+    ):
+        self.listings_repo = (
+            listings_repo if listings_repo is not None else RepositoryFactory.listings()
+        )
+        self.applications_repo = (
+            applications_repo
+            if applications_repo is not None
+            else RepositoryFactory.applications()
+        )
 
     # TODO: prevent duplicate names... (also for rush-category)
     def create(self, data: dict):

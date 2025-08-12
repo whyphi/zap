@@ -16,11 +16,11 @@ class BaseRepository:
     Specific repositories can inherit from this class to reuse common methods.
     """
 
-    def __init__(self, table_name: str, id_field):
-        ENV = os.getenv("ENV")
-        if ENV == "pytest-init":
-            return
-        self.client: Client = SupabaseClient().get_client()
+    def __init__(self, table_name: str, id_field, client: Optional[Client] = None):
+        # TODO: refactor tests to use Dependency Injected client
+        self.client: Client = (
+            client if client is not None else SupabaseClient().get_client()
+        )
         self.table_name = table_name
         self.id_field = id_field
 
