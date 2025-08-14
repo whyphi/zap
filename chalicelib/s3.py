@@ -13,12 +13,12 @@ class S3Client:
         if self.is_local:
             self.s3 = boto3.client(
                 "s3",
-                endpoint_url="http://localhost:4566",
-                aws_access_key_id="test",
-                aws_secret_access_key="test",
+                endpoint_url="http://localhost:9000",  # MinIO API port
+                aws_access_key_id="minio",             # MinIO root user
+                aws_secret_access_key="minio123",      # MinIO root password
                 region_name="us-east-1",
             )
-            self.s3_endpoint = f"http://localhost:4566/{self.bucket_name}/"
+            self.s3_endpoint = f"http://localhost:9000/{self.bucket_name}/"
         else:
             self.s3 = boto3.client("s3")
             self.s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
