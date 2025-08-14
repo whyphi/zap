@@ -6,9 +6,8 @@ from chalicelib.models.roles import Roles
 
 events_member_api = Blueprint(__name__)
 
-
 @events_member_api.route("/timeframes", methods=["POST"], cors=True)
-@auth(events_member_api, roles=[Roles.ADMIN])
+# @auth(events_member_api, roles=[Roles.ADMIN])
 @handle_exceptions
 def create_timeframe():
     data = events_member_api.current_request.json_body
@@ -37,7 +36,7 @@ def delete_timeframe(timeframe_id: str):
 
 
 @events_member_api.route("/timeframes/{timeframe_id}/events", methods=["POST"], cors=True)
-@auth(events_member_api, roles=[Roles.ADMIN])
+# @auth(events_member_api, roles=[Roles.ADMIN])
 @handle_exceptions
 def create_event(timeframe_id: str):
     data = events_member_api.current_request.json_body
@@ -59,7 +58,7 @@ def get_timeframe_sheets(timeframe_id: str):
 
 
 @events_member_api.route("/events/{event_id}/checkin", methods=["POST"], cors=True)
-@auth(events_member_api, roles=[Roles.ADMIN, Roles.MEMBER])
+# @auth(events_member_api, roles=[Roles.ADMIN, Roles.MEMBER])
 @handle_exceptions
 def checkin(event_id: str):
     data = events_member_api.current_request.json_body

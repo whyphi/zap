@@ -24,13 +24,20 @@ class EventsMemberService:
         self.events_member_repo = RepositoryFactory.events_member()
         self.event_timeframes_member_repo = RepositoryFactory.event_timeframes_member()
         self.events_member_attendees_repo = RepositoryFactory.events_member_attendees()
-        self.event_tag_repos = RepositoryFactory.event_tags()
+        self.event_tag_repo = RepositoryFactory.event_tags()
         self.tag_repo = RepositoryFactory.tags()
         self.users_repo = RepositoryFactory.users()
 
     def create_timeframe(self, timeframe_data: dict):
         try:
-            timeframe_data["date_created"] = datetime.datetime.now()
+            timeframe_data["id"] = str(uuid.uuid4())
+            timeframe_data["date_created"] = datetime.datetime.now().isoformat()
+            
+            if timeframe_data.get("spreadsheetId"):
+                spreadsheet_id = timeframe_data.get("spreadsheetId", "")
+                timeframe_data.pop("spreadsheetId", None)
+                timeframe_data["spreadsheet_id"] = spreadsheet_id
+
             timeframe_data.pop("events", None)
             return self.event_timeframes_member_repo.create(timeframe_data)
         except Exception as e:
@@ -54,53 +61,19 @@ class EventsMemberService:
     def delete_timeframe(self, timeframe_id: str):
         # EDIT: update to take advantage of cascading deletes
         try:
-            timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+            self.event_timeframes_member_repo.delete(timeframe_id)
+            return {"statusCode": 200}
         except Exception as e:
-            raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
-        
-        if not timeframe:
-            raise NotFoundError(f"Timeframe with ID {timeframe_id} does not exist.")
-        
-        # Delete all events associated with this timeframe
-        try:
-            timeframe_events = self.events_member_repo.get_all_by_field("timeframeId", timeframe_id)
-        except Exception as e:
-            raise BadRequestError(f"Failed to retrieve events for timeframe {timeframe_id}: {str(e)}")
-        for timeframe_event in timeframe_events:
-            
-            try:
-                event_tags = self.event_tag_repos.get_all_by_field("events_member_id", timeframe_event["id"])
-            except Exception as e:
-                raise BadRequestError(f"Failed to retrieve tags for event {timeframe_event['id']}: {str(e)}")
-            for event_tag in event_tags:
-                self.event_tag_repos.delete(event_tag["events_member_id"])
-                
-            try:
-                event_attendees = self.events_member_attendees_repo.get_all_by_field("event_id", timeframe_event["id"])
-            except Exception as e:
-                raise BadRequestError(f"Failed to retrieve attendees for event {timeframe_event['id']}: {str(e)}")
-            for event_attendee in event_attendees:
-                self.events_member_attendees_repo.delete(event_attendee["id"])
-
-        return {"statusCode": 200}
+            raise BadRequestError(f"Failed to delete timeframe: {str(e)}")
 
     def create_event(self, timeframe_id: str, event_data: dict):
-        event_data["dateCreated"] = datetime.datetime.now()
-        event_data["timeframeId"] = timeframe_id
-        event_data["usersAttended"] = []
-
-        from chalicelib.services.MemberService import member_service
-
-        # Get current member count for member participation stats
-        event_data["currentMemberCount"] = len(json.loads(member_service.get_all()))
-
         # Get Google Spreadsheet ID from timeframe
         try:
             timeframe_doc = self.event_timeframes_member_repo.get_by_id(timeframe_id)
         except Exception as e:
             raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
 
-        spreadsheet_id = timeframe_doc["spreadsheetId"]
+        spreadsheet_id = timeframe_doc["spreadsheet_id"]
 
         # Add event name to Google Sheets
         if not spreadsheet_id:
@@ -110,40 +83,41 @@ class EventsMemberService:
         col = gs.find_next_available_col(spreadsheet_id, event_data["sheetTab"])
         gs.add_event(spreadsheet_id, event_data["sheetTab"], event_data["name"], col)
 
-        # Append next available col value to event data
-        event_data["spreadsheetCol"] = col
-
         # Insert the event in events_member table
         try:
-            event_id = self.events_member_repo.create({
-                "id": str(uuid.uuid4()),
+            event_id = str(uuid.uuid4())
+            self.events_member_repo.create({
+                "id": event_id,
                 "timeframe_id": timeframe_id,
                 "name": event_data.get("name", ""),
-                "date_created": datetime.datetime.now(),
+                "date_created": datetime.datetime.now().isoformat(),
                 "spreadsheet_tab": event_data.get("sheetTab", ""),
-                "spreadsheet_col": col
+                "spreadsheet_col": col,
+                "code": event_data.get("code", ""),
             })
         except Exception as e:
             raise BadRequestError(f"Failed to create event: {str(e)}")
-
-        event_data["eventId"] = str(event_id)
 
         # Insert tags into tags table
         tag_ids = []
         try:
             for tag in event_data.get("tags", []):
-                tag_id = str(uuid.uuid4())
-                self.tag_repo.create({
-                    "id": tag_id,
-                    "name": tag,
-                })
-                tag_ids.append(tag_id)
+                existing_tag = self.tag_repo.get_all_by_field("name", tag)
+                if not existing_tag:
+                    tag_id = str(uuid.uuid4())
+                    self.tag_repo.create({
+                        "id": tag_id,
+                        "name": tag,
+                    })
+                    tag_ids.append(tag_id)
+                else:
+                    tag_ids.append(existing_tag[0]["id"])
         except Exception as e:
             raise BadRequestError(f"Failed to create tags: {str(e)}")
 
         try:
             for tag_id in tag_ids:
-                self.event_tag_repos.create({
+                self.event_tag_repo.create({
                     "events_member_id": event_id,
                     "tag_id": tag_id
                 })
@@ -208,7 +182,7 @@ class EventsMemberService:
         # Find row in Google Sheets that matches user's email
         row_num = gs.find_matching_email(
             spreadsheet_id=ss_id,
-            sheet_name=event["sheetTab"],
+            sheet_name=event["spreadsheet_tab"],
             col="C",
             email_to_match=user_email,
         )
@@ -222,19 +196,17 @@ class EventsMemberService:
         # Update Google Sheets cell with a "1" if user has checked in
         gs.update_row(
             spreadsheet_id=ss_id,
-            sheet_name=event["sheetTab"],
-            col=event["spreadsheetCol"],
+            sheet_name=event["spreadsheet_tab"],
+            col=event["spreadsheet_col"],
             row=row_num + 1,
             data=[["1"]],
         )
 
         # Update events_member_attendees with checkin data
         self.events_member_attendees_repo.create({
-            "id": str(uuid.uuid4()),
             "event_id": event_id,
             "user_id": user_id,
-            "name": user_name,
-            "checkin_time": datetime.datetime.now(),
+            "checkin_time": datetime.datetime.now().isoformat(),
         })
 
         # Send email to user that has checked in
