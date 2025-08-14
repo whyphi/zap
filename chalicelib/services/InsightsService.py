@@ -11,7 +11,7 @@ class InsightsService:
         """driver function of insights (returns both `dashboard` and `distribution`)"""
         try:
             # fetch applicants from `get_applicants` endpoint in `db.py`
-            data = self.applications_repo.get_all_by_field("listing_id", listing_id)
+            data = self.applications_repo.get_all_by_field("listing_id", id)
 
             # call helper functions
             # NOTE: `get_dashboard_insights` updates the data object to ensure all majors/minors are Title() cased
