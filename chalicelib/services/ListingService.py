@@ -6,7 +6,7 @@ from chalice.app import Response, BadRequestError, NotFoundError
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
-from chalicelib.utils import get_file_extension_from_base64
+from chalicelib.utils.utils import get_file_extension_from_base64
 from chalicelib.s3 import s3
 import uuid
 import logging
