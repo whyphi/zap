@@ -128,7 +128,7 @@ class EventsRushService:
                 "https://whyphi-zap.s3.amazonaws.com"
             )
             is_localstack_url = event_cover_image.startswith(
-                "http://localhost:4566/whyphi-zap"
+                "http://localhost:9000/whyphi-zap"
             )
             if not (is_s3_url or is_localstack_url):
 

@@ -10,4 +10,7 @@ services:
       MINIO_ROOT_PASSWORD: minio123
     command: server /data --console-address ":9001"
     volumes:
-      - ./minio_data:/data   # persistent storage
+      - minio_data:/data   # persistent storage (stored at )
+
+volumes:
+  minio_data:
