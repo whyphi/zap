@@ -1,12 +1,13 @@
-from chalicelib.modules.mongo import mongo_module
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
 import json
+import uuid
 from bson import ObjectId
 import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
 
+# IN PROGRESS
 
 class EventsMemberService:
     class BSONEncoder(json.JSONEncoder):
@@ -19,19 +20,24 @@ class EventsMemberService:
                 return str(o)
             return super().default(o)
 
-    def __init__(self, mongo_module=mongo_module):
-        self.mongo_module = mongo_module
-        self.collection_prefix = "events-"
-        
+    def __init__(self):        
         self.events_member_repo = RepositoryFactory.events_member()
         self.event_timeframes_member_repo = RepositoryFactory.event_timeframes_member()
         self.events_member_attendees_repo = RepositoryFactory.events_member_attendees()
         self.event_tag_repo = RepositoryFactory.event_tags()
         self.tag_repo = RepositoryFactory.tags()
+        self.users_repo = RepositoryFactory.users()
 
     def create_timeframe(self, timeframe_data: dict):
         try:
-            timeframe_data["dateCreated"] = datetime.datetime.now()
+            timeframe_data["id"] = str(uuid.uuid4())
+            timeframe_data["date_created"] = datetime.datetime.now().isoformat()
+            
+            if timeframe_data.get("spreadsheetId"):
+                spreadsheet_id = timeframe_data.get("spreadsheetId", "")
+                timeframe_data.pop("spreadsheetId", None)
+                timeframe_data["spreadsheet_id"] = spreadsheet_id
+
             timeframe_data.pop("events", None)
             return self.event_timeframes_member_repo.create(timeframe_data)
         except Exception as e:
@@ -53,82 +59,75 @@ class EventsMemberService:
             raise NotFoundError(f"Failed to retrieve timeframes: {str(e)}")
 
     def delete_timeframe(self, timeframe_id: str):
+        # EDIT: update to take advantage of cascading deletes
         try:
-            timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+            self.event_timeframes_member_repo.delete(timeframe_id)
+            return {"statusCode": 200}
         except Exception as e:
-            raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
-        
-        if not timeframe:
-            raise NotFoundError(f"Timeframe with ID {timeframe_id} does not exist.")
-        
-        # Delete all events associated with this timeframe
-        try:
-            timeframe_events = self.events_member_repo.get_all_by_field("timeframeId", timeframe_id)
-        except Exception as e:
-            raise BadRequestError(f"Failed to retrieve events for timeframe {timeframe_id}: {str(e)}")
-        for timeframe_event in timeframe_events:
-            
-            try:
-                event_tags = self.event_tag_repo.get_all_by_field("events_member_id", timeframe_event["id"])
-            except Exception as e:
-                raise BadRequestError(f"Failed to retrieve tags for event {timeframe_event['id']}: {str(e)}")
-            for event_tag in event_tags:
-                self.event_tag_repo.delete(event_tag["events_member_id"])
-                
-            try:
-                event_attendees = self.events_member_attendees_repo.get_all_by_field("event_id", timeframe_event["id"])
-            except Exception as e:
-                raise BadRequestError(f"Failed to retrieve attendees for event {timeframe_event['id']}: {str(e)}")
-            for event_attendee in event_attendees:
-                self.events_member_attendees_repo.delete(event_attendee["id"])
-
-        return {"statusCode": 200}
+            raise BadRequestError(f"Failed to delete timeframe: {str(e)}")
 
     def create_event(self, timeframe_id: str, event_data: dict):
-        event_data["dateCreated"] = datetime.datetime.now()
-        event_data["timeframeId"] = timeframe_id
-        event_data["usersAttended"] = []
-
-        from chalicelib.services.MemberService import member_service
-
-        # Get current member count for member participation stats
-        event_data["currentMemberCount"] = len(json.loads(member_service.get_all()))
-
         # Get Google Spreadsheet ID from timeframe
-        timeframe_doc = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}timeframe", timeframe_id
-        )
+        try:
+            timeframe_doc = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
 
-        spreadsheet_id = timeframe_doc["spreadsheetId"]
+        spreadsheet_id = timeframe_doc["spreadsheet_id"]
 
         # Add event name to Google Sheets
+        if not spreadsheet_id:
+            raise NotFoundError("No associated spreadsheet found for timeframe.")
+        
         gs = GoogleSheetsModule()
         col = gs.find_next_available_col(spreadsheet_id, event_data["sheetTab"])
         gs.add_event(spreadsheet_id, event_data["sheetTab"], event_data["name"], col)
 
-        # Append next available col value to event data
-        event_data["spreadsheetCol"] = col
+        # Insert the event in events_member table
+        try:
+            event_id = str(uuid.uuid4())
+            self.events_member_repo.create({
+                "id": event_id,
+                "timeframe_id": timeframe_id,
+                "name": event_data.get("name", ""),
+                "date_created": datetime.datetime.now().isoformat(),
+                "spreadsheet_tab": event_data.get("sheetTab", ""),
+                "spreadsheet_col": col,
+                "code": event_data.get("code", ""),
+            })
+        except Exception as e:
+            raise BadRequestError(f"Failed to create event: {str(e)}")
 
-        # Insert the event in event collection
-        event_id = self.mongo_module.insert_document(
-            f"{self.collection_prefix}event", event_data
-        )
+        # Insert tags into tags table
+        tag_ids = []
+        try:
+            for tag in event_data.get("tags", []):
+                existing_tag = self.tag_repo.get_all_by_field("name", tag)
+                if not existing_tag:
+                    tag_id = str(uuid.uuid4())
+                    self.tag_repo.create({
+                        "id": tag_id,
+                        "name": tag,
+                    })
+                    tag_ids.append(tag_id)
+                else:
+                    tag_ids.append(existing_tag[0]["id"])
+        except Exception as e:
+            raise BadRequestError(f"Failed to create tags: {str(e)}")
 
-        event_data["eventId"] = str(event_id)
-
-        # Insert child event in timeframe collection
-        self.mongo_module.update_document(
-            f"{self.collection_prefix}timeframe",
-            timeframe_id,
-            {"$push": {"events": event_data}},
-        )
+        try:
+            for tag_id in tag_ids:
+                self.event_tag_repo.create({
+                    "events_member_id": event_id,
+                    "tag_id": tag_id
+                })
+        except Exception as e:
+            raise BadRequestError(f"Failed to associate tags with event: {str(e)}")
 
         return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
-        event = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}event", event_id
-        )
+        event = self.events_member_repo.get_all_by_field("id", event_id)
 
         return json.dumps(event, cls=self.BSONEncoder)
 
@@ -143,35 +142,39 @@ class EventsMemberService:
             dict -- Dictionary containing status and message.
         """
         user_id, user_email, code = user["id"], user["email"], user["code"]
-        member = self.mongo_module.get_document_by_id("users", user_id)
+        try:
+            member = self.users_repo.get_by_id(user_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve user: {str(e)}")
+        
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
-        user_name = member["name"]
+        user_name = member.get("name", "")
 
-        event = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}event", event_id
-        )
+        try:
+            event = self.events_member_repo.get_by_id(event_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve event: {str(e)}")
 
-        if code.lower().strip() != event["code"].lower().strip():
+        # need to add code field into event_member
+        if code.lower().strip() != event.get("code", "").lower().strip():
             raise UnauthorizedError("Invalid code.")
+        
+        try:
+            # Check if user has already checked in
+            checked_in_users = self.events_member_attendees_repo.get_all_by_field("event_id", event_id, "user_id")
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve checked-in users: {str(e)}")
 
-        if any(d["userId"] == user_id for d in event["usersAttended"]):
+        if any(d["userId"] == user_id for d in checked_in_users):
             raise BadRequestError(f"{user_name} has already checked in.")
 
-        checkin_data = {
-            "userId": user_id,
-            "name": user_name,
-            "dateCheckedIn": datetime.datetime.now(),
-        }
-
         # Get timeframe document to get Google Sheets info
-        timeframe = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}timeframe", event["timeframeId"]
-        )
+        timeframe = self.event_timeframes_member_repo.get_by_id(event.get("timeframe_id", ""))
 
         # Get Google Sheets information
-        ss_id = timeframe["spreadsheetId"]
+        ss_id = timeframe.get("spreadsheet_id", "")
 
         # Initialize Google Sheets Module
         gs = GoogleSheetsModule()
@@ -179,7 +182,7 @@ class EventsMemberService:
         # Find row in Google Sheets that matches user's email
         row_num = gs.find_matching_email(
             spreadsheet_id=ss_id,
-            sheet_name=event["sheetTab"],
+            sheet_name=event["spreadsheet_tab"],
             col="C",
             email_to_match=user_email,
         )
@@ -193,18 +196,18 @@ class EventsMemberService:
         # Update Google Sheets cell with a "1" if user has checked in
         gs.update_row(
             spreadsheet_id=ss_id,
-            sheet_name=event["sheetTab"],
-            col=event["spreadsheetCol"],
+            sheet_name=event["spreadsheet_tab"],
+            col=event["spreadsheet_col"],
             row=row_num + 1,
             data=[["1"]],
         )
 
-        # Update event collection with checkin data
-        self.mongo_module.update_document(
-            f"{self.collection_prefix}event",
-            event_id,
-            {"$push": {"usersAttended": checkin_data}},
-        )
+        # Update events_member_attendees with checkin data
+        self.events_member_attendees_repo.create({
+            "event_id": event_id,
+            "user_id": user_id,
+            "checkin_time": datetime.datetime.now().isoformat(),
+        })
 
         # Send email to user that has checked in
         email_content = f"""
@@ -234,38 +237,33 @@ class EventsMemberService:
 
     def delete(self, event_id: str):
         # Check if event exists and if it doesn't return errors
-        event = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}event", event_id
-        )
+        try:
+            event = self.events_member_repo.get_by_id(event_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve event: {str(e)}")
 
         if event is None:
             raise NotFoundError(f"Event with ID {event_id} does not exist.")
 
-        # If event exists, get the timeframeId (parent)
-        timeframe_id = event["timeframeId"]
-
-        # Remove event from timeframe
-        self.mongo_module.update_document(
-            f"{self.collection_prefix}timeframe",
-            timeframe_id,
-            {"$pull": {"events": {"_id": ObjectId(event_id)}}},
-        )
-
-        # Delete the event document
-        self.mongo_module.delete_document_by_id(
-            f"{self.collection_prefix}event", event_id
-        )
+        try:
+            self.events_member_repo.delete(event_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to delete event: {str(e)}")
+        
+        # EDIT: no return?
 
     def get_timeframe_sheets(self, timeframe_id: str):
-        timeframe = self.mongo_module.get_document_by_id(
-            f"{self.collection_prefix}timeframe", timeframe_id
-        )
+        try:
+            # Check if timeframe exists
+            timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+        except Exception as e:
+            raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
 
-        if "spreadsheetId" not in timeframe or timeframe["spreadsheetId"] == "":
+        if "spreadsheet_id" not in timeframe or timeframe["spreadsheet_id"] == "":
             return []
 
         gs = GoogleSheetsModule()
-        sheets = gs.get_sheets(timeframe["spreadsheetId"], include_properties=False)
+        sheets = gs.get_sheets(timeframe["spreadsheet_id"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
 
 

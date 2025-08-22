@@ -7,6 +7,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# COMPLETED
+
 
 class ApplicantService:
     def __init__(self):

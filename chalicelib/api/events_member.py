@@ -6,7 +6,6 @@ from chalicelib.models.roles import Roles
 
 events_member_api = Blueprint(__name__)
 
-
 @events_member_api.route("/timeframes", methods=["POST"], cors=True)
 @auth(events_member_api, roles=[Roles.ADMIN])
 @handle_exceptions

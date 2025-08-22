@@ -11,6 +11,7 @@ from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from postgrest.exceptions import APIError
 from pytz import timezone as pytz_timezone
 
+
 # TODO: refactor base_repo to pass errors to service classes
 
 

@@ -1,26 +1,29 @@
 # TO BE COMPLETED: create service to perform analytics (used in API...)
-from chalicelib.db import db
-
+from chalicelib.repositories.repository_factory import RepositoryFactory, RepositoryConfig
+from chalice.app import BadRequestError
+from typing import List
 
 class InsightsService:
     def __init__(self):
-        pass
+         self.applications_repo = RepositoryFactory.applications()
 
     def get_insights_from_listing(self, id: str):
         """driver function of insights (returns both `dashboard` and `distribution`)"""
+        try:
+            # fetch applicants from `get_applicants` endpoint in `db.py`
+            data = self.applications_repo.get_all_by_field("listing_id", id)
 
-        # fetch applicants from `get_applicants` endpoint in `db.py`
-        data = db.get_applicants(table_name="zap-applications", listing_id=id)
+            # call helper functions
+            # NOTE: `get_dashboard_insights` updates the data object to ensure all majors/minors are Title() cased
+            dashboard = self._get_dashboard_insights(data)
+            distribution = self._get_pie_chart_insights(data)
 
-        # call helper functions
-        # NOTE: `get_dashboard_insights` updates the data object to ensure all majors/minors are Title() cased
-        dashboard = InsightsService._get_dashboard_insights(data)
-        distribution = InsightsService._get_pie_chart_insights(data)
-
-        return dashboard, distribution
+            return dashboard, distribution
+        except Exception as e:
+            raise BadRequestError("Failed to get insights")
 
     # private method (kinda)
-    def _get_dashboard_insights(data):
+    def _get_dashboard_insights(self, data: List[dict]) -> dict:
         # initialize metrics
         majors = {}
         grad_years = {}
@@ -28,15 +31,13 @@ class InsightsService:
         avg_gpa = 0
         count_gpa = 0
 
-        dashboard = {
-            "applicantCount": 0,
-            "avgGpa": "N/A",
-            "commonMajor": "N/A",
-            "commonGradYear": "N/A",
+        if num_applicants == 0:
+            return {
+                "applicantCount": 0,
+                "avgGpa": "N/A",
+                "commonMajor": "N/A",
+                "commonGradYear": "N/A",
         }
-
-        if num_applicants < 1:
-            return dashboard
 
         # iterate over each applicant and perform analytics
         for applicant in data:
@@ -44,11 +45,9 @@ class InsightsService:
             applicant["major"] = applicant["major"].title()
             applicant["minor"] = applicant["minor"].title()
 
-            gpa, grad_year, major = (
-                applicant["gpa"],
-                applicant["gradYear"],
-                applicant["major"],
-            )
+            gpa = applicant.get("gpa", "")
+            grad_year = applicant.get("gradYear", "")
+            major = applicant.get("major", "")
 
             # attempt conversions (if fail, then skip)
             try:
@@ -60,20 +59,14 @@ class InsightsService:
                 pass
             try:
                 float_grad = float(grad_year)
-                if float_grad in grad_years:
-                    grad_years[float_grad] += 1
-                else:
-                    grad_years[float_grad] = 1
+                grad_years[float_grad] = grad_years.get(float_grad, 0) + 1
             except ValueError:
                 print("skipping gradYear: ", grad_year)
                 pass
 
             # parse majors (if non-empty)
             if major:
-                if major in majors:
-                    majors[major] += 1
-                else:
-                    majors[major] = 1
+                majors[major] = majors.get(major, 0) + 1
 
         if count_gpa:
             avg_gpa /= count_gpa
@@ -98,8 +91,8 @@ class InsightsService:
         dashboard = {
             "applicantCount": num_applicants,
             "avgGpa": round(avg_gpa, 1) if avg_gpa != "N/A" else avg_gpa,
-            "commonMajor": common_major.title(),
             # "countCommonMajor": count_common_major,         # TO-DO: maybe do something with common major counts
+            "commonMajor": common_major.title() if common_major != "N/A" else common_major,
             "commonGradYear": int(common_grad_year)
             if common_grad_year != "N/A"
             else common_grad_year,
@@ -108,7 +101,7 @@ class InsightsService:
 
         return dashboard
 
-    def _get_pie_chart_insights(data):
+    def _get_pie_chart_insights(self, data):
         """helper function for pie charts (should be function, not method within InsightsService)"""
 
         # initialize return object
