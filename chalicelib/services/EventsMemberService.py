@@ -1,5 +1,6 @@
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 import json
 import uuid
 from bson import ObjectId
@@ -8,6 +9,7 @@ from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
 
 # IN PROGRESS
+
 
 class EventsMemberService:
     class BSONEncoder(json.JSONEncoder):
@@ -20,7 +22,7 @@ class EventsMemberService:
                 return str(o)
             return super().default(o)
 
-    def __init__(self):        
+    def __init__(self):
         self.events_member_repo = RepositoryFactory.events_member()
         self.event_timeframes_member_repo = RepositoryFactory.event_timeframes_member()
         self.events_member_attendees_repo = RepositoryFactory.events_member_attendees()
@@ -32,7 +34,7 @@ class EventsMemberService:
         try:
             timeframe_data["id"] = str(uuid.uuid4())
             timeframe_data["date_created"] = datetime.datetime.now().isoformat()
-            
+
             if timeframe_data.get("spreadsheetId"):
                 spreadsheet_id = timeframe_data.get("spreadsheetId", "")
                 timeframe_data.pop("spreadsheetId", None)
@@ -50,13 +52,15 @@ class EventsMemberService:
         except Exception as e:
             raise NotFoundError(f"Failed to retrieve timeframe: {str(e)}")
 
-    def get_all_timeframes(self):
+    def get_all_timeframes_and_events(self):
         """Retrieve all timeframes from the database."""
         try:
-            timeframes = self.event_timeframes_member_repo.get_all()
-            return json.dumps(timeframes, cls=self.BSONEncoder)
+            timeframes = self.event_timeframes_member_repo.get_all(
+                select_query="*, events_member(*)"
+            )
+            return timeframes
         except Exception as e:
-            raise NotFoundError(f"Failed to retrieve timeframes: {str(e)}")
+            raise NotFoundError(GENERIC_CLIENT_ERROR)
 
     def delete_timeframe(self, timeframe_id: str):
         # EDIT: update to take advantage of cascading deletes
@@ -78,7 +82,7 @@ class EventsMemberService:
         # Add event name to Google Sheets
         if not spreadsheet_id:
             raise NotFoundError("No associated spreadsheet found for timeframe.")
-        
+
         gs = GoogleSheetsModule()
         col = gs.find_next_available_col(spreadsheet_id, event_data["sheetTab"])
         gs.add_event(spreadsheet_id, event_data["sheetTab"], event_data["name"], col)
@@ -86,15 +90,17 @@ class EventsMemberService:
         # Insert the event in events_member table
         try:
             event_id = str(uuid.uuid4())
-            self.events_member_repo.create({
-                "id": event_id,
-                "timeframe_id": timeframe_id,
-                "name": event_data.get("name", ""),
-                "date_created": datetime.datetime.now().isoformat(),
-                "spreadsheet_tab": event_data.get("sheetTab", ""),
-                "spreadsheet_col": col,
-                "code": event_data.get("code", ""),
-            })
+            self.events_member_repo.create(
+                {
+                    "id": event_id,
+                    "timeframe_id": timeframe_id,
+                    "name": event_data.get("name", ""),
+                    "date_created": datetime.datetime.now().isoformat(),
+                    "spreadsheet_tab": event_data.get("sheetTab", ""),
+                    "spreadsheet_col": col,
+                    "code": event_data.get("code", ""),
+                }
+            )
         except Exception as e:
             raise BadRequestError(f"Failed to create event: {str(e)}")
 
@@ -105,10 +111,12 @@ class EventsMemberService:
                 existing_tag = self.tag_repo.get_all_by_field("name", tag)
                 if not existing_tag:
                     tag_id = str(uuid.uuid4())
-                    self.tag_repo.create({
-                        "id": tag_id,
-                        "name": tag,
-                    })
+                    self.tag_repo.create(
+                        {
+                            "id": tag_id,
+                            "name": tag,
+                        }
+                    )
                     tag_ids.append(tag_id)
                 else:
                     tag_ids.append(existing_tag[0]["id"])
@@ -117,19 +125,23 @@ class EventsMemberService:
 
         try:
             for tag_id in tag_ids:
-                self.event_tag_repo.create({
-                    "events_member_id": event_id,
-                    "tag_id": tag_id
-                })
+                self.event_tag_repo.create(
+                    {"events_member_id": event_id, "tag_id": tag_id}
+                )
         except Exception as e:
             raise BadRequestError(f"Failed to associate tags with event: {str(e)}")
 
         return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
-        event = self.events_member_repo.get_all_by_field("id", event_id)
-
-        return json.dumps(event, cls=self.BSONEncoder)
+        try:
+            event = self.events_member_repo.get_by_id(
+                id_value=event_id,
+                select_query="*, attendees:events_member_attendees(user:users(*), checkin_time)",
+            )
+            return event
+        except Exception as e:
+            raise NotFoundError(GENERIC_CLIENT_ERROR)
 
     def checkin(self, event_id: str, user: dict) -> dict:
         """Checks in a user to an event.
@@ -146,7 +158,7 @@ class EventsMemberService:
             member = self.users_repo.get_by_id(user_id)
         except Exception as e:
             raise BadRequestError(f"Failed to retrieve user: {str(e)}")
-        
+
         if member is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
@@ -160,10 +172,12 @@ class EventsMemberService:
         # need to add code field into event_member
         if code.lower().strip() != event.get("code", "").lower().strip():
             raise UnauthorizedError("Invalid code.")
-        
+
         try:
             # Check if user has already checked in
-            checked_in_users = self.events_member_attendees_repo.get_all_by_field("event_id", event_id, "user_id")
+            checked_in_users = self.events_member_attendees_repo.get_all_by_field(
+                "event_id", event_id, "user_id"
+            )
         except Exception as e:
             raise BadRequestError(f"Failed to retrieve checked-in users: {str(e)}")
 
@@ -171,7 +185,9 @@ class EventsMemberService:
             raise BadRequestError(f"{user_name} has already checked in.")
 
         # Get timeframe document to get Google Sheets info
-        timeframe = self.event_timeframes_member_repo.get_by_id(event.get("timeframe_id", ""))
+        timeframe = self.event_timeframes_member_repo.get_by_id(
+            event.get("timeframe_id", "")
+        )
 
         # Get Google Sheets information
         ss_id = timeframe.get("spreadsheet_id", "")
@@ -203,11 +219,13 @@ class EventsMemberService:
         )
 
         # Update events_member_attendees with checkin data
-        self.events_member_attendees_repo.create({
-            "event_id": event_id,
-            "user_id": user_id,
-            "checkin_time": datetime.datetime.now().isoformat(),
-        })
+        self.events_member_attendees_repo.create(
+            {
+                "event_id": event_id,
+                "user_id": user_id,
+                "checkin_time": datetime.datetime.now().isoformat(),
+            }
+        )
 
         # Send email to user that has checked in
         email_content = f"""
@@ -249,7 +267,7 @@ class EventsMemberService:
             self.events_member_repo.delete(event_id)
         except Exception as e:
             raise BadRequestError(f"Failed to delete event: {str(e)}")
-        
+
         # EDIT: no return?
 
     def get_timeframe_sheets(self, timeframe_id: str):

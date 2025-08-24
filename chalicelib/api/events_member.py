@@ -18,7 +18,7 @@ def create_timeframe():
 @auth(events_member_api, roles=[Roles.ADMIN, Roles.MEMBER])
 @handle_exceptions
 def get_all_timeframes():
-    return events_member_service.get_all_timeframes()
+    return events_member_service.get_all_timeframes_and_events()
 
 
 @events_member_api.route("/timeframes/{timeframe_id}", methods=["GET"], cors=True)
