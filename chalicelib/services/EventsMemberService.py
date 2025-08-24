@@ -2,10 +2,7 @@ from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from postgrest.exceptions import APIError
-import json
 import uuid
-from bson import ObjectId
-import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
 
@@ -127,7 +124,6 @@ class EventsMemberService:
                 {
                     "event_id": event_id,
                     "user_id": user_id,
-                    "checkin_time": datetime.datetime.now().isoformat(),
                 }
             )
         except APIError as e:
