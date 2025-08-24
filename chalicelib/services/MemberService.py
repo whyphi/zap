@@ -115,7 +115,7 @@ class MemberService:
     def get_all(self):
         try:
             data = self.users_repo.get_all(
-                select_query="*, user_roles: user_roles (roles: roles (id,name))"
+                select_query="*, user_roles: user_roles (role: roles (id,name))"
             )
             return data
         except Exception as e:
