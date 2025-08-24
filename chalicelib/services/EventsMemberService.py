@@ -1,6 +1,7 @@
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import NotFoundError, BadRequestError, UnauthorizedError
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
+from postgrest.exceptions import APIError
 import json
 import uuid
 from bson import ObjectId
@@ -112,16 +113,16 @@ class EventsMemberService:
         Returns:
             dict -- Dictionary containing status and message.
         """
-        user_id, user_email, code = user["id"], user["email"], user["code"]
+        user_id, code = user["id"], user["code"]
         try:
-            member = self.users_repo.get_by_id(user_id)
+            user = self.users_repo.get_by_id(user_id)
         except Exception as e:
             raise BadRequestError(f"Failed to retrieve user: {str(e)}")
 
-        if member is None:
+        if user is None:
             raise NotFoundError(f"User with ID {user_id} does not exist.")
 
-        user_name = member.get("name", "")
+        user_name, user_email = user.get("name", ""), user.get("email", "")
 
         try:
             event = self.events_member_repo.get_by_id(event_id)
@@ -132,21 +133,22 @@ class EventsMemberService:
         if code.lower().strip() != event.get("code", "").lower().strip():
             raise UnauthorizedError("Invalid code.")
 
+        # Update events_member_attendees with checkin data
         try:
-            # Check if user has already checked in
-            checked_in_users = self.events_member_attendees_repo.get_all_by_field(
-                "event_id", event_id, "user_id"
+            self.events_member_attendees_repo.create(
+                {
+                    "event_id": event_id,
+                    "user_id": user_id,
+                    "checkin_time": datetime.datetime.now().isoformat(),
+                }
             )
-        except Exception as e:
-            raise BadRequestError(f"Failed to retrieve checked-in users: {str(e)}")
-
-        if any(d["userId"] == user_id for d in checked_in_users):
-            raise BadRequestError(f"{user_name} has already checked in.")
+        except APIError as e:
+            if e.code == "23505":
+                raise BadRequestError("User has already checked in.")
+            raise BadRequestError(GENERIC_CLIENT_ERROR)
 
         # Get timeframe document to get Google Sheets info
-        timeframe = self.event_timeframes_member_repo.get_by_id(
-            event.get("timeframe_id", "")
-        )
+        timeframe = self.event_timeframes_member_repo.get_by_id(event["timeframe_id"])
 
         # Get Google Sheets information
         ss_id = timeframe.get("spreadsheet_id", "")
@@ -163,10 +165,11 @@ class EventsMemberService:
         )
 
         if row_num == -1:
-            return {
-                "status": False,
-                "message": f"{user_name} was not found in the sheet.",
-            }
+            # Roll-back supabse update if error updating Google Sheets
+            self.events_member_attendees_repo.delete_by_field(
+                field="user_id", value=user["id"]
+            )
+            raise BadRequestError("Error updating Google Sheets. User email not found.")
 
         # Update Google Sheets cell with a "1" if user has checked in
         gs.update_row(
@@ -175,15 +178,6 @@ class EventsMemberService:
             col=event["spreadsheet_col"],
             row=row_num + 1,
             data=[["1"]],
-        )
-
-        # Update events_member_attendees with checkin data
-        self.events_member_attendees_repo.create(
-            {
-                "event_id": event_id,
-                "user_id": user_id,
-                "checkin_time": datetime.datetime.now().isoformat(),
-            }
         )
 
         # Send email to user that has checked in
