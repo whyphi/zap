@@ -33,14 +33,6 @@ class EventsMemberService:
     def create_timeframe(self, timeframe_data: dict):
         try:
             timeframe_data["id"] = str(uuid.uuid4())
-            timeframe_data["date_created"] = datetime.datetime.now().isoformat()
-
-            if timeframe_data.get("spreadsheetId"):
-                spreadsheet_id = timeframe_data.get("spreadsheetId", "")
-                timeframe_data.pop("spreadsheetId", None)
-                timeframe_data["spreadsheet_id"] = spreadsheet_id
-
-            timeframe_data.pop("events", None)
             return self.event_timeframes_member_repo.create(timeframe_data)
         except Exception as e:
             raise BadRequestError(f"Failed to create timeframe: {str(e)}")
@@ -73,65 +65,32 @@ class EventsMemberService:
     def create_event(self, timeframe_id: str, event_data: dict):
         # Get Google Spreadsheet ID from timeframe
         try:
-            timeframe_doc = self.event_timeframes_member_repo.get_by_id(timeframe_id)
+            timeframe_data = self.event_timeframes_member_repo.get_by_id(timeframe_id)
         except Exception as e:
             raise BadRequestError(f"Failed to retrieve timeframe: {str(e)}")
 
-        spreadsheet_id = timeframe_doc["spreadsheet_id"]
+        spreadsheet_id = timeframe_data["spreadsheet_id"]
 
         # Add event name to Google Sheets
         if not spreadsheet_id:
             raise NotFoundError("No associated spreadsheet found for timeframe.")
 
         gs = GoogleSheetsModule()
-        col = gs.find_next_available_col(spreadsheet_id, event_data["sheetTab"])
-        gs.add_event(spreadsheet_id, event_data["sheetTab"], event_data["name"], col)
+        col = gs.find_next_available_col(spreadsheet_id, event_data["spreadsheet_tab"])
+        gs.add_event(
+            spreadsheet_id, event_data["spreadsheet_tab"], event_data["name"], col
+        )
 
         # Insert the event in events_member table
         try:
-            event_id = str(uuid.uuid4())
-            self.events_member_repo.create(
-                {
-                    "id": event_id,
-                    "timeframe_id": timeframe_id,
-                    "name": event_data.get("name", ""),
-                    "date_created": datetime.datetime.now().isoformat(),
-                    "spreadsheet_tab": event_data.get("sheetTab", ""),
-                    "spreadsheet_col": col,
-                    "code": event_data.get("code", ""),
-                }
-            )
+            id = str(uuid.uuid4())
+            event_data["id"] = id
+            event_data["timeframe_id"] = timeframe_data["id"]
+            event_data["spreadsheet_col"] = col
+            self.events_member_repo.create(data=event_data)
+            return event_data
         except Exception as e:
             raise BadRequestError(f"Failed to create event: {str(e)}")
-
-        # Insert tags into tags table
-        tag_ids = []
-        try:
-            for tag in event_data.get("tags", []):
-                existing_tag = self.tag_repo.get_all_by_field("name", tag)
-                if not existing_tag:
-                    tag_id = str(uuid.uuid4())
-                    self.tag_repo.create(
-                        {
-                            "id": tag_id,
-                            "name": tag,
-                        }
-                    )
-                    tag_ids.append(tag_id)
-                else:
-                    tag_ids.append(existing_tag[0]["id"])
-        except Exception as e:
-            raise BadRequestError(f"Failed to create tags: {str(e)}")
-
-        try:
-            for tag_id in tag_ids:
-                self.event_tag_repo.create(
-                    {"events_member_id": event_id, "tag_id": tag_id}
-                )
-        except Exception as e:
-            raise BadRequestError(f"Failed to associate tags with event: {str(e)}")
-
-        return json.dumps(event_data, cls=self.BSONEncoder)
 
     def get_event(self, event_id: str):
         try:
