@@ -9,19 +9,8 @@ import datetime
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
 
-# IN PROGRESS
-
 
 class EventsMemberService:
-    class BSONEncoder(json.JSONEncoder):
-        """JSON encoder that converts Mongo ObjectIds and datetime.datetime to strings."""
-
-        def default(self, o):
-            if isinstance(o, datetime.datetime):
-                return o.isoformat()
-            elif isinstance(o, ObjectId):
-                return str(o)
-            return super().default(o)
 
     def __init__(self):
         self.events_member_repo = RepositoryFactory.events_member()
@@ -41,7 +30,7 @@ class EventsMemberService:
     def get_timeframe(self, timeframe_id: str):
         try:
             timeframe = self.event_timeframes_member_repo.get_by_id(timeframe_id)
-            return json.dumps(timeframe, cls=self.BSONEncoder)
+            return timeframe
         except Exception as e:
             raise NotFoundError(f"Failed to retrieve timeframe: {str(e)}")
 
@@ -56,7 +45,6 @@ class EventsMemberService:
             raise NotFoundError(GENERIC_CLIENT_ERROR)
 
     def delete_timeframe(self, timeframe_id: str):
-        # EDIT: update to take advantage of cascading deletes
         try:
             self.event_timeframes_member_repo.delete(timeframe_id)
             return {"statusCode": 200}
@@ -220,8 +208,6 @@ class EventsMemberService:
             self.events_member_repo.delete(event_id)
         except Exception as e:
             raise BadRequestError(f"Failed to delete event: {str(e)}")
-
-        # EDIT: no return?
 
     def get_timeframe_sheets(self, timeframe_id: str):
         try:
