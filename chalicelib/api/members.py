@@ -58,7 +58,7 @@ def create_member():
 
 
 @members_api.route("/members", methods=["DELETE"], cors=True)
-# @auth(members_api, roles=[Roles.ADMIN])
+@auth(members_api, roles=[Roles.ADMIN])
 @handle_exceptions
 def delete_members():
     data = members_api.current_request.json_body
@@ -66,11 +66,11 @@ def delete_members():
 
 
 @members_api.route("/members/{user_id}/roles", methods=["PATCH"], cors=True)
-# @auth(members_api, roles=[Roles.ADMIN])
+@auth(members_api, roles=[Roles.ADMIN])
 @handle_exceptions
 def update_member_roles(user_id):
     data = members_api.current_request.json_body
-    return member_service.update_roles(user_id, data)
+    return member_service.update_roles(user_id=user_id, roles=data["roles"])
 
 
 # returned empty result

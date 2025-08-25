@@ -177,17 +177,24 @@ class MemberService:
         except Exception as e:
             raise BadRequestError(f"Failed to update user: {e}")
 
-    def update_roles(self, user_id: str, roles: list) -> bool:
+    def update_roles(self, user_id: str, roles: list[str]) -> bool:
         try:
-            existing_roles = self.users_repo.get_by_id(user_id)  # Check if user exists
-            if existing_roles:
-                self.user_roles_repo.delete_by_field("user_id", user_id)
+            # Get all roles
+            base_roles = self.roles_repo.get_all()
 
-            for role in roles:
-                role_id = self.roles_repo.get_all_by_field("name", role)[0].get("id")
-                if not role_id:
-                    raise NotFoundError(f"Role with ID {role} not found")
-                self.user_roles_repo.create({"user_id": user_id, "role_id": role_id})
+            # Clear previous roles for user
+            self.user_roles_repo.delete_by_field(field="user_id", value=user_id)
+
+            # Convert roles to role_ids
+            role_ids = [br["id"] for br in base_roles if br["name"] in roles]
+
+            if len(roles) != len(role_ids):
+                raise BadRequestError("Invalid role name.")
+
+            # Add each new role to table
+            for rid in role_ids:
+                self.user_roles_repo.create({"user_id": user_id, "role_id": rid})
+
             return True
         except Exception as e:
             raise BadRequestError(f"Failed to update roles: {e}")
