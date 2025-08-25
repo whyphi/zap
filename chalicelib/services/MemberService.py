@@ -32,43 +32,36 @@ class MemberService:
             bool: True if the user was created, False otherwise.
         """
         try:
-            existing_user = self.users_repo.get_all_by_field(
-                field="email", value=data["email"]
-            )
+            # existing_user = self.users_repo.get_all_by_field(
+            #     field="email", value=data["email"]
+            # )
 
-            if existing_user and len(existing_user) > 0:
-                raise ConflictError("User already exists")
+            # if existing_user and len(existing_user) > 0:
+            #     raise ConflictError("User already exists")
 
             # Create the user in the database
-            roles = data.pop("roles", None)  # Remove roles if present
-            data["id"] = str(uuid.uuid4())  # Generate a new UUID for the user ID
-            data["is_eboard"] = data.get(
-                "is_eboard", False
-            )  # Default to False if not provided
-            data["is_new_user"] = data.get(
-                "is_new_user", True
-            )  # Default to True if not provided
+            roles = data.pop("roles", [])
+            user_id = str(uuid.uuid4())
+            data["id"] = user_id
+            data["is_eboard"] = data.get("is_eboard", False)
+            data["is_new_user"] = data.get("is_new_user", True)
             self.users_repo.create(data)
 
             # Create user-role relationship in the user_roles database
-            role_id = self.roles_repo.get_all_by_field(field="name", value="member")
-            if not role_id:
-                raise NotFoundError("Default role not found")
-            self.user_roles_repo.create(
-                {"user_id": data["id"], "role_id": role_id[0]["id"]}
-            )
+            base_roles = self.roles_repo.get_all()
+            base_roles_map = {br["name"]: br["id"] for br in base_roles}
 
-            for role in roles or []:
-                role_id = self.roles_repo.get_all_by_field(field="name", value=role)
+            for role in roles:
+                role_id = base_roles_map.get(role)
                 if not role_id:
                     raise NotFoundError(f"Role {role} is not role")
                 self.user_roles_repo.create(
-                    {"user_id": data["id"], "role_id": role_id[0]["id"]}
+                    {"user_id": user_id, "role_id": role_id}
                 )
 
             return {
                 "success": True,
-                "message": "User created successfully",
+                "message": f"User created successfully with roles: {roles}",
             }
         except Exception as e:
             raise BadRequestError(f"Failed to create user: {e}")
