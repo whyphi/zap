@@ -15,9 +15,6 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# TODO: DON'T FORGET TO DECIDE WHAT TO DO WITH ListingService.create (temporarily create MongoDB event???)
-
-# COMPLETED
 
 class ListingService:
     def __init__(
@@ -39,7 +36,6 @@ class ListingService:
             if event_timeframes_rush_repo is not None
             else RepositoryFactory.event_timeframes_rush()
         )
-        
 
     # TODO: prevent duplicate names... (also for rush-category)..
     def create(self, data: dict, include_events_attended: bool):
@@ -48,15 +44,13 @@ class ListingService:
         data["is_visible"] = True
         data["is_encrypted"] = False
 
-        # TODO: check for dup name BEFORE going to rush-category creation
-
         self.listings_repo.create(data=data)
 
         rush_timeframe_id = str(uuid.uuid4())
         rush_timeframe_data = {
             "id": rush_timeframe_id,
             "name": data["title"],
-            "listing_id": data["id"]
+            "listing_id": data["id"],
         }
 
         if include_events_attended:
