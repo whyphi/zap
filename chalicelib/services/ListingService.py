@@ -24,6 +24,7 @@ class ListingService:
         self,
         listings_repo: Optional[BaseRepository] = None,
         applications_repo: Optional[BaseRepository] = None,
+        event_timeframes_rush_repo: Optional[BaseRepository] = None,
     ):
         self.listings_repo = (
             listings_repo if listings_repo is not None else RepositoryFactory.listings()
@@ -33,24 +34,33 @@ class ListingService:
             if applications_repo is not None
             else RepositoryFactory.applications()
         )
+        self.events_rush_repo = (
+            event_timeframes_rush_repo
+            if event_timeframes_rush_repo is not None
+            else RepositoryFactory.event_timeframes_rush()
+        )
+        
 
-    # TODO: prevent duplicate names... (also for rush-category)
-    def create(self, data: dict):
+    # TODO: prevent duplicate names... (also for rush-category)..
+    def create(self, data: dict, include_events_attended: bool):
         id = str(uuid.uuid4())
         data["id"] = id
         data["is_visible"] = True
         data["is_encrypted"] = False
 
         # TODO: check for dup name BEFORE going to rush-category creation
-        # if includeEventsAttended, create corresponding rush category (and create foreign-key)
-        # if data.get("includeEventsAttended", None):
-        #     events_rush_data = {"name": data["title"], "defaultRushCategory": False}
-        #     rush_category_id = events_rush_service.create_rush_category(
-        #         data=events_rush_data
-        #     )
-        #     data["rushCategoryId"] = str(rush_category_id)
 
         self.listings_repo.create(data=data)
+
+        rush_timeframe_id = str(uuid.uuid4())
+        rush_timeframe_data = {
+            "id": rush_timeframe_id,
+            "name": data["title"],
+            "listing_id": data["id"]
+        }
+
+        if include_events_attended:
+            self.events_rush_repo.create(rush_timeframe_data)
 
         return {"msg": True}
 

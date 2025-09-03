@@ -8,12 +8,14 @@ from chalicelib.models.roles import Roles
 listings_api = Blueprint(__name__)
 
 
-@listings_api.route("/create", methods=["POST"], cors=True)
+@listings_api.route("/listings/create", methods=["POST"], cors=True)
 @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
 @handle_exceptions
 def create_listing():
     """Creates a new listing with given information"""
-    return listing_service.create(listings_api.current_request.json_body)
+    data: dict = listings_api.current_request.json_body
+    include_events_attended = data.pop("include_events_attended")
+    return listing_service.create(data, include_events_attended)
 
 
 @listings_api.route("/apply", methods=["POST"], cors=True)
