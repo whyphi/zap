@@ -30,18 +30,22 @@ class ApplicantService:
         )
 
         # Collect rush information (events-attended)
-        rush_category = self.event_timeframes_rush_repo.get_with_custom_select(
+        rush_category_data = self.event_timeframes_rush_repo.get_with_custom_select(
             filters={"listing_id": listing_id}
-        )[0]
-        rush_category_id = rush_category["id"]
-        if rush_category_id:
+        )
+
+        if rush_category_data:
+            rush_category_id = rush_category_data[0]["id"]
             analytics = self._get_rush_analytics(rush_category_id)
             rushees = analytics.get("rushees", {})
             events = analytics.get("events", {})
 
             for applicant in applications:
                 email = applicant["email"]
-                rushee = rushees[email]
+                rushee = rushees.get(email, None)
+                if not rushee:
+                    continue
+
                 events_attended = rushee["events_attended"]
 
                 applicant["threshold"] = rushee["threshold"]
