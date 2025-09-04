@@ -7,13 +7,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# COMPLETED
-
 
 class ApplicantService:
     def __init__(self):
         self.listings_repo = RepositoryFactory.listings()
         self.applications_repo = RepositoryFactory.applications()
+        self.event_timeframes_rush_repo = RepositoryFactory.event_timeframes_rush()
 
     def get(self, id: str):
         data = self.applications_repo.get_by_id(id_value=id)
@@ -25,43 +24,55 @@ class ApplicantService:
 
     def get_all_from_listing(self, id: str):
         listing = self.listings_repo.get_by_id(id_value=id)
-        data = self.applications_repo.get_all_by_field(field="listing_id", value=id)
+        listing_id = listing["id"]
+        applications = self.applications_repo.get_all_by_field(
+            field="listing_id", value=id
+        )
 
-        # TODO: re-implement this
-        # # automated rush event logic (NOTE: does not override existing rush event logic)
-        # rush_category_id = listing.get("rushCategoryId", None)
-        # if rush_category_id:
-        #     analytics = self._get_rush_analytics(rush_category_id)
-        #     attendees = analytics.get("attendees", {})
-        #     events = analytics.get("events", [])
+        # Collect rush information (events-attended)
+        rush_category = self.event_timeframes_rush_repo.get_with_custom_select(
+            filters={"listing_id": listing_id}
+        )[0]
+        rush_category_id = rush_category["id"]
+        if rush_category_id:
+            analytics = self._get_rush_analytics(rush_category_id)
+            rushees = analytics.get("rushees", {})
+            events = analytics.get("events", {})
 
-        #     for applicant in data:
-        #         applicant["events"] = self._get_applicant_events(
-        #             email=applicant["email"], attendees=attendees, events=events
-        #         )
+            for applicant in applications:
+                email = applicant["email"]
+                rushee = rushees[email]
+                events_attended = rushee["events_attended"]
+
+                applicant["threshold"] = rushee["threshold"]
+                applicant["events"] = self._get_applicant_events(
+                    events_attended=events_attended, events=events
+                )
 
         is_encrypted = listing.get("is_encrypted", False)
         if is_encrypted:
-            data = hash_value(data)
+            applications = hash_value(applications)
 
-        return data
+        return applications
 
     def _get_rush_analytics(self, rush_category_id: str) -> dict:
         """Helper method for `get_all_from_listing`"""
         analytics = events_rush_service.get_rush_timeframe_analytics(rush_category_id)
-        try:
-            return json.loads(analytics)
-        except json.JSONDecodeError as e:
-            raise BadRequestError(f"Error decoding JSON: {e}")
 
-    def _get_applicant_events(self, email: str, attendees: dict, events: list) -> dict:
+        # remap rushees dict from rush_id → email
+        rushees_by_email = {
+            rushee_data["email"]: rushee_data
+            for rushee_data in analytics.get("rushees", {}).values()
+        }
+
+        analytics["rushees"] = rushees_by_email
+        return analytics
+
+    def _get_applicant_events(self, events_attended: dict, events: dict) -> dict:
         """Helper method for `get_all_from_listing`"""
         return {
-            event["eventName"]: any(
-                event_attended["eventId"] == event["eventId"]
-                for event_attended in attendees.get(email, {}).get("eventsAttended", [])
-            )
-            for event in events
+            events[event_attended["id"]]["name"]: event_attended["attended"]
+            for event_attended in events_attended
         }
 
 
