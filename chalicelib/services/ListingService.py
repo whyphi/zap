@@ -66,7 +66,6 @@ class ListingService:
         data = self.listings_repo.get_all()
         return data
 
-    # TODO: also delete corresponding rush-category
     def delete(self, id: str):
         self.listings_repo.delete(id_value=id)
         return {"msg": True}
