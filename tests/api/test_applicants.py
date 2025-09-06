@@ -47,42 +47,31 @@ def test_get_applicant(test_client):
         assert response.json_body == TEST_APPLICANTS[0]
 
 
-# def test_get_all_applicants(test_client):
-#     # Create a Chalice test client
-#     with Client(app) as client:
-#         # Mock applicant_service's get method
-#         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-#             # Assuming the decoded token has the required role
-#             mock_decode.return_value = {"roles": ["admin"]}
-#             with patch(
-#                 "chalicelib.services.ApplicantService.applicant_service.get_all"
-#             ) as mock_get_all:
-#                 mock_get_all.return_value = TEST_APPLICANTS
-#                 response = client.http.get(
-#                     "/applicants",
-#                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-#                 )
+def test_get_applictest_get_all_applicantsnt(test_client):
+    client, mock_applicant_service = test_client
+    mock_applicant_service.get_all.return_value = TEST_APPLICANTS
 
-#                 # Check the response status code and body
-#                 assert response.status_code == 200
-#                 assert response.json_body == TEST_APPLICANTS
+    with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+        mock_decode.return_value = {"roles": ["admin"]}
+        response = client.http.get(
+            f"/applicants",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+        assert response.status_code == 200
+        assert response.json_body == TEST_APPLICANTS
 
 
-# def test_get_all_applicants_from_listing(test_client):
-#     # Create a Chalice test client
-#     with Client(app) as client:
-#         with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-#             # Assuming the decoded token has the required role
-#             mock_decode.return_value = {"roles": ["admin"]}
-#             with patch(
-#                 "chalicelib.services.ApplicantService.applicant_service.get_all_from_listing"
-#             ) as mock_get_all_from_listing:
-#                 mock_get_all_from_listing.return_value = TEST_APPLICANTS
-#                 response = client.http.get(
-#                     "/applicants/test_listing_id",
-#                     headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-#                 )
+def test_get_all_applicants_from_listing(test_client):
+    client, mock_applicant_service = test_client
+    mock_applicant_service.get_all_from_listing.return_value = TEST_APPLICANTS
 
-#                 # Check the response status code and body
-#                 assert response.status_code == 200
-#                 assert response.json_body == TEST_APPLICANTS
+    with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+        mock_decode.return_value = {"roles": ["admin"]}
+        response = client.http.get(
+            f"/applicants/test_listing_id",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+        assert response.status_code == 200
+        assert response.json_body == TEST_APPLICANTS
