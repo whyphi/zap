@@ -35,21 +35,24 @@ SAMPLE_LISTINGS = [
 
 @pytest.fixture
 def service():
-    with patch("chalicelib.services.ListingService.RepositoryFactory") as mock_factory:
-        mock_applicants_repo = Mock()
-        mock_listings_repo = Mock()
-        mock_factory.applications.return_value = mock_applicants_repo
-        mock_factory.listings.return_value = mock_listings_repo
+    mock_listings_repo = Mock()
+    mock_applicants_repo = Mock()
+    mock_events_rush_repo = Mock()
 
-        # services: will use the patched RepositoryFactory
-        listing_service = ListingService()
-        yield listing_service, mock_listings_repo, mock_applicants_repo
+    # Direct injection, no patching needed
+    mock_listing_service = ListingService(
+        listings_repo=mock_listings_repo,
+        applications_repo=mock_applicants_repo,
+        event_timeframes_rush_repo=mock_events_rush_repo,
+    )
+    return mock_listing_service, mock_listings_repo, mock_applicants_repo, mock_events_rush_repo
+
 
 
 def test_create_listing(service):
     import uuid
 
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     CREATED_LISTING = {
         "title": "test",
@@ -60,10 +63,8 @@ def test_create_listing(service):
 
     CREATED_LISTING_ID = uuid.UUID("12345678123456781234567812345678")
 
-    with patch("uuid.uuid4") as mock_uuid:
-        # Mock uuid and execute ListingService
-        mock_uuid.return_value = CREATED_LISTING_ID
-        result = listing_service.create(CREATED_LISTING.copy())
+    with patch("uuid.uuid4", return_value=CREATED_LISTING_ID):
+        result = listing_service.create(CREATED_LISTING.copy(), include_events_attended=False)
 
         # Validate listing_repo method call
         expected_data = CREATED_LISTING.copy()
@@ -76,7 +77,7 @@ def test_create_listing(service):
 
 
 def test_get_listing(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.get_by_id.return_value = SAMPLE_LISTINGS[0]
 
@@ -89,7 +90,7 @@ def test_get_listing(service):
 
 
 def test_get_all_listings(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.get_all.return_value = SAMPLE_LISTINGS
 
@@ -100,7 +101,7 @@ def test_get_all_listings(service):
 
 
 def test_delete_listing(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.delete.return_value = True
 
@@ -111,7 +112,7 @@ def test_delete_listing(service):
 
 
 def test_delete_listing_not_found(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.delete.side_effect = NotFoundError("Listing not found.")
 
@@ -120,7 +121,7 @@ def test_delete_listing_not_found(service):
 
 
 def test_toggle_visibility(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listing_id = SAMPLE_LISTINGS[0]["id"]
     result = listing_service.toggle_visibility(id=mock_listing_id)
@@ -133,7 +134,7 @@ def test_toggle_visibility(service):
 
 
 def test_toggle_visibility_invalid_listing_id(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.toggle_boolean_field.return_value = None
     mock_listings_repo.toggle_boolean_field.side_effect = NotFoundError(
@@ -151,7 +152,7 @@ def test_toggle_visibility_invalid_listing_id(service):
 
 
 def test_toggle_visibility_exception(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.toggle_boolean_field.return_value = None
     mock_listings_repo.toggle_boolean_field.side_effect = Exception("Error.")
@@ -165,7 +166,7 @@ def test_toggle_visibility_exception(service):
 
 
 def test_update_field_route(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.update_field.return_value = None
     mock_listings_repo.update.return_value = None
@@ -183,7 +184,7 @@ def test_update_field_route(service):
 
 
 def test_update_field_listing_not_found(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.update_field.side_effect = NotFoundError("Listing not found.")
 
@@ -197,7 +198,7 @@ def test_update_field_listing_not_found(service):
 
 
 def test_update_field_exception(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.update_field.side_effect = Exception("Error.")
 
@@ -211,7 +212,7 @@ def test_update_field_exception(service):
 
 
 def test_toggle_encryption_succeeds(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.toggle_boolean_field.return_value = True
     mock_listing_id = SAMPLE_LISTINGS[0]["id"]
@@ -226,7 +227,7 @@ def test_toggle_encryption_succeeds(service):
 
 
 def test_toggle_encryption_invalid_listing_id_raises_not_found(service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     mock_listings_repo.toggle_boolean_field.side_effect = NotFoundError(
         "Listing not found: 3."
@@ -264,7 +265,7 @@ def test_apply_success(
     mock_uuid,
     service,
 ):
-    listing_service, mock_listings_repo, mock_applicants_repo = service
+    listing_service, mock_listings_repo, mock_applicants_repo, _ = service
 
     # Setup fixed current time and deadline
     mock_datetime.now.return_value = datetime(2023, 9, 10, tzinfo=timezone.utc)
@@ -315,7 +316,7 @@ def test_apply_success(
 
 @patch("chalicelib.services.ListingService.Application.model_validate")
 def test_apply_listing_not_found(model_validate, service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     # Mock invisible listing
     mock_listings_repo.get_by_id.return_value = {
@@ -339,7 +340,7 @@ def test_apply_listing_not_found(model_validate, service):
 @patch("chalicelib.services.ListingService.datetime")
 @patch("chalicelib.services.ListingService.Application.model_validate")
 def test_apply_deadline_passed(mock_validate, mock_datetime, service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     # Listing is visible but deadline is in the past
     mock_listings_repo.get_by_id.return_value = {
