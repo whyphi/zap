@@ -1,44 +1,164 @@
 [
   {
-      "_id": "6689c9ad461be403487c0bf6",
-      "name": "Test default",
-      "defaultRushCategory": false,
-      "dateCreated": "2024-07-06T18:48:13.498000",
-      "events": []
+    "id": "acd7e645-928a-49b3-ab98-f89406f4b164",
+    "listing_id": "12161be3-3a5a-4736-8905-785b01af8126",
+    "name": "Fall 2024 (dev)",
+    "default_rush_timeframe": false,
+    "date_created": "2024-09-04T10:28:37.578+00:00",
+    "events_rush": [
+      {
+        "id": "1fcc7baa-fd98-40de-b652-bc92cfb1b9f7",
+        "code": "code",
+        "date": "2024-09-04T14:28:48.166+00:00",
+        "name": "Test 1",
+        "deadline": "2024-09-04T16:28:48.166+00:00",
+        "location": "gsu",
+        "date_created": "2024-09-04T10:29:03.93+00:00",
+        "timeframe_id": "acd7e645-928a-49b3-ab98-f89406f4b164",
+        "last_modified": "2024-09-04T10:29:03.93+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d86e950abe5d0d9c922fa0/66d86eaf0abe5d0d9c922fa1/v0.png",
+        "event_cover_image_name": "professionalpanel",
+        "event_cover_image_version": "v0"
+      },
+      {
+        "id": "36db207f-d8c9-4dde-b2c6-b280ad0e0546",
+        "code": "code",
+        "date": "2024-09-04T14:29:06.383+00:00",
+        "name": "Test 2",
+        "deadline": "2024-09-04T16:29:06.383+00:00",
+        "location": "gsu",
+        "date_created": "2024-09-04T10:29:19.632+00:00",
+        "timeframe_id": "acd7e645-928a-49b3-ab98-f89406f4b164",
+        "last_modified": "2024-09-04T10:29:19.632+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d86e950abe5d0d9c922fa0/66d86ebf0abe5d0d9c922fa2/v0.png",
+        "event_cover_image_name": "resumeworkshop",
+        "event_cover_image_version": "v0"
+      }
+    ]
   },
   {
-      "_id": "668ab770b97edcf7e0dd7c61",
-      "name": "Spring 2024",
-      "defaultRushCategory": false,
-      "dateCreated": "2024-07-07T11:42:40.365000",
-      "events": []
+    "id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+    "listing_id": "ec3298f9-29c4-4009-816f-e84b9b394c35",
+    "name": "temp",
+    "default_rush_timeframe": false,
+    "date_created": "2024-09-04T15:03:53.598+00:00",
+    "events_rush": [
+      {
+        "id": "8a595937-64a8-4bf9-81e8-229a49cce02a",
+        "code": "code",
+        "date": "2024-09-04T15:04:21.122+00:00",
+        "name": "Info Session 1",
+        "deadline": "2024-09-12T17:04:21+00:00",
+        "location": "GSU",
+        "date_created": "2024-09-04T15:04:43.715+00:00",
+        "timeframe_id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+        "last_modified": "2024-09-17T15:26:53.963+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d876d9c86bcea1681776e5/66d8770bc86bcea1681776e6/v0.png",
+        "event_cover_image_name": "infosession2",
+        "event_cover_image_version": "v4"
+      },
+      {
+        "id": "4fc6562c-7395-4975-bba0-511b74c7014e",
+        "code": "code",
+        "date": "2024-09-06T15:32:09.516+00:00",
+        "name": "Info Session 2",
+        "deadline": "2024-09-06T17:32:09.516+00:00",
+        "location": "gsu",
+        "date_created": "2024-09-06T11:32:39.522+00:00",
+        "timeframe_id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+        "last_modified": "2024-09-17T15:27:19.79+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d876d9c86bcea1681776e5/66db2097be7f978f44a63834/v0.png",
+        "event_cover_image_name": "professionalpanel",
+        "event_cover_image_version": "v1"
+      },
+      {
+        "id": "86f2053c-0dca-4f78-91e8-c097e8f0dd71",
+        "code": "code",
+        "date": "2024-09-06T16:15:00+00:00",
+        "name": "Professional Panel",
+        "deadline": "2025-03-27T18:15:00+00:00",
+        "location": "gsu",
+        "date_created": "2024-09-06T11:33:22.63+00:00",
+        "timeframe_id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+        "last_modified": "2025-02-01T10:31:18.308+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d876d9c86bcea1681776e5/66db20c2be7f978f44a63835/v0.png",
+        "event_cover_image_name": "resumeworkshop",
+        "event_cover_image_version": "v2"
+      },
+      {
+        "id": "64ac1085-dd97-4733-991b-16704751d7db",
+        "code": "code",
+        "date": "2024-09-17T19:27:33.663+00:00",
+        "name": "Resume Night",
+        "deadline": "2024-09-17T21:27:33.663+00:00",
+        "location": "asf",
+        "date_created": "2024-09-17T15:28:14.911+00:00",
+        "timeframe_id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+        "last_modified": "2024-09-17T15:28:14.911+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d876d9c86bcea1681776e5/66e9d84e6007da0769cc9754/v0.png",
+        "event_cover_image_name": "resumeworkshop",
+        "event_cover_image_version": "v0"
+      },
+      {
+        "id": "65cab91c-cdd3-442e-bd81-d84c3026e9a1",
+        "code": "code",
+        "date": "2024-09-17T19:28:17.387+00:00",
+        "name": "Social Event",
+        "deadline": "2024-09-17T21:28:17.387+00:00",
+        "location": "gsu",
+        "date_created": "2024-09-17T15:28:35.172+00:00",
+        "timeframe_id": "fde9d57c-a305-4595-af7a-9423f22c86ad",
+        "last_modified": "2024-09-17T15:28:35.172+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d876d9c86bcea1681776e5/66e9d8636007da0769cc9755/v0.png",
+        "event_cover_image_name": "socialevent",
+        "event_cover_image_version": "v0"
+      }
+    ]
   },
   {
-      "_id": "668ab777b97edcf7e0dd7c62",
-      "name": "Fall 2024",
-      "defaultRushCategory": false,
-      "dateCreated": "2024-07-07T11:42:47.334000",
-      "events": [
-          {
-              "_id": "668ac7fd961912025eff6e1c",
-              "name": "Info Session 1",
-              "code": "info",
-              "location": "EPC 204",
-              "date": "2024-07-07T16:52:32.071Z",
-              "deadline": "2024-07-07T18:52:32.071Z",
-              "dateCreated": "2024-07-07T12:53:17.418000",
-              "lastModified": "2024-07-07T13:25:39.525000",
-              "attendees": [],
-              "numAttendees": 0,
-              "eventId": "668ac7fd961912025eff6e1c"
-          }
-      ]
+    "id": "a0c74af9-6017-46f0-8139-d5533a40b85b",
+    "listing_id": "acaef2fc-4da1-47e8-9b1e-81e3b8bde4b8",
+    "name": "TEST Spring 2025",
+    "default_rush_timeframe": false,
+    "date_created": "2025-01-27T21:20:55.218+00:00",
+    "events_rush": [
+      {
+        "id": "e3a234a2-b49a-4523-937f-bb922c90386f",
+        "code": "CoDe",
+        "date": "2025-01-28T14:25:17.531+00:00",
+        "name": "hello",
+        "deadline": "2025-01-28T16:25:17.531+00:00",
+        "location": "GSu",
+        "date_created": "2025-01-28T09:25:34.063+00:00",
+        "timeframe_id": "a0c74af9-6017-46f0-8139-d5533a40b85b",
+        "last_modified": "2025-01-28T09:25:34.063+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/67983f07aa06d23230084cc0/6798e8defe051756456738b6/v0.png",
+        "event_cover_image_name": "15",
+        "event_cover_image_version": "v0"
+      }
+    ]
   },
   {
-      "_id": "668eb4d9bb65e34f7746ae71",
-      "name": "Spring 2025",
-      "defaultRushCategory": false,
-      "dateCreated": "2024-07-10T12:20:41.851000",
-      "events": []
+    "id": "5d703f5e-6e57-40aa-be5f-c2d76f805a3b",
+    "listing_id": "ddbe5d60-0ff3-4796-8ee7-a6d80eeeb35d",
+    "name": "Test Spring 2025 (2)",
+    "default_rush_timeframe": true,
+    "date_created": "2025-01-29T18:52:44.749+00:00",
+    "events_rush": [
+      {
+        "id": "f4c6c2a8-fecd-49ce-9d09-5cbd92786e15",
+        "code": "test1",
+        "date": "2025-01-29T23:53:45.188+00:00",
+        "name": "test1",
+        "deadline": "2025-01-30T01:53:45.188+00:00",
+        "location": "gsu",
+        "date_created": "2025-01-29T18:54:00.415+00:00",
+        "timeframe_id": "5d703f5e-6e57-40aa-be5f-c2d76f805a3b",
+        "last_modified": "2025-01-29T18:54:00.415+00:00",
+        "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/679abf4cf99ffb3704fe41b0/679abf98f99ffb3704fe41b1/v0.png",
+        "event_cover_image_name": "15",
+        "event_cover_image_version": "v0"
+      }
+    ]
   }
 ]
