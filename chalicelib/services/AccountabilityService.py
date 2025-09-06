@@ -5,7 +5,7 @@ class AccountabilityService:
         # Currently hardcoded --> need to set as dynamic parameter either in DB or SSM
         self.spreadsheet_id = "1VEj06zGrxq-1Hrp8ArbYJkvPw58g5e4C3MhDeBjL6o4"
         self.gs = GoogleSheetsModule()
-        
+
     def get_total_accountability(self, page: int, page_size: int = 20) -> list[dict]:
         START_ROW = 2 + page * page_size
         cells = self.gs.get_rows(

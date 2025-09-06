@@ -1,50 +1,43 @@
 from chalice.app import BadRequestError
 from chalicelib.repositories.repository_factory import RepositoryFactory
-from chalicelib.repositories.base_repository import BaseRepository
-from chalicelib.services.service_utils import resolve_repo
+from chalicelib.services.EventsRushService import events_rush_service
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from chalice.app import Response, BadRequestError, NotFoundError
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
-from chalicelib.utils.utils import get_file_extension_from_base64
+from chalicelib.utils import get_file_extension_from_base64
 from chalicelib.s3 import s3
 import uuid
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# TODO: DON'T FORGET TO DECIDE WHAT TO DO WITH ListingService.create (temporarily create MongoDB event???)
+
 
 class ListingService:
-    def __init__(
-        self,
-        listings_repo: Optional[BaseRepository] = None,
-        applications_repo: Optional[BaseRepository] = None,
-        event_timeframes_rush_repo: Optional[BaseRepository] = None,
-    ):
-        self.listings_repo = resolve_repo(listings_repo, RepositoryFactory.listings)
-        self.applications_repo = resolve_repo(applications_repo, RepositoryFactory.applications)
-        self.events_rush_repo = resolve_repo(event_timeframes_rush_repo, RepositoryFactory.event_timeframes_rush)
+    def __init__(self):
+        self.listings_repo = RepositoryFactory.listings()
+        self.applications_repo = RepositoryFactory.applications()
 
-    # TODO: prevent duplicate names... (also for rush-category)..
-    def create(self, data: dict, include_events_attended: bool):
+    # TODO: prevent duplicate names... (also for rush-category)
+    def create(self, data: dict):
         id = str(uuid.uuid4())
         data["id"] = id
         data["is_visible"] = True
         data["is_encrypted"] = False
 
+        # TODO: check for dup name BEFORE going to rush-category creation
+        # if includeEventsAttended, create corresponding rush category (and create foreign-key)
+        # if data.get("includeEventsAttended", None):
+        #     events_rush_data = {"name": data["title"], "defaultRushCategory": False}
+        #     rush_category_id = events_rush_service.create_rush_category(
+        #         data=events_rush_data
+        #     )
+        #     data["rushCategoryId"] = str(rush_category_id)
+
         self.listings_repo.create(data=data)
-
-        rush_timeframe_id = str(uuid.uuid4())
-        rush_timeframe_data = {
-            "id": rush_timeframe_id,
-            "name": data["title"],
-            "listing_id": data["id"],
-        }
-
-        if include_events_attended:
-            self.events_rush_repo.create(rush_timeframe_data)
 
         return {"msg": True}
 
@@ -56,6 +49,7 @@ class ListingService:
         data = self.listings_repo.get_all()
         return data
 
+    # TODO: also delete corresponding rush-category
     def delete(self, id: str):
         self.listings_repo.delete(id_value=id)
         return {"msg": True}
@@ -152,3 +146,6 @@ class ListingService:
         )
 
         return {"msg": True, "resumeUrl": resume_url}
+
+
+listing_service = ListingService()

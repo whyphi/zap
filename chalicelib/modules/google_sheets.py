@@ -121,29 +121,18 @@ class GoogleSheetsModule:
 
     def find_next_available_col(self, spreadsheet_id: str, sheet_name: str):
         # Find the next available column in row 1
-        events_range = f"{sheet_name}!1:1"  # Get the entire first row
+        events_range = f"{sheet_name}!A1:Z1"
         response = (
             self.service.spreadsheets()
             .values()
             .get(spreadsheetId=spreadsheet_id, range=events_range)
             .execute()
         )
-        
-        events = response.get("values", [[]])[0] if "values" in response else []
-        col_index = len(events)  # 0-based index
+        events = response["values"][0]
 
-        # Convert index to A1 notation
-        def index_to_column_name(n: int) -> str:
-            """Convert a zero-based index to a column name (A, B, ..., Z, AA, AB, ...)"""
-            name = ""
-            while n >= 0:
-                n, remainder = divmod(n, 26)
-                name = chr(65 + remainder) + name
-                n -= 1
-            return name
+        next_col = chr(ord("A") + len(events))
 
-        return index_to_column_name(col_index)
-
+        return next_col
 
     def get_sheet_with_grid_data(self, spreadsheet_id: str, sheet_name: str):
         """
