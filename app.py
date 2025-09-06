@@ -36,26 +36,29 @@ from chalicelib.services.AccountabilityService import AccountabilityService
 from chalicelib.events.test import test_events
 
 
-# Configure and initialize sentry
-sentry_sdk.init(
-    dsn=boto3.client("ssm").get_parameter(Name="/Zap/sentry/dsn", WithDecryption=True)[
-        "Parameter"
-    ]["Value"],
-    integrations=[ChaliceIntegration()],
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    traces_sample_rate=1.0,
-    # Set profiles_sample_rate to 1.0 to profile 100%
-    # of sampled transactions.
-    # We recommend adjusting this value in production.
-    profiles_sample_rate=1.0,
-    environment="production" if os.environ.get("ENV") == "prod" else "development",
-)
-
 app = Chalice(app_name="zap")
 
 
-def register_services():
+def initialize_app():
+
+    ################################################################
+    # Configure and initialize sentry
+    ################################################################
+
+    sentry_sdk.init(
+        dsn=boto3.client("ssm").get_parameter(
+            Name="/Zap/sentry/dsn", WithDecryption=True
+        )["Parameter"]["Value"],
+        integrations=[ChaliceIntegration()],
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        environment="production" if os.environ.get("ENV") == "prod" else "development",
+    )
 
     ################################################################
     #  Dependency injection (services injected into api)
@@ -133,8 +136,9 @@ def register_services():
     app.register_blueprint(test_events)
 
 
+# IMPORTANT: Only initialize app services/routes/blueprints outside of testing scope
 if os.environ.get("CHALICE_TESTING") != "1":
-    register_services()
+    initialize_app()
 
 
 @app.route("/")
