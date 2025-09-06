@@ -169,3 +169,7 @@ cython_debug/
 
 .vscode
 .vscode/*
+
+# Docker data
+volume/
+minio_data/

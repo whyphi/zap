@@ -1,21 +1,48 @@
 import boto3
 import os
-from chalicelib.utils import decode_base64
+from chalicelib.utils.utils import decode_base64
 
 
 class S3Client:
     def __init__(self):
         self.bucket_name = "whyphi-zap"
-        self.is_prod = os.environ.get("ENV") == "prod"
-        self.s3 = boto3.client("s3")
+        self.env = os.environ.get("ENV", "local")  # local, staging, prod
+        self.is_local = self.env == "local"
 
-    def upload_binary_data(self, path: str, data: str) -> str:
-        """Uploads object to S3 Bucket and returns path"""
-        # Set path
-        if self.is_prod:
-            path = f"prod/{path}"
+        # Configure boto3 client based on environment
+        if self.is_local:
+            self.s3 = boto3.client(
+                "s3",
+                endpoint_url="http://localhost:9000",  # MinIO API port
+                aws_access_key_id="minio",             # MinIO root user
+                aws_secret_access_key="minio123",      # MinIO root password
+                region_name="us-east-1",
+            )
+            self.s3_endpoint = f"http://localhost:9000/{self.bucket_name}/"
         else:
-            path = f"dev/{path}"
+            self.s3 = boto3.client("s3")
+            self.s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
+
+    def _get_path_prefix(self) -> str:
+        """Get the appropriate path prefix based on environment"""
+        if self.env == "prod":
+            return "prod"
+        elif self.env == "staging":
+            return "dev"
+        else:
+            return "local"
+
+    def upload_binary_data(self, relative_path: str, data: str) -> str:
+        """Uploads object to S3 Bucket and returns path
+        Args:
+            relative_path (str): The partial key (path) of the object to delete from the S3 bucket. e.g. image/rush/<timeframe>/<event>/infosession2.png
+
+        Returns:
+            str: Url of S3 resource.
+
+        Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/put_object.html
+        """
+        full_path = f"{self._get_path_prefix()}/{relative_path}"
 
         # Split parts of base64 data
         parts = data.split(",")
@@ -28,32 +55,26 @@ class S3Client:
         # Upload binary data as object with content type set
         self.s3.put_object(
             Bucket=self.bucket_name,
-            Key=path,
+            Key=full_path,
             Body=binary_data,
             ContentType=content_type,
         )
 
         # Retrieve endpoint of object
-        s3_endpoint = f"https://{self.bucket_name}.s3.amazonaws.com/"
-        object_url = s3_endpoint + path
-
+        object_url = self.s3_endpoint + full_path
         return object_url
 
-    def delete_binary_data(self, object_id: str) -> str:
+    def delete_binary_data(self, relative_path: str) -> str:
         """Deletes object from s3 and returns response
         Args:
-            object_id (str): The key (path) of the object to delete from the S3 bucket.
-            e.g. dev/image/rush/66988908fd70b2c44bf2305d/199bb28f-b54c-48a3-9b94-1c95eab61f7d/infosession2.png
+            relative_path (str): The key (path) of the object to delete from the S3 bucket. e.g. image/rush/<timeframe>/<event>/infosession2.png
 
         Returns:
-            str: A message indicating the result of the deletion operation.
+            dict: An object indicating the result of the deletion operation.
 
         Documentation: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
         """
-        if self.is_prod:
-            path = f"prod/{object_id}"
-        else:
-            path = f"dev/{object_id}"
+        path = f"{self._get_path_prefix()}/{relative_path}"
 
         # delete binary data given bucket_name and key
         response = self.s3.delete_object(Bucket=self.bucket_name, Key=path)

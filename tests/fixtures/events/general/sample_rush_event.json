@@ -1,11 +1,15 @@
 {
-  "_id": "668ac7fd961912025eff6e1c",
-  "categoryId": "668ab777b97edcf7e0dd7c62",
-  "name": "Info Session 1",
-  "location": "EPC 204",
-  "date": "2024-07-07T16:52:32.071Z",
-  "deadline": "2024-07-07T18:52:32.071Z",
-  "dateCreated": "2024-07-07T12:53:17.418000",
-  "lastModified": "2024-07-07T13:25:39.525000",
-  "eventId": "668ac7fd961912025eff6e1c"
+  "id": "1fcc7baa-fd98-40de-b652-bc92cfb1b9f7",
+  "timeframe_id": "acd7e645-928a-49b3-ab98-f89406f4b164",
+  "name": "Test 1",
+  "code": "code",
+  "location": "gsu",
+  "date": "2024-09-04T14:28:48.166+00:00",
+  "deadline": "2024-09-04T16:28:48.166+00:00",
+  "event_cover_image": "https://whyphi-zap.s3.amazonaws.com/dev/image/rush/66d86e950abe5d0d9c922fa0/66d86eaf0abe5d0d9c922fa1/v0.png",
+  "event_cover_image_name": "professionalpanel",
+  "event_cover_image_version": "v0",
+  "date_created": "2024-09-04T10:29:03.93+00:00",
+  "last_modified": "2024-09-04T10:29:03.93+00:00",
+  "attendees": []
 }

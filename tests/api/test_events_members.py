@@ -1,8 +1,13 @@
-from chalice.test import Client
-from unittest.mock import patch
-import json
+import os
 
+os.environ["CHALICE_TESTING"] = "1"
+
+import json
+import pytest
+from unittest.mock import Mock, patch
+from chalice.test import Client
 from app import app
+from chalicelib.api import events_member
 
 with open("tests/fixtures/events/general/sample_timeframes.json") as f:
     SAMPLE_TIMEFRAMES = json.load(f)
@@ -11,175 +16,173 @@ with open("tests/fixtures/events/general/sample_timeframe_sheets.json") as f:
     SAMPLE_TIMEFRAME_SHEETS = json.load(f)
 
 
-def test_create_timeframe():
+@pytest.fixture(scope="module")
+def test_client():
+    # Create mock for EventsMemberService
+    mock_events_member_service = Mock()
+
+    # Register routes with the mock
+    events_member.register_routes(events_member_service=mock_events_member_service)
+
+    # Attach blueprint
+    app.register_blueprint(events_member.events_member_api)
+
     with Client(app) as client:
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.create_timeframe"
-            ) as mock_create_timeframe:
-                mock_create_timeframe.return_value = {"msg": True}
-                response = client.http.post(
-                    "/timeframes",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
-
-                assert response.status_code == 200
-                assert response.json_body == {"msg": True}
+        yield client, mock_events_member_service
 
 
-def test_get_all_timeframes():
-    # Create a Chalice test client
-    with Client(app) as client:
-        # Mock applicant_service's get method
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.get_all_timeframes",
-            ) as mock_get_all_timeframes:
-                mock_get_all_timeframes.return_value = SAMPLE_TIMEFRAMES
-                response = client.http.get(
-                    "/timeframes",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_create_timeframe(test_client):
+    client, mock_service = test_client
+    mock_service.create_timeframe.return_value = {"msg": True}
 
-                # Check the response status code and body
-                assert response.status_code == 200
-                assert response.json_body == SAMPLE_TIMEFRAMES
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.post(
+            "/timeframes",
+            headers={
+                "Authorization": "Bearer SAMPLE_TOKEN_STRING",
+                "Content-Type": "application/json",
+            },
+            body=json.dumps({"name": "Fall 2025"}),
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == {"msg": True}
+    mock_service.create_timeframe.assert_called_once_with({"name": "Fall 2025"})
 
 
-def test_get_timeframe():
-    # Create a Chalice test client
-    with Client(app) as client:
-        # Mock applicant_service's get method
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.get_timeframe",
-            ) as mock_get_timeframe:
-                mock_get_timeframe.return_value = SAMPLE_TIMEFRAMES[0]
-                response = client.http.get(
-                    "/timeframes/test_timeframe_id",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_get_all_timeframes(test_client):
+    client, mock_service = test_client
+    mock_service.get_all_timeframes_and_events.return_value = SAMPLE_TIMEFRAMES
 
-                # Check the response status code and body
-                assert response.status_code == 200
-                assert response.json_body == SAMPLE_TIMEFRAMES[0]
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.get(
+            "/timeframes",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == SAMPLE_TIMEFRAMES
+    mock_service.get_all_timeframes_and_events.assert_called_once()
 
 
-def test_delete_timeframe():
-    with Client(app) as client:
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.delete_timeframe",
-            ) as mock_delete:
-                mock_delete.return_value = {"status": True}
-                response = client.http.delete(
-                    f"/timeframes/{SAMPLE_TIMEFRAMES[0]['_id']}",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_get_timeframe(test_client):
+    client, mock_service = test_client
+    mock_service.get_timeframe.return_value = SAMPLE_TIMEFRAMES[0]
 
-                assert response.status_code == 200
-                assert response.json_body == {"status": True}
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.get(
+            f"/timeframes/{SAMPLE_TIMEFRAMES[0]['id']}",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == SAMPLE_TIMEFRAMES[0]
+    mock_service.get_timeframe.assert_called_once_with(SAMPLE_TIMEFRAMES[0]["id"])
 
 
-def test_create_event():
-    with Client(app) as client:
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.create_event"
-            ) as mock_create_event:
-                mock_create_event.return_value = {"msg": True}
-                response = client.http.post(
-                    f"/timeframes/{SAMPLE_TIMEFRAMES[0]['_id']}/events",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_delete_timeframe(test_client):
+    client, mock_service = test_client
+    mock_service.delete_timeframe.return_value = {"status": True}
 
-                assert response.status_code == 200
-                assert response.json_body == {"msg": True}
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.delete(
+            f"/timeframes/{SAMPLE_TIMEFRAMES[0]['id']}",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == {"status": True}
+    mock_service.delete_timeframe.assert_called_once_with(SAMPLE_TIMEFRAMES[0]["id"])
 
 
-def test_get_event():
-    # Create a Chalice test client
-    with Client(app) as client:
-        # Mock applicant_service's get method
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.get_timeframe",
-            ) as mock_get_timeframe:
-                mock_get_timeframe.return_value = SAMPLE_TIMEFRAMES[0]
-                response = client.http.get(
-                    "/timeframes/test_timeframe_id",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_create_event(test_client):
+    client, mock_service = test_client
+    mock_service.create_event.return_value = {"msg": True}
 
-                # Check the response status code and body
-                assert response.status_code == 200
-                assert response.json_body == SAMPLE_TIMEFRAMES[0]
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.post(
+            f"/timeframes/{SAMPLE_TIMEFRAMES[0]['id']}/events",
+            headers={
+                "Authorization": "Bearer SAMPLE_TOKEN_STRING",
+                "Content-Type": "application/json",
+            },
+            body=json.dumps({"name": "New Event"}),
+        )
 
-
-def test_get_timeframe_sheets():
-    # Create a Chalice test client
-    with Client(app) as client:
-        # Mock applicant_service's get method
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.get_timeframe_sheets",
-            ) as mock_get_timeframe_sheets:
-                mock_get_timeframe_sheets.return_value = SAMPLE_TIMEFRAME_SHEETS
-                response = client.http.get(
-                    "/timeframes/test_timeframe_id/sheets",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
-
-                # Check the response status code and body
-                assert response.status_code == 200
-                assert response.json_body == SAMPLE_TIMEFRAME_SHEETS
+    assert response.status_code == 200
+    assert response.json_body == {"msg": True}
+    mock_service.create_event.assert_called_once_with(
+        SAMPLE_TIMEFRAMES[0]["id"], {"name": "New Event"}
+    )
 
 
-def test_checkin():
-    with Client(app) as client:
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.checkin"
-            ) as mock_checkin:
-                mock_checkin.return_value = {"msg": True}
-                response = client.http.post(
-                    "/events/test_event_id/checkin",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_get_event(test_client):
+    client, mock_service = test_client
+    mock_service.get_event.return_value = SAMPLE_TIMEFRAMES[0]["events_member"][0]
 
-                assert response.status_code == 200
-                assert response.json_body == {"msg": True}
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.get(
+            f"/events/{SAMPLE_TIMEFRAMES[0]['events_member'][0]['id']}",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == SAMPLE_TIMEFRAMES[0]["events_member"][0]
+    mock_service.get_event.assert_called_once_with(
+        SAMPLE_TIMEFRAMES[0]["events_member"][0]["id"]
+    )
 
 
-def test_delete_event():
-    with Client(app) as client:
-        with patch("chalicelib.decorators.jwt.decode") as mock_decode:
-            # Assuming the decoded token has the required role
-            mock_decode.return_value = {"roles": ["admin"]}
-            with patch(
-                "chalicelib.services.EventsMemberService.events_member_service.delete",
-            ) as mock_delete:
-                mock_delete.return_value = {"status": True}
-                response = client.http.delete(
-                    "/events/test_event_id",
-                    headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
-                )
+def test_get_timeframe_sheets(test_client):
+    client, mock_service = test_client
+    mock_service.get_timeframe_sheets.return_value = SAMPLE_TIMEFRAME_SHEETS
 
-                assert response.status_code == 200
-                assert response.json_body == {"status": True}
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.get(
+            f"/timeframes/{SAMPLE_TIMEFRAMES[0]['id']}/sheets",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == SAMPLE_TIMEFRAME_SHEETS
+    mock_service.get_timeframe_sheets.assert_called_once_with(
+        SAMPLE_TIMEFRAMES[0]["id"]
+    )
+
+
+def test_checkin(test_client):
+    client, mock_service = test_client
+    mock_service.checkin.return_value = {"msg": True}
+
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.post(
+            f"/events/{SAMPLE_TIMEFRAMES[0]['events_member'][0]['id']}/checkin",
+            headers={
+                "Authorization": "Bearer SAMPLE_TOKEN_STRING",
+                "Content-Type": "application/json",
+            },
+            body=json.dumps({"user": "123"}),
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == {"msg": True}
+    mock_service.checkin.assert_called_once_with(
+        SAMPLE_TIMEFRAMES[0]["events_member"][0]["id"], {"user": "123"}
+    )
+
+
+def test_delete_event(test_client):
+    client, mock_service = test_client
+    mock_service.delete.return_value = {"status": True}
+
+    with patch("chalicelib.decorators.jwt.decode", return_value={"roles": ["admin"]}):
+        response = client.http.delete(
+            f"/events/{SAMPLE_TIMEFRAMES[0]['events_member'][0]['id']}",
+            headers={"Authorization": "Bearer SAMPLE_TOKEN_STRING"},
+        )
+
+    assert response.status_code == 200
+    assert response.json_body == {"status": True}
+    mock_service.delete.assert_called_once_with(
+        SAMPLE_TIMEFRAMES[0]["events_member"][0]["id"]
+    )

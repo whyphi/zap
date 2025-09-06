@@ -1,5 +1,5 @@
 import base64
-from chalicelib.utils import decode_base64, get_file_extension_from_base64
+from chalicelib.utils.utils import decode_base64, get_file_extension_from_base64
 
 
 def test_decode_base64():
