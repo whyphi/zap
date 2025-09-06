@@ -1,5 +1,4 @@
 import os
-
 os.environ["CHALICE_TESTING"] = "1"
 
 import json
