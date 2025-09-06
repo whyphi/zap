@@ -40,12 +40,12 @@ def service():
     mock_events_rush_repo = Mock()
 
     # Direct injection, no patching needed
-    listing_service = ListingService(
+    mock_listing_service = ListingService(
         listings_repo=mock_listings_repo,
         applications_repo=mock_applicants_repo,
         event_timeframes_rush_repo=mock_events_rush_repo,
     )
-    return listing_service, mock_listings_repo, mock_applicants_repo, mock_events_rush_repo
+    return mock_listing_service, mock_listings_repo, mock_applicants_repo, mock_events_rush_repo
 
 
 
@@ -340,7 +340,7 @@ def test_apply_listing_not_found(model_validate, service):
 @patch("chalicelib.services.ListingService.datetime")
 @patch("chalicelib.services.ListingService.Application.model_validate")
 def test_apply_deadline_passed(mock_validate, mock_datetime, service):
-    listing_service, mock_listings_repo, _ = service
+    listing_service, mock_listings_repo, _, _ = service
 
     # Listing is visible but deadline is in the past
     mock_listings_repo.get_by_id.return_value = {

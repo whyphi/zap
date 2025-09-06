@@ -12,13 +12,13 @@ logger = logging.getLogger(__name__)
 class ApplicantService:
     def __init__(
         self,
-        listings_repo: Optional[BaseRepository] = None,
         applications_repo: Optional[BaseRepository] = None,
+        listings_repo: Optional[BaseRepository] = None,
         event_timeframes_rush_repo: Optional[BaseRepository] = None,
         events_rush_service: Optional[EventsRushService] = None,
     ):
-        self.listings_repo = resolve_repo(listings_repo, RepositoryFactory.listings)
         self.applications_repo = resolve_repo(applications_repo, RepositoryFactory.applications)
+        self.listings_repo = resolve_repo(listings_repo, RepositoryFactory.listings)
         self.event_timeframes_rush_repo = resolve_repo(event_timeframes_rush_repo, RepositoryFactory.event_timeframes_rush)
         self.events_rush_service = events_rush_service
 
