@@ -3,24 +3,28 @@ from unittest.mock import patch, MagicMock
 from chalicelib.modules.supabase_client import SupabaseClient
 from chalicelib.repositories.base_repository import BaseRepository
 from chalicelib.repositories.repository_factory import RepositoryFactory
-from chalice.app import NotFoundError
+from chalice.app import BadRequestError, NotFoundError
 from postgrest.exceptions import APIError
+from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 
 
 @pytest.fixture
-def mock_supabase():
-    with patch("chalicelib.modules.supabase_client.create_client") as mock_create_client:
+def mock_supabase(monkeypatch):
+    with patch(
+        "chalicelib.modules.supabase_client.create_client"
+    ) as mock_create_client:
         mock_client = MagicMock()
         mock_create_client.return_value = mock_client
-        # Ensure SupabaseClient uses this mock for all repos
-        from chalicelib.modules.supabase_client import SupabaseClient
-        SupabaseClient.set_client(mock_client)
+        monkeypatch.setenv("ENV", "pytest-tests")
+        monkeypatch.setenv("SUPABASE_URL", "http://fake.supabase.co")
+        monkeypatch.setenv("SUPABASE_KEY", "fake-key")
         yield mock_client
-        SupabaseClient.reset_client()
 
 
 def test_supabase_client_initialization(mock_supabase):
     client = SupabaseClient()
+    assert client.url == "http://fake.supabase.co"
+    assert client.key == "fake-key"
     assert client.get_client() == mock_supabase
 
 
@@ -44,14 +48,18 @@ def test_base_repository_get_all_returns_all_records_from_table(mock_supabase):
     assert result == [{"id": 1, "name": "Alice"}]
 
 
-def test_base_repository_get_all_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_get_all_raises_bad_request_error_on_api_error(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().select().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().select().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.get_all()
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_get_by_id_returns_record_with_id_from_table(mock_supabase):
@@ -77,14 +85,18 @@ def test_base_repository_get_by_id_raises_not_found_error_on_empty_data(mock_sup
     assert "Test_table with ID '123' not found." in str(exc_info.value)
 
 
-def test_base_repository_get_by_id_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_get_by_id_raises_bad_request_error_on_api_error(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().select().eq().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().select().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.get_by_id("abc123")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_get_all_by_field_returns_matching_records_from_table(
@@ -102,14 +114,20 @@ def test_base_repository_get_all_by_field_returns_matching_records_from_table(
     assert result == [{"test_field": "test_value"}]
 
 
-def test_base_repository_get_all_by_field_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_get_all_by_field_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().select().eq().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().select().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.get_all_by_field("test_field", "test_value")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_create_returns_created_record_from_table(mock_supabase):
@@ -123,14 +141,20 @@ def test_base_repository_create_returns_created_record_from_table(mock_supabase)
     assert result == [{"id": "newid"}]
 
 
-def test_base_repository_create_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_create_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().insert().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().insert().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.create({"id": "test_id"})
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_create_bulk_returns_created_records_from_table(mock_supabase):
@@ -154,14 +178,20 @@ def test_base_repository_create_bulk_returns_created_records_from_table(mock_sup
     ]
 
 
-def test_base_repository_create_bulk_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_create_bulk_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().insert().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().insert().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.create([{"foo": "bar1"}, {"foo": "bar2"}, {"foo": "bar3"}])
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_update_returns_updated_record_from_table(mock_supabase):
@@ -190,14 +220,18 @@ def test_base_repository_update_raises_not_found_error_on_empty_data(mock_supaba
     assert "Test_table with ID '123' not found." in str(exc_info.value)
 
 
-def test_base_repository_update_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_update_raises_bad_request_error_on_api_error(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().update().eq().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().update().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.update("123", {"id": "123"})
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_toggle_boolean_field_returns_updated_record_from_table(
@@ -220,14 +254,20 @@ def test_base_repository_toggle_boolean_field_returns_updated_record_from_table(
     assert result == {"id": "1", "is_active": True}
 
 
-def test_base_repository_toggle_boolean_field_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_toggle_boolean_field_raises_bad_request_error_on_api_error(
+    mock_supabase,
+):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().select().eq().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().select().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.toggle_boolean_field("123", "test_field")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)
 
 
 def test_base_repository_delete__returns_deleted_record_from_table(mock_supabase):
@@ -254,11 +294,15 @@ def test_base_repository_delete_raises_not_found_error_on_empty_data(mock_supaba
     assert "Test_table with ID '123' not found." in str(exc_info.value)
 
 
-def test_base_repository_delete_raises_api_error_on_api_error(mock_supabase):
+def test_base_repository_delete_raises_bad_request_error_on_api_error(mock_supabase):
     repo = BaseRepository("test_table", "id")
     repo.client = mock_supabase
 
-    mock_supabase.table().delete().eq().execute.side_effect = APIError(error={"message": "API failed"})
+    mock_supabase.table().delete().eq().execute.side_effect = APIError(
+        error={"message": "API failed"}
+    )
 
-    with pytest.raises(APIError) as exc_info:
+    with pytest.raises(BadRequestError) as exc_info:
         repo.delete("abc123")
+
+    assert GENERIC_CLIENT_ERROR in str(exc_info.value)

@@ -1,37 +1,294 @@
 [
   {
-    "id": "8adc0702-5a50-4aa5-9e58-c54d3bf004f4",
-    "name": "Fall 2024 (copy)",
-    "spreadsheet_id": "1kbqJlWKzNVYftS4Mv-PU_HDWAFRLnd0Zf8IL8c2WFqk",
-    "date_created": "2024-09-13T23:14:54.621+00:00",
-    "events_member": [
-      {
-        "id": "167c4f88-9750-4a55-a765-39945b33f6dc",
-        "code": "code",
-        "name": "test 1",
-        "date_created": "2024-09-14T00:31:49.969+00:00",
-        "timeframe_id": "8adc0702-5a50-4aa5-9e58-c54d3bf004f4",
-        "spreadsheet_col": "F",
-        "spreadsheet_tab": "Chapter"
-      },
-      {
-        "id": "45ea4f25-8992-4669-96a9-98985a5855be",
-        "code": "Code",
-        "name": "Test 2 (nav)",
-        "date_created": "2024-09-14T11:17:02.77+00:00",
-        "timeframe_id": "8adc0702-5a50-4aa5-9e58-c54d3bf004f4",
-        "spreadsheet_col": "G",
-        "spreadsheet_tab": "Chapter"
-      },
-      {
-        "id": "987f4c6a-5b03-4f32-9246-ca0c910dd907",
-        "code": "code2",
-        "name": "Test 3 (staging)",
-        "date_created": "2024-09-14T16:29:47.364+00:00",
-        "timeframe_id": "8adc0702-5a50-4aa5-9e58-c54d3bf004f4",
-        "spreadsheet_col": "H",
-        "spreadsheet_tab": "Chapter"
-      }
-    ]
+      "_id": "66087df56fa3fb414972106b",
+      "name": "Fall 2023 - Test",
+      "dateCreated": "2024-03-30T17:02:45.353000",
+      "events": [
+          {
+              "name": "Rush - Professional Panel",
+              "dateCreated": "2024-03-30T17:03:01.534000",
+              "timeframeId": "66087df56fa3fb414972106b",
+              "usersAttended": [],
+              "_id": "66087e056fa3fb414972106c",
+              "eventId": "None"
+          }
+      ],
+      "spreadsheetId": "1qSr4nrWxh3JEyz1A5chy2BictSP5xeUYxfzpZo8s3OE"
+  },
+  {
+      "_id": "660895a36fa3fb414972106e",
+      "name": "Spring 2024",
+      "dateCreated": "2024-03-30T18:43:47.164000",
+      "events": [
+          {
+              "name": "Chapter #2",
+              "tags": [
+                  "Chapter"
+              ],
+              "dateCreated": "2024-03-30T20:07:27.037000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6608a93f93bd0645cfbea76f",
+              "eventId": "None"
+          },
+          {
+              "name": "Rush - Professional Panel",
+              "tags": [
+                  "Rush",
+                  "Recruitment"
+              ],
+              "dateCreated": "2024-03-30T20:07:52.514000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6608a95893bd0645cfbea770",
+              "eventId": "None"
+          },
+          {
+              "name": "Mobile Test",
+              "tags": [
+                  "Test"
+              ],
+              "dateCreated": "2024-03-31T15:11:36.361000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "66097d28b1676ff30e2013e9",
+              "eventId": "None"
+          },
+          {
+              "name": "test",
+              "tags": [
+                  "1",
+                  "2",
+                  "3"
+              ],
+              "dateCreated": "2024-03-31T17:11:32.451000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6609994479bb0f98429a203e",
+              "eventId": "None"
+          },
+          {
+              "name": "test",
+              "tags": [
+                  "123"
+              ],
+              "dateCreated": "2024-04-08T14:51:40.524000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "66143cbc03dc0e897a754217",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:07:24.171000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661567bc649f7b9cc800cc8f",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:07:47.388000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661567d33d373f47bab97d9f",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:09:08.373000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661568248e117e2ec75a9b14",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:09:44.825000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661568489788689e69c4f450",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:10:03.146000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615685b9788689e69c4f451",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:11:59.416000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661568cfb4554b8732fabaa4",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:13:19.444000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615691f83737f75748b346f",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "dateCreated": "2024-04-09T12:13:37",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615693183737f75748b3470",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:14:08.703000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615695083737f75748b3471",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:14:31.891000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615696706e364d836e334ad",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:15:01.169000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "6615698594eff08c048f1743",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:16:52.605000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "661569f4d4ff3f38b7222248",
+              "eventId": "None"
+          },
+          {
+              "name": "123123123",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:17:12.387000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "66156a08efec1d2f8ea4b415",
+              "eventId": "None"
+          },
+          {
+              "name": "check-in test",
+              "tags": [
+                  "123"
+              ],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:17:43.676000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "_id": "66156a27efec1d2f8ea4b416",
+              "eventId": "None"
+          },
+          {
+              "name": "spreadsheet col please work",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:47:18.083000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "spreadsheetCol": "J",
+              "_id": "66157117a8f38c63b8955e4d",
+              "eventId": "None"
+          },
+          {
+              "name": "final test",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-09T12:49:03.991000",
+              "timeframeId": "660895a36fa3fb414972106e",
+              "usersAttended": [],
+              "spreadsheetCol": "K",
+              "_id": "66157181f8c8d95dc97b09e5",
+              "eventId": "None"
+          }
+      ],
+      "spreadsheetId": "1_LJEwFVKVzFd3kiaftlpi6-zPcsPfg9IivdaHpBpk2I"
+  },
+  {
+      "_id": "6615f3912a689bd2d93d8e1f",
+      "name": "Fall 2024",
+      "spreadsheetId": "1_LJEwFVKVzFd3kiaftlpi6-zPcsPfg9IivdaHpBpk2I",
+      "dateCreated": "2024-04-09T22:04:01.392000",
+      "events": [
+          {
+              "name": "Chapter - April 17",
+              "tags": [
+                  "Chapter"
+              ],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-17T19:16:15.672000",
+              "timeframeId": "6615f3912a689bd2d93d8e1f",
+              "usersAttended": [],
+              "spreadsheetCol": "H",
+              "_id": "66205840febfc8688db7c7e6",
+              "eventId": "66205840febfc8688db7c7e6"
+          },
+          {
+              "name": "test",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-24T15:19:15.742000",
+              "timeframeId": "6615f3912a689bd2d93d8e1f",
+              "usersAttended": [],
+              "spreadsheetCol": "J",
+              "_id": "66295b344895f2954f3f8afa",
+              "eventId": "66295b344895f2954f3f8afa"
+          },
+          {
+              "name": "Chapter (04/24)",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-24T15:20:38.238000",
+              "timeframeId": "6615f3912a689bd2d93d8e1f",
+              "usersAttended": [],
+              "spreadsheetCol": "K",
+              "_id": "66295b87b49ca09a9e23792a",
+              "eventId": "66295b87b49ca09a9e23792a"
+          },
+          {
+              "name": "Final Chapter (April 24)",
+              "tags": [],
+              "sheetTab": "Copy of Rush",
+              "dateCreated": "2024-04-24T15:26:02.591000",
+              "timeframeId": "6615f3912a689bd2d93d8e1f",
+              "usersAttended": [],
+              "spreadsheetCol": "M",
+              "_id": "66295ccb0d5296ea797fb449",
+              "eventId": "66295ccb0d5296ea797fb449"
+          }
+      ]
   }
 ]
