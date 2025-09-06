@@ -42,6 +42,7 @@ def service():
         mock_events_rush_service,
         mock_applicants_repo,
         mock_listings_repo,
+        # TODO: potentially yield and test events (mock_event_timeframes_rush_repo, mock_events_rush_service)
     )
 
 
