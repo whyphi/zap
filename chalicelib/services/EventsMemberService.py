@@ -5,17 +5,27 @@ from postgrest.exceptions import APIError
 import uuid
 from chalicelib.modules.google_sheets import GoogleSheetsModule
 from chalicelib.modules.ses import ses, SesDestination
-
+from chalicelib.repositories.base_repository import BaseRepository
+from chalicelib.services.service_utils import resolve_repo
+from typing import Optional
 
 class EventsMemberService:
 
-    def __init__(self):
-        self.events_member_repo = RepositoryFactory.events_member()
-        self.event_timeframes_member_repo = RepositoryFactory.event_timeframes_member()
-        self.events_member_attendees_repo = RepositoryFactory.events_member_attendees()
-        self.event_tag_repo = RepositoryFactory.event_tags()
-        self.tag_repo = RepositoryFactory.tags()
-        self.users_repo = RepositoryFactory.users()
+    def __init__(
+        self,
+        events_member_repo: Optional[BaseRepository] = None,
+        event_timeframes_member_repo: Optional[BaseRepository] = None,
+        events_member_attendees_repo: Optional[BaseRepository] = None,
+        event_tags_repo: Optional[BaseRepository] = None,
+        tags_repo: Optional[BaseRepository] = None,
+        users_repo: Optional[BaseRepository] = None,
+    ):
+        self.events_member_repo = resolve_repo(events_member_repo, RepositoryFactory.events_member)
+        self.event_timeframes_member_repo = resolve_repo(event_timeframes_member_repo, RepositoryFactory.event_timeframes_member)
+        self.events_member_attendees_repo = resolve_repo(events_member_attendees_repo, RepositoryFactory.events_member_attendees)
+        self.event_tags_repo = resolve_repo(event_tags_repo, RepositoryFactory.event_tags)
+        self.tags_repo = resolve_repo(tags_repo, RepositoryFactory.tags)
+        self.users_repo = resolve_repo(users_repo, RepositoryFactory.users)
 
     def create_timeframe(self, timeframe_data: dict):
         try:
@@ -218,6 +228,3 @@ class EventsMemberService:
         gs = GoogleSheetsModule()
         sheets = gs.get_sheets(timeframe["spreadsheet_id"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
-
-
-events_member_service = EventsMemberService()

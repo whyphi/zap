@@ -32,11 +32,6 @@ class SupabaseClient:
                 raise Exception(
                     f"[SupabaseClient] Failed to fetch Supabase params from SSM: {str(e)}"
                 )
-        elif ENV == "pytest-init":
-            # TODO: remove entirely (shouldn't be needed for dep-injection pytest)
-            # Edge case: pytest lazy-initializes url and key
-            url = "dummy-url"
-            key = "dummy-key"
         else:
             load_dotenv(".env.local")
             url = os.getenv("SUPABASE_URL")
