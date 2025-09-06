@@ -9,6 +9,7 @@ from chalicelib.models.roles import Roles
 listings_api = Blueprint(__name__)
 
 def register_routes(listing_service: ListingService):
+    
     @listings_api.route("/listings/create", methods=["POST"], cors=True)
     @auth(listings_api, roles=[Roles.ADMIN, Roles.MEMBER])
     @handle_exceptions

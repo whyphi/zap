@@ -201,6 +201,3 @@ class InsightsService:
                     distribution[metric] += [new_object]
 
         return distribution
-
-
-insights_service = InsightsService()

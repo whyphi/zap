@@ -228,6 +228,3 @@ class EventsMemberService:
         gs = GoogleSheetsModule()
         sheets = gs.get_sheets(timeframe["spreadsheet_id"], include_properties=False)
         return [sheet["title"] for sheet in sheets]
-
-
-events_member_service = EventsMemberService()

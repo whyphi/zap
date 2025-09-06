@@ -372,6 +372,3 @@ class EventsRushService:
             "rushees": rushee_dict,
             "events": rush_events_dict,
         }
-
-
-events_rush_service = EventsRushService()

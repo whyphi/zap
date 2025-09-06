@@ -1,4 +1,4 @@
-from chalicelib.services.EventsRushService import events_rush_service
+from chalicelib.services.EventsRushService import EventsRushService
 from chalicelib.utils.utils import hash_value
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.repositories.base_repository import BaseRepository
@@ -15,10 +15,12 @@ class ApplicantService:
         listings_repo: Optional[BaseRepository] = None,
         applications_repo: Optional[BaseRepository] = None,
         event_timeframes_rush_repo: Optional[BaseRepository] = None,
+        events_rush_service: Optional[EventsRushService] = None,
     ):
         self.listings_repo = resolve_repo(listings_repo, RepositoryFactory.listings)
         self.applications_repo = resolve_repo(applications_repo, RepositoryFactory.applications)
         self.event_timeframes_rush_repo = resolve_repo(event_timeframes_rush_repo, RepositoryFactory.event_timeframes_rush)
+        self.events_rush_service = events_rush_service
 
     def get(self, id: str):
         data = self.applications_repo.get_by_id(id_value=id)
@@ -67,7 +69,8 @@ class ApplicantService:
 
     def _get_rush_analytics(self, rush_category_id: str) -> dict:
         """Helper method for `get_all_from_listing`"""
-        analytics = events_rush_service.get_rush_timeframe_analytics(rush_category_id)
+        assert self.events_rush_service is not None, "EventsRushService must be initialized"
+        analytics = self.events_rush_service.get_rush_timeframe_analytics(rush_category_id)
 
         # remap rushees dict from rush_id → email
         rushees_by_email = {
@@ -84,6 +87,3 @@ class ApplicantService:
             events[event_attended["id"]]["name"]: event_attended["attended"]
             for event_attended in events_attended
         }
-
-
-applicant_service = ApplicantService()

@@ -217,6 +217,3 @@ class MemberService:
 
         except Exception as e:
             raise BadRequestError(f"Failed to generate family tree")
-
-
-member_service = MemberService()
