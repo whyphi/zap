@@ -1,25 +1,29 @@
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalice.app import (
-    ConflictError,
     NotFoundError,
     UnauthorizedError,
     BadRequestError,
     CaseInsensitiveMapping,
 )
-from bson import ObjectId
 from collections import defaultdict
-import json
 import jwt
 import boto3
 import uuid
-
+from chalicelib.repositories.base_repository import BaseRepository
+from chalicelib.services.service_utils import resolve_repo
+from typing import Optional
 
 class MemberService:
 
-    def __init__(self):
-        self.users_repo = RepositoryFactory.users()
-        self.user_roles_repo = RepositoryFactory.user_roles()
-        self.roles_repo = RepositoryFactory.roles()
+    def __init__(
+        self,
+        users_repo: Optional[BaseRepository] = None,
+        user_roles_repo: Optional[BaseRepository] = None,
+        roles_repo: Optional[BaseRepository] = None,
+    ):
+        self.users_repo = resolve_repo(users_repo, RepositoryFactory.users)
+        self.user_roles_repo = resolve_repo(user_roles_repo, RepositoryFactory.user_roles)
+        self.roles_repo = resolve_repo(roles_repo, RepositoryFactory.roles)
 
     def create(self, data):
         """

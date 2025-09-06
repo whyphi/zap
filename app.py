@@ -15,6 +15,9 @@ from chalicelib.api.events_member import events_member_api
 from chalicelib.api.events_rush import events_rush_api
 from chalicelib.api.accountability import accountability_api
 from chalicelib.api.monitoring import monitoring_api
+from chalicelib.repositories.repository_factory import RepositoryFactory
+from chalicelib.api import listings, applicants
+from chalicelib.services.ListingService import ListingService
 
 # Event imports
 from chalicelib.events.test import test_events
@@ -38,7 +41,18 @@ sentry_sdk.init(
 
 app = Chalice(app_name="zap")
 
-# Register APIs
+# Dependency injection (services injected into api)
+listing_service = ListingService(
+    listings_repo=RepositoryFactory.listings(),
+    applications_repo=RepositoryFactory.applications(),
+    event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
+)
+
+# Register routes
+
+listings.register_routes(listing_service=listing_service)
+
+# Register blueprints
 app.register_blueprint(listings_api)
 app.register_blueprint(applicants_api)
 app.register_blueprint(insights_api)

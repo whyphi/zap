@@ -1,7 +1,7 @@
 from chalice.app import BadRequestError
 from chalicelib.repositories.repository_factory import RepositoryFactory
 from chalicelib.repositories.base_repository import BaseRepository
-from chalicelib.services.EventsRushService import events_rush_service
+from chalicelib.services.service_utils import resolve_repo
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from chalice.app import Response, BadRequestError, NotFoundError
 from chalicelib.models.application import Application
@@ -23,19 +23,9 @@ class ListingService:
         applications_repo: Optional[BaseRepository] = None,
         event_timeframes_rush_repo: Optional[BaseRepository] = None,
     ):
-        self.listings_repo = (
-            listings_repo if listings_repo is not None else RepositoryFactory.listings()
-        )
-        self.applications_repo = (
-            applications_repo
-            if applications_repo is not None
-            else RepositoryFactory.applications()
-        )
-        self.events_rush_repo = (
-            event_timeframes_rush_repo
-            if event_timeframes_rush_repo is not None
-            else RepositoryFactory.event_timeframes_rush()
-        )
+        self.listings_repo = resolve_repo(listings_repo, RepositoryFactory.listings)
+        self.applications_repo = resolve_repo(applications_repo, RepositoryFactory.applications)
+        self.events_rush_repo = resolve_repo(event_timeframes_rush_repo, RepositoryFactory.event_timeframes_rush)
 
     # TODO: prevent duplicate names... (also for rush-category)..
     def create(self, data: dict, include_events_attended: bool):
@@ -162,6 +152,3 @@ class ListingService:
         )
 
         return {"msg": True, "resumeUrl": resume_url}
-
-
-listing_service = ListingService()

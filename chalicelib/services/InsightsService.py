@@ -1,11 +1,18 @@
 # TO BE COMPLETED: create service to perform analytics (used in API...)
-from chalicelib.repositories.repository_factory import RepositoryFactory, RepositoryConfig
+from chalicelib.repositories.repository_factory import (
+    RepositoryFactory,
+    RepositoryConfig,
+)
 from chalice.app import BadRequestError
 from typing import List
+from chalicelib.repositories.base_repository import BaseRepository
+from chalicelib.services.service_utils import resolve_repo
+from typing import Optional
+
 
 class InsightsService:
-    def __init__(self):
-         self.applications_repo = RepositoryFactory.applications()
+    def __init__(self, applications_repo: Optional[BaseRepository] = None):
+        self.applications_repo = resolve_repo(applications_repo, RepositoryFactory.applications)
 
     def get_insights_from_listing(self, id: str):
         """driver function of insights (returns both `dashboard` and `distribution`)"""
@@ -37,7 +44,7 @@ class InsightsService:
                 "avgGpa": "N/A",
                 "commonMajor": "N/A",
                 "commonGradYear": "N/A",
-        }
+            }
 
         # iterate over each applicant and perform analytics
         for applicant in data:
@@ -92,10 +99,12 @@ class InsightsService:
             "applicantCount": num_applicants,
             "avgGpa": round(avg_gpa, 1) if avg_gpa != "N/A" else avg_gpa,
             # "countCommonMajor": count_common_major,         # TO-DO: maybe do something with common major counts
-            "commonMajor": common_major.title() if common_major != "N/A" else common_major,
-            "commonGradYear": int(common_grad_year)
-            if common_grad_year != "N/A"
-            else common_grad_year,
+            "commonMajor": (
+                common_major.title() if common_major != "N/A" else common_major
+            ),
+            "commonGradYear": (
+                int(common_grad_year) if common_grad_year != "N/A" else common_grad_year
+            ),
             # "avgResponseLength": 0                        # TO-DO: maybe implement parsing for response lengths
         }
 

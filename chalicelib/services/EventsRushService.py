@@ -10,18 +10,26 @@ import uuid
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from postgrest.exceptions import APIError
 from pytz import timezone as pytz_timezone
-
+from chalicelib.repositories.base_repository import BaseRepository
+from chalicelib.services.service_utils import resolve_repo
+from typing import Optional
 
 # TODO: refactor base_repo to pass errors to service classes
 
 
 class EventsRushService:
 
-    def __init__(self):
-        self.event_timeframes_rush_repo = RepositoryFactory.event_timeframes_rush()
-        self.events_rush_repo = RepositoryFactory.events_rush()
-        self.events_rush_attendees_repo = RepositoryFactory.events_rush_attendees()
-        self.rushees_repo = RepositoryFactory.rushees()
+    def __init__(
+        self,
+        event_timeframes_rush_repo: Optional[BaseRepository] = None,
+        events_rush_repo: Optional[BaseRepository] = None,
+        events_rush_attendees_repo: Optional[BaseRepository] = None,
+        rushees_repo: Optional[BaseRepository] = None,
+    ):
+        self.event_timeframes_rush_repo = resolve_repo(event_timeframes_rush_repo, RepositoryFactory.event_timeframes_rush)
+        self.events_rush_repo = resolve_repo(events_rush_repo, RepositoryFactory.events_rush)
+        self.events_rush_attendees_repo = resolve_repo(events_rush_attendees_repo, RepositoryFactory.events_rush_attendees)
+        self.rushees_repo = resolve_repo(rushees_repo, RepositoryFactory.rushees)
 
     def get_rush_categories_and_events(self):
         try:
