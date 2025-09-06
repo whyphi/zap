@@ -54,80 +54,87 @@ sentry_sdk.init(
 
 app = Chalice(app_name="zap")
 
-################################################################
-#  Dependency injection (services injected into api)
-################################################################
 
-listing_service = ListingService(
-    listings_repo=RepositoryFactory.listings(),
-    applications_repo=RepositoryFactory.applications(),
-    event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
-)
+def register_services():
+
+    ################################################################
+    #  Dependency injection (services injected into api)
+    ################################################################
+
+    listing_service = ListingService(
+        listings_repo=RepositoryFactory.listings(),
+        applications_repo=RepositoryFactory.applications(),
+        event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
+    )
+
+    insights_service = InsightsService(
+        applications_repo=RepositoryFactory.applications()
+    )
+
+    member_service = MemberService(
+        users_repo=RepositoryFactory.users(),
+        user_roles_repo=RepositoryFactory.user_roles(),
+        roles_repo=RepositoryFactory.roles(),
+    )
+
+    events_member_service = EventsMemberService(
+        events_member_repo=RepositoryFactory.events_member(),
+        event_timeframes_member_repo=RepositoryFactory.event_timeframes_member(),
+        events_member_attendees_repo=RepositoryFactory.events_member_attendees(),
+        event_tags_repo=RepositoryFactory.event_tags(),
+        tags_repo=RepositoryFactory.tags(),
+        users_repo=RepositoryFactory.users(),
+    )
+
+    events_rush_service = EventsRushService(
+        event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
+        events_rush_repo=RepositoryFactory.events_rush(),
+        events_rush_attendees_repo=RepositoryFactory.events_rush_attendees(),
+        rushees_repo=RepositoryFactory.rushees(),
+    )
+
+    applicant_service = ApplicantService(
+        listings_repo=RepositoryFactory.listings(),
+        applications_repo=RepositoryFactory.applications(),
+        event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
+        events_rush_service=events_rush_service,
+    )
+
+    accountability_service = AccountabilityService()
+
+    ################################################################
+    # Register routes
+    ################################################################
+
+    listings.register_routes(listing_service=listing_service)
+    applicants.register_routes(applicant_service=applicant_service)
+    insights.register_routes(insights_service=insights_service)
+    members.register_routes(member_service=member_service)
+    events_member.register_routes(events_member_service=events_member_service)
+    events_rush.register_routes(events_rush_service=events_rush_service)
+
+    ################################################################
+    # Register blueprints
+    ################################################################
+
+    app.register_blueprint(listings_api)
+    app.register_blueprint(insights_api)
+    app.register_blueprint(members_api)
+    app.register_blueprint(events_member_api)
+    app.register_blueprint(events_rush_api)
+    app.register_blueprint(applicants_api)
+    app.register_blueprint(accountability_api)
+    app.register_blueprint(monitoring_api)
+
+    ################################################################
+    # Register events
+    ################################################################
+
+    app.register_blueprint(test_events)
 
 
-insights_service = InsightsService(applications_repo=RepositoryFactory.applications())
-
-member_service = MemberService(
-    users_repo=RepositoryFactory.users(),
-    user_roles_repo=RepositoryFactory.user_roles(),
-    roles_repo=RepositoryFactory.roles(),
-)
-
-events_member_service = EventsMemberService(
-    events_member_repo=RepositoryFactory.events_member(),
-    event_timeframes_member_repo=RepositoryFactory.event_timeframes_member(),
-    events_member_attendees_repo=RepositoryFactory.events_member_attendees(),
-    event_tags_repo=RepositoryFactory.event_tags(),
-    tags_repo=RepositoryFactory.tags(),
-    users_repo=RepositoryFactory.users(),
-)
-
-events_rush_service = EventsRushService(
-    event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
-    events_rush_repo=RepositoryFactory.events_rush(),
-    events_rush_attendees_repo=RepositoryFactory.events_rush_attendees(),
-    rushees_repo=RepositoryFactory.rushees(),
-)
-
-applicant_service = ApplicantService(
-    listings_repo=RepositoryFactory.listings(),
-    applications_repo=RepositoryFactory.applications(),
-    event_timeframes_rush_repo=RepositoryFactory.event_timeframes_rush(),
-    events_rush_service=events_rush_service,
-)
-
-accountability_service = AccountabilityService()
-
-
-################################################################
-# Register routes
-################################################################
-
-listings.register_routes(listing_service=listing_service)
-applicants.register_routes(applicant_service=applicant_service)
-insights.register_routes(insights_service=insights_service)
-members.register_routes(member_service=member_service)
-events_member.register_routes(events_member_service=events_member_service)
-events_rush.register_routes(events_rush_service=events_rush_service)
-
-################################################################
-# Register blueprints
-################################################################
-
-app.register_blueprint(listings_api)
-app.register_blueprint(insights_api)
-app.register_blueprint(members_api)
-app.register_blueprint(events_member_api)
-app.register_blueprint(events_rush_api)
-app.register_blueprint(applicants_api)
-app.register_blueprint(accountability_api)
-app.register_blueprint(monitoring_api)
-
-################################################################
-# Register events
-################################################################
-
-app.register_blueprint(test_events)
+if os.environ.get("CHALICE_TESTING") != "1":
+    register_services()
 
 
 @app.route("/")
