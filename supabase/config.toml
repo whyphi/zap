@@ -49,7 +49,14 @@ max_client_conn = 100
 # Specifies an ordered list of schema files that describe your database.
 # Supports glob patterns relative to supabase directory: "./schemas/*.sql"
 # NOTE: the paths must be listed IN THE ORDER that they should be applied!!!!!!!!!!!
-schema_paths = ["./schemas/listings.sql", "./schemas/applications.sql"]
+schema_paths = [
+    "./schemas/listings.sql",
+    "./schemas/rushees.sql",
+    "./schemas/applications.sql",
+    "./schemas/users.sql",
+    "./schemas/events_member.sql",
+    "./schemas/events_rush.sql",
+]
 
 [db.seed]
 # If enabled, seeds the database after migrations during a db reset.
@@ -150,7 +157,7 @@ token_verifications = 30
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
-enable_signup = false
+enable_signup = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
