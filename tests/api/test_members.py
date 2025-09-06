@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from app import app
 from chalicelib.api import members
 
+
 TEST_MEMBER_DATA = [
     {
         "id": "12a34bc678df27ead9388708",
@@ -91,7 +92,10 @@ def test_update_member(test_client):
 
     assert resp.status_code == 200
     assert resp.json_body == update_member_data
-    mock_service.update.assert_called_once()
+    args, kwargs = mock_service.update.call_args
+    assert kwargs["user_id"] == TEST_MEMBER_DATA[0]["id"]
+    assert kwargs["data"] == update_member_data
+    assert kwargs["headers"]["authorization"] == "Bearer TOKEN"
 
 
 def test_get_all_members(test_client):
@@ -100,9 +104,7 @@ def test_get_all_members(test_client):
 
     with patch("chalicelib.decorators.jwt.decode") as mock_decode:
         mock_decode.return_value = {"roles": ["admin"]}
-        resp = client.http.get(
-            "/members", headers={"Authorization": "Bearer TOKEN"}
-        )
+        resp = client.http.get("/members", headers={"Authorization": "Bearer TOKEN"})
 
     assert resp.status_code == 200
     assert resp.json_body == TEST_MEMBER_DATA
@@ -117,19 +119,18 @@ def test_onboard_member(test_client):
         mock_decode.return_value = {"roles": ["member"]}
         resp = client.http.post(
             f"/members/onboard/{TEST_MEMBER_DATA[1]['id']}",
-            body=json.dumps(TEST_MEMBER_DATA[1]),
             headers={
                 "Authorization": "Bearer TOKEN",
                 "Content-Type": "application/json",
             },
+            body=json.dumps(TEST_MEMBER_DATA[1]),
         )
 
     assert resp.status_code == 200
-    assert resp.json_body == {
-        "status": True,
-        "message": "User updated successfully.",
-    }
-    mock_service.onboard.assert_called_once()
+    assert resp.json_body == {"status": True, "message": "User updated successfully."}
+    mock_service.onboard.assert_called_once_with(
+        TEST_MEMBER_DATA[1]["id"], TEST_MEMBER_DATA[1]
+    )
 
 
 def test_create_member(test_client):
@@ -151,11 +152,8 @@ def test_create_member(test_client):
         )
 
     assert resp.status_code == 200
-    assert resp.json_body == {
-        "success": True,
-        "message": "User created successfully",
-    }
-    mock_service.create.assert_called_once()
+    assert resp.json_body == {"success": True, "message": "User created successfully"}
+    mock_service.create.assert_called_once_with(TEST_MEMBER_DATA[0])
 
 
 def test_delete_members(test_client):
@@ -181,7 +179,7 @@ def test_delete_members(test_client):
         "success": True,
         "message": "Documents deleted successfully",
     }
-    mock_service.delete.assert_called_once()
+    mock_service.delete.assert_called_once_with(TEST_MEMBER_DATA)
 
 
 def test_update_member_roles(test_client):
@@ -205,3 +203,19 @@ def test_update_member_roles(test_client):
     mock_service.update_roles.assert_called_once_with(
         user_id=TEST_MEMBER_DATA[0]["id"], roles=["admin"]
     )
+
+
+def test_get_family_tree(test_client):
+    client, mock_service = test_client
+    family_tree = {"family": "Poseidon", "members": [TEST_MEMBER_DATA[0]]}
+    mock_service.get_family_tree.return_value = family_tree
+
+    with patch("chalicelib.decorators.jwt.decode") as mock_decode:
+        mock_decode.return_value = {"roles": ["member"]}
+        resp = client.http.get(
+            "/members/family-tree", headers={"Authorization": "Bearer TOKEN"}
+        )
+
+    assert resp.status_code == 200
+    assert resp.json_body == family_tree
+    mock_service.get_family_tree.assert_called_once()

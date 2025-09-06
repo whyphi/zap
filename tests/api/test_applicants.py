@@ -47,7 +47,7 @@ def test_get_applicant(test_client):
         assert response.json_body == TEST_APPLICANTS[0]
 
 
-def test_get_applictest_get_all_applicantsnt(test_client):
+def test_get_all_applicants(test_client):
     client, mock_applicant_service = test_client
     mock_applicant_service.get_all.return_value = TEST_APPLICANTS
 
