@@ -44,21 +44,23 @@ def initialize_app():
     ################################################################
     # Configure and initialize sentry
     ################################################################
+    env = os.environ.get("ENV", "local")
 
-    sentry_sdk.init(
-        dsn=boto3.client("ssm").get_parameter(
-            Name="/Zap/sentry/dsn", WithDecryption=True
-        )["Parameter"]["Value"],
-        integrations=[ChaliceIntegration()],
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for performance monitoring.
-        traces_sample_rate=1.0,
-        # Set profiles_sample_rate to 1.0 to profile 100%
-        # of sampled transactions.
-        # We recommend adjusting this value in production.
-        profiles_sample_rate=1.0,
-        environment="production" if os.environ.get("ENV") == "prod" else "development",
-    )
+    if env != "local":  # only init for staging/prod
+        sentry_sdk.init(
+            dsn=boto3.client("ssm").get_parameter(
+                Name="/Zap/sentry/dsn", WithDecryption=True
+            )["Parameter"]["Value"],
+            integrations=[ChaliceIntegration()],
+            # Set traces_sample_rate to 1.0 to capture 100%
+            # of transactions for performance monitoring.
+            traces_sample_rate=1.0,
+            # Set profiles_sample_rate to 1.0 to profile 100%
+            # of sampled transactions.
+            # We recommend adjusting this value in production.
+            profiles_sample_rate=1.0,
+            environment=env,
+        )
 
     ################################################################
     #  Dependency injection (services injected into api)
