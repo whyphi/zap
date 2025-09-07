@@ -6,6 +6,7 @@ from chalicelib.utils.utils import get_prev_image_version, extract_relative_path
 from chalicelib.utils.rush_events import is_rush_threshold_met
 from typing import Optional
 from datetime import datetime, timezone
+from dateutil import parser
 import uuid
 from chalicelib.handlers.error_handler import GENERIC_CLIENT_ERROR
 from postgrest.exceptions import APIError
@@ -209,7 +210,7 @@ class EventsRushService:
         rushee_id = user_data["rusheeId"]
 
         # 3. Validate time + code
-        deadline = datetime.fromisoformat(event["deadline"])
+        deadline = parser.isoparse(event["deadline"])
         now = datetime.now(tz=timezone.utc)
 
         if now > deadline:
