@@ -7,6 +7,7 @@ from chalice.app import Response, BadRequestError, NotFoundError
 from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
+from dateutil import parser
 from chalicelib.utils.utils import get_file_extension_from_base64
 from chalicelib.s3 import s3
 import uuid
@@ -101,7 +102,7 @@ class ListingService:
         if not listing_data["is_visible"]:
             raise NotFoundError("Invalid listing.")
 
-        deadline_utc = datetime.fromisoformat(deadline).astimezone(timezone.utc)
+        deadline_utc = parser.isoparse(deadline).astimezone(timezone.utc)
         curr_time_utc = datetime.now(tz=timezone.utc)
 
         if curr_time_utc > deadline_utc:
