@@ -120,21 +120,7 @@ class MemberService:
 
     def onboard(self, id: str, data: dict) -> bool:
         try:
-            print(f"Onboarding user: {id} with data: {data}")
-
-            print(f"data.get('is_eboard'): {data.get('is_eboard')}")
-
             data["is_new_user"] = False
-            if "graduation_year" in data:
-                data["grad_year"] = int(data["graduation_year"])
-                data.pop("graduation_year", None)
-            if "is_eboard" in data:
-                data["is_eboard"] = data["is_eboard"]
-                data.pop("is_eboard", None)
-            if "is_new_user" in data:
-                data.pop("is_new_user", None)
-
-            print(f"Processed data for onboarding: {data}")
             self.users_repo.update(id, data)
             return True
         except Exception as e:
