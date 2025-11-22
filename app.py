@@ -138,22 +138,6 @@ def initialize_app():
 
     app.register_blueprint(test_events)
 
-    ################################################################
-    # Cron jobs
-    ################################################################
-
-    # @app.schedule(Cron("0", "6", "*", "*", "?", "*")) # TODO: enable once we have tested minutely
-    @app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
-    def supabase_ping(event):
-        try:
-            supabase = SupabaseClient.get_client()
-            res = supabase.rpc("healthcheck").execute()  # harmless keep-alive
-            print("Supabase healthcheck OK:", res.data)
-            return {"ok": True}
-        except Exception as e:
-            print("Ping failed:", e)
-            raise
-
 
 # IMPORTANT: Only initialize app services/routes/blueprints outside of testing scope
 if os.environ.get("CHALICE_TESTING") != "1":
@@ -163,3 +147,21 @@ if os.environ.get("CHALICE_TESTING") != "1":
 @app.route("/")
 def index():
     return {"hello": "world"}
+
+
+################################################################
+# Cron jobs
+################################################################
+
+
+# @app.schedule(Cron("0", "6", "*", "*", "?", "*")) # TODO: enable once we have tested minutely
+@app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
+def supabase_ping(event):
+    try:
+        supabase = SupabaseClient.get_client()
+        res = supabase.rpc("healthcheck").execute()  # harmless keep-alive
+        print("Supabase healthcheck OK:", res.data)
+        return {"ok": True}
+    except Exception as e:
+        print("Ping failed:", e)
+        raise
