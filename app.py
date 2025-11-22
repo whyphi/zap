@@ -3,7 +3,8 @@ import boto3
 import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
 
-from chalice.app import Chalice
+from chalice.app import Chalice, Cron, Rate
+from chalicelib.modules.supabase_client import SupabaseClient
 
 
 # API imports
@@ -146,3 +147,20 @@ if os.environ.get("CHALICE_TESTING") != "1":
 @app.route("/")
 def index():
     return {"hello": "world"}
+
+
+################################################################
+# Cron jobs
+################################################################
+
+
+@app.schedule(Cron("0", "6", "*", "*", "?", "*")) # Daily at 6 AM UTC / 1 AM EST
+def supabase_ping(event):
+    try:
+        supabase = SupabaseClient.get_client()
+        res = supabase.rpc("healthcheck").execute()  # harmless keep-alive
+        print("Supabase healthcheck OK:", res.data)
+        return {"ok": True}
+    except Exception as e:
+        print("Ping failed:", e)
+        raise
