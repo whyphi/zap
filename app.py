@@ -154,8 +154,7 @@ def index():
 ################################################################
 
 
-# @app.schedule(Cron("0", "6", "*", "*", "?", "*")) # TODO: enable once we have tested minutely
-@app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
+@app.schedule(Cron("0", "6", "*", "*", "?", "*")) # Daily at 6 AM UTC / 1 AM EST
 def supabase_ping(event):
     try:
         supabase = SupabaseClient.get_client()
