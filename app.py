@@ -3,7 +3,8 @@ import boto3
 import sentry_sdk
 from sentry_sdk.integrations.chalice import ChaliceIntegration
 
-from chalice.app import Chalice
+from chalice.app import Chalice, Cron, Rate
+from chalicelib.modules.supabase_client import SupabaseClient
 
 
 # API imports
@@ -136,6 +137,22 @@ def initialize_app():
     ################################################################
 
     app.register_blueprint(test_events)
+
+    ################################################################
+    # Cron jobs
+    ################################################################
+
+    # @app.schedule(Cron("0", "6", "*", "*", "?", "*")) # TODO: enable once we have tested minutely
+    @app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
+    def supabase_ping(event):
+        try:
+            supabase = SupabaseClient.get_client()
+            res = supabase.rpc("healthcheck").execute()  # harmless keep-alive
+            print("Supabase healthcheck OK:", res.data)
+            return {"ok": True}
+        except Exception as e:
+            print("Ping failed:", e)
+            raise
 
 
 # IMPORTANT: Only initialize app services/routes/blueprints outside of testing scope
