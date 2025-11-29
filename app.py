@@ -154,13 +154,21 @@ def index():
 ################################################################
 
 
-@app.schedule(Cron("0", "6", "*", "*", "?", "*")) # Daily at 6 AM UTC / 1 AM EST
+# @app.schedule(Cron("0", "6", "*", "*", "?", "*"))  # Daily at 6 AM UTC / 1 AM EST
+@app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
 def supabase_ping(event):
     try:
+        PING_ID = "00000000-0000-0000-0000-000000000001"
         supabase = SupabaseClient.get_client()
-        res = supabase.rpc("healthcheck").execute()  # harmless keep-alive
-        print("Supabase healthcheck OK:", res.data)
+        res = (
+            supabase.table("ping_health")
+            .update({"last_ping": "now()"})
+            .eq("id", PING_ID)
+            .execute()
+        )
+
+        print("Supabase ping OK:", res.data)
         return {"ok": True}
     except Exception as e:
-        print("Ping failed:", e)
-        raise
+        print("Supabase ping failed:", e)
+        return {"ok": False, "error": str(e)}
