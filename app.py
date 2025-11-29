@@ -154,8 +154,7 @@ def index():
 ################################################################
 
 
-# @app.schedule(Cron("0", "6", "*", "*", "?", "*"))  # Daily at 6 AM UTC / 1 AM EST
-@app.schedule(Cron("*", "*", "*", "*", "?", "*"))  # minutely for testing
+@app.schedule(Cron("0", "6", "*", "*", "?", "*"))  # Daily at 6 AM UTC / 1 AM EST
 def supabase_ping(event):
     try:
         PING_ID = "00000000-0000-0000-0000-000000000001"
