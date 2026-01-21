@@ -13,6 +13,7 @@ from chalicelib.s3 import s3
 import uuid
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,16 @@ class ListingService:
         data["id"] = applicant_id
 
         Application.model_validate(data)
+
+        # Validate video_url if provided
+        video_url = data.get("video_url")
+        if video_url:
+            parsed_url = urlparse(video_url)
+            if not parsed_url.scheme or not parsed_url.netloc:
+                raise BadRequestError("Invalid video URL format. Please provide a valid Google Drive or YouTube link.")
+            # Allow http, https schemes
+            if parsed_url.scheme not in ["http", "https"]:
+                raise BadRequestError("Video URL must use http or https protocol.")
 
         # Exctract necessary fields
         listing_id = data["listing_id"]

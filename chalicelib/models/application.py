@@ -43,3 +43,4 @@ class Application(BaseModel):
     phone: str
     colleges: College
     responses: Optional[List[Response]]
+    video_url: Optional[str]

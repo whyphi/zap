@@ -1,6 +1,8 @@
 import boto3
 import jwt
 import logging
+import os
+from dotenv import load_dotenv
 
 from chalice.app import UnauthorizedError
 from chalicelib.models.roles import Roles
@@ -61,10 +63,36 @@ def auth(blueprint, roles):
                 raise UnauthorizedError("Token is missing.")
 
             try:
-                ssm_client = boto3.client("ssm")
-                auth_secret = ssm_client.get_parameter(
-                    Name="/Zap/AUTH_SECRET", WithDecryption=True
-                )["Parameter"]["Value"]
+                # Check if we're in local development mode
+                env = os.getenv("ENV", "local")
+                is_local = env == "local"
+                
+                if is_local:
+                    # In local mode, try to get AUTH_SECRET from .env.local
+                    load_dotenv(".env.local")
+                    auth_secret = os.getenv("AUTH_SECRET")
+                    if not auth_secret:
+                        # Fallback: try to get from SSM (might fail, but that's okay)
+                        try:
+                            ssm_client = boto3.client("ssm")
+                            auth_secret = ssm_client.get_parameter(
+                                Name="/Zap/AUTH_SECRET", WithDecryption=True
+                            )["Parameter"]["Value"]
+                        except Exception:
+                            logger.warning(
+                                "Could not get AUTH_SECRET from SSM in local mode. "
+                                "Add AUTH_SECRET to .env.local or ensure AWS credentials are configured."
+                            )
+                            raise UnauthorizedError(
+                                "Authentication secret not configured for local development."
+                            )
+                else:
+                    # In staging/prod, get from SSM
+                    ssm_client = boto3.client("ssm")
+                    auth_secret = ssm_client.get_parameter(
+                        Name="/Zap/AUTH_SECRET", WithDecryption=True
+                    )["Parameter"]["Value"]
+                
                 decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
                 user_roles = [Roles(role) for role in decoded.get("roles", [])]
                 if len(roles) > 0 and not any(role in user_roles for role in roles):
