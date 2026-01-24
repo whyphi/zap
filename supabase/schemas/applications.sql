@@ -17,11 +17,11 @@ CREATE TABLE
 		resume text NOT NULL,
 		major text NOT NULL,
 		minor text,
-	phone text NOT NULL,
-	colleges jsonb,
-	responses jsonb,
-	video_url text,
-	FOREIGN KEY (listing_id) REFERENCES listings (id) ON DELETE CASCADE
-);
+		phone text NOT NULL,
+		colleges jsonb,
+		responses jsonb,
+		video_url text,
+		FOREIGN KEY (listing_id) REFERENCES listings (id) ON DELETE CASCADE
+	);
 
 COMMENT ON TABLE applications IS 'events data are queried using the applications.email from the events_rush_attendees table';
