@@ -95,9 +95,9 @@ class ListingService:
             parsed_url: ParseResult = urlparse(video_url)
             if not parsed_url.scheme or not parsed_url.netloc:
                 raise BadRequestError("Invalid video URL format. Please provide a valid Google Drive or YouTube link.")
-            # Allow http, https schemes
-            if parsed_url.scheme not in ["http", "https"]:
-                raise BadRequestError("Video URL must use http or https protocol.")
+            # Allow https schemes
+            if parsed_url.scheme not in ["https"]:
+                raise BadRequestError("Video URL must use https protocol.")
 
         # Exctract necessary fields
         listing_id = data["listing_id"]
