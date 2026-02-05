@@ -1,6 +1,6 @@
 # TODO: eventually this should be configurable in by admins for each rush-timeframe (to prevent "false-negative" thresholds)
 mandatory_events = ["Info Session 1", "Info Session 2"]
-remaining_events = ["Professional Panel", "Resume Night", "Social Event"]
+remaining_events = ["Professional Panel", "Resume Night", "Social Event", "Closed Tech", "Philanthropy Open House"]
 minimum_remaining_events = 2
 
 
