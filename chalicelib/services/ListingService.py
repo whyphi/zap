@@ -8,12 +8,11 @@ from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
 from dateutil import parser
-from chalicelib.utils.utils import get_file_extension_from_base64
+from chalicelib.utils.utils import get_file_extension_from_base64, validate_https_url
 from chalicelib.s3 import s3
 import uuid
 import logging
 from typing import Optional
-from urllib.parse import urlparse, ParseResult
 
 logger = logging.getLogger(__name__)
 
@@ -90,14 +89,8 @@ class ListingService:
         Application.model_validate(data)
 
         # Validate video_url if provided
-        video_url = data.get("video_url")
-        if video_url:
-            parsed_url: ParseResult = urlparse(video_url)
-            if not parsed_url.scheme or not parsed_url.netloc:
-                raise BadRequestError("Invalid video URL format. Please provide a valid Google Drive or YouTube link.")
-            # Allow https schemes
-            if parsed_url.scheme not in ["https"]:
-                raise BadRequestError("Video URL must use https protocol.")
+        if video_url := data.get("video_url"):
+            validate_https_url(video_url)
 
         # Exctract necessary fields
         listing_id = data["listing_id"]
