@@ -8,7 +8,7 @@ from chalicelib.models.application import Application
 from chalicelib.modules.ses import ses, SesDestination
 from datetime import datetime, timezone
 from dateutil import parser
-from chalicelib.utils.utils import get_file_extension_from_base64
+from chalicelib.utils.utils import get_file_extension_from_base64, validate_https_url
 from chalicelib.s3 import s3
 import uuid
 import logging
@@ -87,6 +87,10 @@ class ListingService:
         data["id"] = applicant_id
 
         Application.model_validate(data)
+
+        # Validate video_url if provided
+        if video_url := data.get("video_url"):
+            validate_https_url(video_url)
 
         # Exctract necessary fields
         listing_id = data["listing_id"]

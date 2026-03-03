@@ -3,6 +3,15 @@ import random
 import hashlib
 from urllib.parse import urlparse
 
+from chalice.app import BadRequestError
+
+
+def validate_https_url(url: str) -> None:
+    """Validates that the given string is a valid absolute HTTPS URL."""
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise BadRequestError("video_url must be a valid absolute HTTPS URL.")
+
 
 def decode_base64(base64_data):
     """Decodes base64 data into binary data."""

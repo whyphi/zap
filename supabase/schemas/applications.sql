@@ -20,6 +20,7 @@ CREATE TABLE
 		phone text NOT NULL,
 		colleges jsonb,
 		responses jsonb,
+		video_url text,
 		FOREIGN KEY (listing_id) REFERENCES listings (id) ON DELETE CASCADE
 	);
 
