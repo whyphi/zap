@@ -23,6 +23,11 @@ SAMPLE_APPLICANTS = [
     {"id": "sample_id2", "name": "Bob"},
 ]
 
+SAMPLE_APPLICANTS_WITH_EMAILS = [
+    {"id": "sample_id1", "name": "John Doe", "email": "john@example.com"},
+    {"id": "sample_id2", "name": "Bob", "email": "bob@example.com"},
+]
+
 
 @pytest.fixture
 def service():
@@ -92,4 +97,58 @@ def test_get_all_applicants_from_listing_unencrypted_no_events(service):
     assert result == SAMPLE_APPLICANTS
     assert len(result) == 2
 
-# TODO: Add unittests for listing with rush events
+
+def test_get_all_applicants_from_listing_with_rush_events(service):
+    (
+        applicants_service,
+        mock_events_rush_service,
+        mock_applicants_repo,
+        mock_listings_repo,
+        mock_event_timeframes_rush_repo,
+    ) = service
+
+    mock_applicants_repo.get_all_by_field.return_value = SAMPLE_APPLICANTS_WITH_EMAILS
+    mock_listings_repo.get_by_id.return_value = SAMPLE_LISTING
+    mock_event_timeframes_rush_repo.get_with_custom_select.return_value = [
+        {"id": "rush_timeframe_1"}
+    ]
+    mock_events_rush_service.get_rush_timeframe_analytics.return_value = {
+        "rushees": {
+            "rushee_1": {
+                "email": "john@example.com",
+                "events_attended": [{"id": "event_1", "attended": True}],
+                "threshold": True,
+            }
+        },
+        "events": {"event_1": {"name": "Info Session 1"}},
+    }
+
+    result = applicants_service.get_all_from_listing(SAMPLE_LISTING["id"])
+
+    assert result[0]["threshold"] is True
+    assert result[0]["events"] == {"Info Session 1": True}
+    assert "threshold" not in result[1]
+    assert "events" not in result[1]
+
+
+def test_get_all_applicants_from_listing_encrypted_hashes_result(service):
+    (
+        applicants_service,
+        _,
+        mock_applicants_repo,
+        mock_listings_repo,
+        mock_event_timeframes_rush_repo,
+    ) = service
+    encrypted_listing = {**SAMPLE_LISTING, "is_encrypted": True}
+    hashed_applications = [{"id": "hashed"}]
+
+    mock_applicants_repo.get_all_by_field.return_value = SAMPLE_APPLICANTS
+    mock_listings_repo.get_by_id.return_value = encrypted_listing
+    mock_event_timeframes_rush_repo.get_with_custom_select.return_value = None
+
+    with patch("chalicelib.services.ApplicantService.hash_value") as mock_hash_value:
+        mock_hash_value.return_value = hashed_applications
+        result = applicants_service.get_all_from_listing(SAMPLE_LISTING["id"])
+
+    mock_hash_value.assert_called_once_with(SAMPLE_APPLICANTS)
+    assert result == hashed_applications
