@@ -1,11 +1,50 @@
 import boto3
 import jwt
 import logging
+from typing import Optional
 
 from chalice.app import UnauthorizedError
 from chalicelib.models.roles import Roles
 
 logger = logging.getLogger(__name__)
+PROD_SUFFIX = "-prod"
+DEV_SUFFIX = "-dev"
+AUTH_SECRET_PARAMETER = "/Zap/AUTH_SECRET"
+
+
+def _resolve_table_name(table_name: str, env: bool) -> str:
+    return f"{table_name}{PROD_SUFFIX if env else DEV_SUFFIX}"
+
+
+def _extract_bearer_token(auth_header: Optional[str]) -> str:
+    if not auth_header:
+        raise UnauthorizedError("Authorization header is missing.")
+
+    _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
+    if token is None:
+        raise UnauthorizedError("Token is missing.")
+    return token
+
+
+def _get_auth_secret() -> str:
+    ssm_client = boto3.client("ssm")
+    return ssm_client.get_parameter(Name=AUTH_SECRET_PARAMETER, WithDecryption=True)[
+        "Parameter"
+    ]["Value"]
+
+
+def _get_user_roles(decoded_jwt: dict) -> list[Roles]:
+    try:
+        return [Roles(role) for role in decoded_jwt.get("roles", [])]
+    except ValueError:
+        logger.error("Invalid role value in token payload.")
+        raise UnauthorizedError("Invalid token.")
+
+
+def _is_user_authorized(required_roles: list[Roles], user_roles: list[Roles]) -> bool:
+    if len(required_roles) == 0:
+        return True
+    return any(role in user_roles for role in required_roles)
 
 
 def add_env_suffix(func):
@@ -23,10 +62,9 @@ def add_env_suffix(func):
     """
 
     def wrapper(self, table_name: str, *args, **kwargs):
-        if "env" in kwargs and kwargs["env"]:
-            table_name += "-prod"
-        else:
-            table_name += "-dev"
+        table_name = _resolve_table_name(
+            table_name=table_name, env="env" in kwargs and kwargs["env"]
+        )
 
         return func(self, table_name, *args, **kwargs)
 
@@ -53,21 +91,13 @@ def auth(blueprint, roles):
         def wrapper(*args, **kwargs):
             api_request = blueprint.current_request
             auth_header = api_request.headers.get("Authorization", None)
-            if not auth_header:
-                raise UnauthorizedError("Authorization header is missing.")
-
-            _, token = auth_header.split(" ", 1) if " " in auth_header else (None, None)
-            if token is None:
-                raise UnauthorizedError("Token is missing.")
+            token = _extract_bearer_token(auth_header=auth_header)
 
             try:
-                ssm_client = boto3.client("ssm")
-                auth_secret = ssm_client.get_parameter(
-                    Name="/Zap/AUTH_SECRET", WithDecryption=True
-                )["Parameter"]["Value"]
+                auth_secret = _get_auth_secret()
                 decoded = jwt.decode(token, auth_secret, algorithms=["HS256"])
-                user_roles = [Roles(role) for role in decoded.get("roles", [])]
-                if len(roles) > 0 and not any(role in user_roles for role in roles):
+                user_roles = _get_user_roles(decoded_jwt=decoded)
+                if not _is_user_authorized(required_roles=roles, user_roles=user_roles):
                     logger.error(
                         f"User with roles {user_roles} tried to access a resource requiring roles {roles}"
                     )
