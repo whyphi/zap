@@ -222,3 +222,23 @@ def test_auth_raises_when_role_not_authorized(mock_blueprint, mock_ssm):
         protected_route(mock_blueprint)
 
     assert "You do not have permission to access this resource." == str(e.value)
+
+
+def test_auth_raises_when_token_contains_unknown_role(mock_blueprint, mock_ssm):
+    token = generate_token(
+        {
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+            "roles": ["unknown-role"],
+        },
+        "SAMPLE_AUTH_SECRET",
+    )
+    mock_blueprint.current_request.headers = {"Authorization": f"Bearer {token}"}
+
+    @auth(mock_blueprint, roles=[Roles.ADMIN])
+    def protected_route(*_):  # pragma: no cover
+        return {"message": "should not reach"}
+
+    with pytest.raises(UnauthorizedError) as e:
+        protected_route(mock_blueprint)
+
+    assert "Invalid token." == str(e.value)
